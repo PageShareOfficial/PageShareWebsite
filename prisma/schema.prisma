@@ -1,0 +1,248 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite doesn't support enums, using String with @default
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  username      String?   @unique
+  password      String?   // Hashed password for credentials auth
+  image         String?
+  bio           String?
+  role          String    @default("USER") // USER, AUTHOR, ADMIN
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  comments      Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  collections   Collection[]
+  authoredPosts Post[]    @relation("AuthorPosts")
+  following     FollowAuthor[] @relation("Follower")
+  followers     FollowAuthor[] @relation("Author")
+  followingTags FollowTag[]
+  subscriptions SubscriptionPreferences?
+  readingHistory ReadingHistory[]
+}
+
+model Post {
+  id            String     @id @default(cuid())
+  title         String
+  slug          String     @unique
+  excerpt       String?
+  contentMdx    String
+  coverImage    String?
+  status        String     @default("DRAFT") // DRAFT, PUBLISHED, SCHEDULED
+  categoryId    String?
+  authorId      String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  publishedAt   DateTime?
+  scheduledFor  DateTime?
+
+  // Relations
+  author        User       @relation("AuthorPosts", fields: [authorId], references: [id])
+  category      Category?  @relation(fields: [categoryId], references: [id])
+  tags          PostTag[]
+  comments      Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  collectionItems CollectionItem[]
+  readingHistory ReadingHistory[]
+  pins          PostPin[]
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([publishedAt])
+  @@index([status])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  parentId  String?
+  body      String
+  isHidden  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model Like {
+  userId    String   @default(cuid())
+  postId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId])
+}
+
+model Bookmark {
+  userId    String   @default(cuid())
+  postId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId])
+}
+
+model Collection {
+  id          String           @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CollectionItem[]
+
+  @@index([userId])
+}
+
+model CollectionItem {
+  collectionId String     @default(cuid())
+  postId       String
+  createdAt    DateTime   @default(now())
+
+  // Relations
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  post         Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, postId])
+}
+
+model FollowAuthor {
+  followerId String   @default(cuid())
+  authorId   String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  follower   User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  author     User     @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, authorId])
+  @@index([authorId])
+}
+
+model FollowTag {
+  followerId String   @default(cuid())
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  follower   User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, tagId])
+  @@index([tagId])
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  posts       PostTag[]
+  followers   FollowTag[]
+
+  @@index([slug])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  // Relations
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  posts       Post[]
+
+  @@index([slug])
+}
+
+model SubscriptionPreferences {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  digestFrequency   String          @default("WEEKLY") // DAILY, WEEKLY, OFF
+  contentTypes      String          @default("[]") // JSON array
+  quietHoursStart   String?         // HH:mm format
+  quietHoursEnd     String?
+  deliveryChannel   String          @default("EMAIL") // EMAIL
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReadingHistory {
+  userId          String   @default(cuid())
+  postId          String
+  lastScrollPercent Float  @default(0)
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post            Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([userId])
+}
+
+model PostPin {
+  id        String      @id @default(cuid())
+  postId    String      @unique
+  position  String      // HERO, FEATURED_1, FEATURED_2, EDITORS_PICK
+  createdAt DateTime    @default(now())
+
+  // Relations
+  post      Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([position])
+}
