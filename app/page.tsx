@@ -1,30 +1,10 @@
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { TrendingTicker } from "@/components/home/TrendingTicker";
-import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturedPost } from "@/components/home/FeaturedPost";
-import { TrendingRail } from "@/components/home/TrendingRail";
-import { EditorsPicks } from "@/components/home/EditorsPicks";
-import { CategoryTabs } from "@/components/home/CategoryTabs";
-import { ContinueReading } from "@/components/home/ContinueReading";
-import { PersonalizedSection } from "@/components/home/PersonalizedSection";
-
-export default async function HomePage() {
+export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
-      <TrendingTicker />
-      <main>
-        <HeroSection />
-        <FeaturedPost />
-        <TrendingRail />
-        <EditorsPicks />
-        <CategoryTabs />
-        <ContinueReading />
-        <PersonalizedSection />
-      </main>
-      <Footer />
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">Welcome to PageShare</h1>
+        <p className="text-lg text-gray-600">Get started by editing this page.</p>
+      </div>
+    </main>
   );
 }
-
