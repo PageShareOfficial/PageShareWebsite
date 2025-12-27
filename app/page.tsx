@@ -1,154 +1,142 @@
+'use client';
+
+import Link from 'next/link';
+import Logo from '@/components/Logo';
+import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export default function Home() {
+  const { t } = useLanguage();
   return (
-    <div className="min-h-screen bg-black">
-      {/* Main Split Layout */}
-      <div className="flex min-h-screen">
-        {/* Left Side - Sign Up Section */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-md space-y-8">
-            {/* Logo/Icon */}
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-              <span className="text-black text-2xl font-bold">𝕏</span>
+    <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
+      {/* Vibrant Black Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-black"></div>
+
+      {/* Minimal Navbar */}
+      <nav className="relative z-50 border-b border-white/10 bg-black">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="group hover:opacity-80 transition-opacity">
+              <Logo size={40} />
+            </Link>
+            <div className="flex items-center gap-4">
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content - No Scroll */}
+      <main className="flex-1 relative z-10 flex items-center justify-center overflow-hidden">
+        <div className="w-full max-w-[1800px] mx-auto px-8 lg:px-16 xl:px-20 2xl:px-24">
+          <div className="grid lg:grid-cols-2 gap-20 lg:gap-28 xl:gap-32 2xl:gap-40 items-center h-full">
+            
+            {/* Left Column - Premium Content */}
+            <div className="space-y-8 max-w-2xl ml-0 lg:ml-8 xl:ml-12 2xl:ml-16">
+              {/* Premium Headline with Creative Typography */}
+              <div className="space-y-6">
+                <h1 className="text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] tracking-tight">
+                  <span className="block">{t('shareMarket')}</span>
+                  <span className="block bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
+                    {t('thoughts')}
+                  </span>
+                  <span className="block mt-2">{t('discover')}</span>
+                  <span className="block bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
+                    {t('signal')}
+                  </span>
+                </h1>
+                <p className="text-xl lg:text-2xl text-gray-300 leading-relaxed">
+                  {t('subheadline')}
+                </p>
+              </div>
+
+              {/* Professional Feature Pills - Twitter Style */}
+              <div className="flex flex-wrap gap-3 pt-4">
+                <button className="px-4 py-2 bg-white/5 border border-white/20 rounded-full text-sm text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
+                  {t('notBrokerage')}
+                </button>
+                <button className="px-4 py-2 bg-white/5 border border-white/20 rounded-full text-sm text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
+                  {t('stocksEtfCrypto')}
+                </button>
+                <button className="px-4 py-2 bg-white/5 border border-white/20 rounded-full text-sm text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
+                  {t('labsAi')}
+                </button>
+              </div>
+
             </div>
 
-            {/* Main Heading Section */}
-            <div className="space-y-12">
-              {/* "Happening now" text */}
-              <h1 className="text-6xl font-bold text-white leading-tight">
-                Happening now
-              </h1>
-
-              {/* "Join today" heading */}
-              <h2 className="text-3xl font-bold text-white">
-                Join today.
-              </h2>
-
-              {/* Sign Up Buttons Section */}
-              <div className="space-y-4">
-                {/* Sign up with Google button */}
-                <button className="w-full h-12 bg-white rounded-full border border-gray-600 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    <span className="text-gray-900 font-semibold">Sign up with Google</span>
+            {/* Right Column - Auth Card */}
+            <div className="flex items-center justify-center lg:justify-end">
+              <div className="w-full max-w-lg bg-black p-10 mr-0 lg:mr-8 xl:mr-12 2xl:mr-16">
+                <div className="space-y-6">
+                  <div className="text-left">
+                    <h2 className="text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-4">PageShare</h2>
+                    <p className="text-2xl lg:text-3xl font-black text-white mb-8">Join now.</p>
                   </div>
-                </button>
 
-                {/* Sign up with Apple button */}
-                <button className="w-full h-12 bg-white rounded-full border border-gray-600 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C1.79 15.25 4.96 6.39 12.05 6.39c2.25 0 3.85.83 5.18 1.56-1.19 1.65-1.81 3.75-1.38 5.96.48 2.45 2.13 4.28 4.15 4.28.5 0 .98-.05 1.45-.15-.3 1.01-1.15 1.85-2.2 2.24zm-1.05-16.28c-1.5 0-2.81 1.12-3.5 2.61-.65-1.39-1.75-2.61-3.5-2.61-1.96 0-3.63 1.59-3.63 3.71 0 2.9 2.65 6.29 7.13 6.29.5 0 1.01-.03 1.5-.1-.5-1.5-.5-2.9-.5-3.9 0-2.1 1.5-3.9 3.5-3.9z"/>
-                    </svg>
-                    <span className="text-gray-900 font-semibold">Sign up with Apple</span>
-                  </div>
-                </button>
+                  <Link
+                    href="/signup"
+                    className="w-full px-6 py-3 bg-white rounded-full text-gray-900 font-semibold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center"
+                    aria-label="Sign up"
+                  >
+                    Sign up
+                  </Link>
 
-                {/* OR divider */}
-                <div className="flex items-center justify-center">
-                  <div className="h-px flex-1 bg-gray-700"></div>
-                  <div className="px-4">
-                    <span className="text-gray-500 text-sm">OR</span>
-                  </div>
-                  <div className="h-px flex-1 bg-gray-700"></div>
-                </div>
-
-                {/* Create account button */}
-                <button className="w-full h-12 bg-blue-500 hover:bg-blue-600 rounded-full text-white font-bold transition-colors">
-                  Create account
-                </button>
-
-                {/* Terms and Privacy text */}
-                <div className="space-y-1 pt-2">
-                  <p className="text-xs text-gray-500 text-center">
-                    By signing up, you agree to the{" "}
-                    <a href="#" className="text-blue-500 hover:underline">Terms of Service</a>
-                    {" "}and{" "}
-                    <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
-                    , including{" "}
-                    <a href="#" className="text-blue-500 hover:underline">Cookie Use</a>.
+                  <p className="text-xs text-gray-500 text-center leading-relaxed">
+                    {t('termsText')}{" "}
+                    <Link href="/terms" className="text-cyan-400 hover:underline">{t('termsOfService')}</Link>
+                    {" "}{t('and')}{" "}
+                    <Link href="/privacy" className="text-cyan-400 hover:underline">{t('privacyPolicy')}</Link>
+                    , {t('including')}{" "}
+                    <Link href="#" className="text-cyan-400 hover:underline">{t('cookieUse')}</Link>.
                   </p>
-                </div>
-              </div>
 
-              {/* Already have account section */}
-              <div className="pt-8">
-                <div className="space-y-4">
-                  <p className="text-white text-lg font-semibold">Already have an account?</p>
-                  <button className="w-full h-12 bg-transparent border border-gray-600 rounded-full text-white font-bold hover:bg-gray-900 transition-colors">
-                    Sign in
-                  </button>
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-sm text-gray-400 mb-3 text-center">{t('alreadyHaveAccount')}</p>
+                    <Link
+                      href="/signin"
+                      className="w-full px-6 py-3 bg-transparent border border-white/20 rounded-full text-white font-semibold hover:bg-white/10 transition-colors flex items-center justify-center"
+                      aria-label={t('signIn')}
+                    >
+                      {t('signIn')}
+                    </Link>
+                  </div>
                 </div>
-              </div>
-
-              {/* Get Grok link */}
-              <div className="pt-4">
-                <a href="#" className="flex items-center space-x-2 text-blue-500 hover:underline">
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                  <span>Get Grok</span>
-                </a>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right Side - Image/Logo Section */}
-        <div className="hidden lg:flex flex-1 items-center justify-center bg-black relative overflow-hidden">
-          {/* Large X logo/icon */}
-          <div className="w-96 h-96 flex items-center justify-center">
-            <span className="text-white text-[400px] font-bold opacity-20">𝕏</span>
-          </div>
-        </div>
       </div>
+    </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <footer className="relative z-10 border-t border-white/10 bg-black">
+        <div className="max-w-[1800px] mx-auto px-8 lg:px-16 xl:px-20 2xl:px-24 py-4">
           <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-gray-500">
-            <a href="#" className="hover:underline">About</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('about')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Download the X app</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('helpCenter')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Grok</a>
+            <Link href="/terms" className="hover:text-white transition-colors">{t('termsOfService')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Help Center</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">{t('privacyPolicy')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Terms of Service</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('cookiePolicy')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Privacy Policy</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('accessibility')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Cookie Policy</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('disclaimer')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Accessibility</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('blog')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Ads info</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('careers')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Blog</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('brandResources')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Careers</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('api')}</Link>
             <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Brand Resources</a>
-            <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Advertising</a>
-            <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Marketing</a>
-            <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">X for Business</a>
-            <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Developers</a>
-            <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">News</a>
-            <span className="text-gray-600">|</span>
-            <a href="#" className="hover:underline">Settings</a>
+            <Link href="#" className="hover:text-white transition-colors">{t('contact')}</Link>
           </nav>
           <div className="mt-4 text-center">
-            <p className="text-gray-500 text-sm">© 2025 X Corp.</p>
+            <p className="text-gray-500 text-xs">{t('copyright')}</p>
           </div>
         </div>
       </footer>

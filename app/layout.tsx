@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import LanguageProviderWrapper from "@/components/LanguageProviderWrapper";
 
 export const metadata: Metadata = {
   title: "PageShare",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LanguageProviderWrapper>{children}</LanguageProviderWrapper>
+      </body>
     </html>
   );
 }
