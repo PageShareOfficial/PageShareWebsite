@@ -142,7 +142,7 @@ export default function OnboardingPage() {
               type="text"
               id="username"
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-              placeholder="username"
+              placeholder="Username"
             />
             {errors.username && (
               <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
@@ -196,6 +196,9 @@ export default function OnboardingPage() {
             {errors.bio && (
               <p className="mt-1 text-sm text-red-400">{errors.bio.message}</p>
             )}
+            <p className="mt-1 text-xs text-gray-500 text-right">
+              {watch('bio')?.length || 0}/200 characters
+            </p>
           </div>
 
           {/* Interests */}
