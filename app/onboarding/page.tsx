@@ -83,14 +83,16 @@ export default function OnboardingPage() {
   const onSubmit = async (data: OnboardingFormData) => {
     setIsSubmitting(true);
     
+    // Auto-detect timezone from browser
+    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     // Combine Google data with form data
-    // Note: country and timezone should be auto-detected from IP or Google Auth
+    // Note: country should be auto-detected from IP on backend
     const onboardingPayload = {
       ...googleUserData,
       ...data,
-      // These will be set by backend from IP geolocation or Google Auth
-      // country: autoDetectedCountry,
-      // timezone: autoDetectedTimezone,
+      timezone: detectedTimezone, // Auto-detected from browser
+      // country will be set by backend from IP geolocation
     };
 
     // TODO: Send to backend API
