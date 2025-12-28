@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PageShare",
-  description: "A social platform for sharing thoughts and ideas",
+  description: "A social platform for sharing thoughts and ideas about Stock markets, NFT's and Crypto",
 };
 
 export default function RootLayout({
@@ -13,7 +13,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+      </body>
     </html>
   );
 }
