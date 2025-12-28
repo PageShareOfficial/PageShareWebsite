@@ -1,142 +1,118 @@
 'use client';
 
 import Link from 'next/link';
-import Logo from '@/components/Logo';
-import { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import Image from 'next/image';
+import AuthTabs from '@/components/auth/AuthTabs';
 
 export default function Home() {
-  const { t } = useLanguage();
   return (
-    <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
-      {/* Vibrant Black Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-black"></div>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-black"></div>
 
-      {/* Minimal Navbar */}
-      <nav className="relative z-50 border-b border-white/10 bg-black">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="group hover:opacity-80 transition-opacity">
-              <Logo size={40} />
-            </Link>
-            <div className="flex items-center gap-4">
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Logo - Mobile/Tablet (Top Left) */}
+      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8 z-50 lg:hidden">
+        <Link href="/" className="block">
+          <Image
+            src="/pageshare_final.png"
+            alt="PageShare Logo"
+            width={200}
+            height={200}
+            className="w-auto h-12 sm:h-24 md:h-24"
+            priority
+          />
+        </Link>
+      </div>
 
-      {/* Main Content - No Scroll */}
-      <main className="flex-1 relative z-10 flex items-center justify-center overflow-hidden">
-        <div className="w-full max-w-[1800px] mx-auto px-8 lg:px-16 xl:px-20 2xl:px-24">
-          <div className="grid lg:grid-cols-2 gap-20 lg:gap-28 xl:gap-32 2xl:gap-40 items-center h-full">
+      {/* Main Content */}
+      <main className="flex-1 relative z-10 flex items-center justify-center py-8 sm:py-12 md:py-16 lg:py-20">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 lg:gap-20 xl:gap-24 2xl:gap-32 items-center">
             
-            {/* Left Column - Premium Content */}
-            <div className="space-y-8 max-w-2xl ml-0 lg:ml-8 xl:ml-12 2xl:ml-16">
+            {/* Left Column - Premium Content (Hidden on Mobile/Tablet) */}
+            <div className="hidden lg:block space-y-6 sm:space-y-8 max-w-2xl mx-auto lg:mx-0 lg:ml-0 xl:ml-8 2xl:ml-12">
+              {/* Logo - Inline with Left Column */}
+              <div className="mb-4 sm:mb-6">
+                <Link href="/" className="block">
+                  <Image
+                    src="/pageshare_final.png"
+                    alt="PageShare Logo"
+                    width={200}
+                    height={200}
+                    className="w-auto h-16 sm:h-20 md:h-24 lg:h-28"
+                    priority
+                  />
+                </Link>
+              </div>
+
               {/* Premium Headline with Creative Typography */}
-              <div className="space-y-6">
-                <h1 className="text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] tracking-tight">
-                  <span className="block">{t('shareMarket')}</span>
+              <div className="space-y-4 sm:space-y-6">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] tracking-tight">
+                  <span className="block">Share market thoughts &</span>
                   <span className="block bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
-                    {t('thoughts')}
-                  </span>
-                  <span className="block mt-2">{t('discover')}</span>
-                  <span className="block bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
-                    {t('signal')}
+                    Discover more
                   </span>
                 </h1>
-                <p className="text-xl lg:text-2xl text-gray-300 leading-relaxed">
-                  {t('subheadline')}
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 leading-relaxed">
+                  A social feed for stocks, ETFs, and crypto. Discover discussions through tickers and news. Explore AI experiments in Labs.
                 </p>
               </div>
 
               {/* Professional Feature Pills - Twitter Style */}
-              <div className="flex flex-wrap gap-3 pt-4">
-                <button className="px-4 py-2 bg-white/5 border border-white/20 rounded-full text-sm text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  {t('notBrokerage')}
+              <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
+                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
+                  Opinions from experts
                 </button>
-                <button className="px-4 py-2 bg-white/5 border border-white/20 rounded-full text-sm text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  {t('stocksEtfCrypto')}
+                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
+                  Stocks • ETFs • Crypto
                 </button>
-                <button className="px-4 py-2 bg-white/5 border border-white/20 rounded-full text-sm text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  {t('labsAi')}
+                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
+                  Labs: AI Experiments
                 </button>
               </div>
 
             </div>
 
             {/* Right Column - Auth Card */}
-            <div className="flex items-center justify-center lg:justify-end">
-              <div className="w-full max-w-lg bg-black p-10 mr-0 lg:mr-8 xl:mr-12 2xl:mr-16">
-                <div className="space-y-6">
-                  <div className="text-left">
-                    <h2 className="text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-4">PageShare</h2>
-                    <p className="text-2xl lg:text-3xl font-black text-white mb-8">Join now.</p>
-                  </div>
-
-                  <Link
-                    href="/signup"
-                    className="w-full px-6 py-3 bg-white rounded-full text-gray-900 font-semibold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center"
-                    aria-label="Sign up"
-                  >
-                    Sign up
-                  </Link>
-
-                  <p className="text-xs text-gray-500 text-center leading-relaxed">
-                    {t('termsText')}{" "}
-                    <Link href="/terms" className="text-cyan-400 hover:underline">{t('termsOfService')}</Link>
-                    {" "}{t('and')}{" "}
-                    <Link href="/privacy" className="text-cyan-400 hover:underline">{t('privacyPolicy')}</Link>
-                    , {t('including')}{" "}
-                    <Link href="#" className="text-cyan-400 hover:underline">{t('cookieUse')}</Link>.
-                  </p>
-
-                  <div className="pt-4 border-t border-white/10">
-                    <p className="text-sm text-gray-400 mb-3 text-center">{t('alreadyHaveAccount')}</p>
-                    <Link
-                      href="/signin"
-                      className="w-full px-6 py-3 bg-transparent border border-white/20 rounded-full text-white font-semibold hover:bg-white/10 transition-colors flex items-center justify-center"
-                      aria-label={t('signIn')}
-                    >
-                      {t('signIn')}
-                    </Link>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center justify-center w-full">
+              <AuthTabs />
             </div>
           </div>
-      </div>
-    </main>
+        </div>
+      </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 bg-black">
-        <div className="max-w-[1800px] mx-auto px-8 lg:px-16 xl:px-20 2xl:px-24 py-4">
-          <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-gray-500">
-            <Link href="#" className="hover:text-white transition-colors">{t('about')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('helpCenter')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="/terms" className="hover:text-white transition-colors">{t('termsOfService')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="/privacy" className="hover:text-white transition-colors">{t('privacyPolicy')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('cookiePolicy')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('accessibility')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('disclaimer')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('blog')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('careers')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('brandResources')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('api')}</Link>
-            <span className="text-gray-600">|</span>
-            <Link href="#" className="hover:text-white transition-colors">{t('contact')}</Link>
+      <footer className="relative z-10 border-t border-white/10 bg-black mt-auto">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4 sm:py-6">
+          <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 md:gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500">
+            <Link href="#" className="hover:text-white transition-colors px-1">About</Link>
+            <span className="text-gray-600 hidden sm:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Help Center</Link>
+            <span className="text-gray-600 hidden sm:inline">|</span>
+            <Link href="/terms" className="hover:text-white transition-colors px-1">Terms of Service</Link>
+            <span className="text-gray-600 hidden sm:inline">|</span>
+            <Link href="/privacy" className="hover:text-white transition-colors px-1">Privacy Policy</Link>
+            <span className="text-gray-600 hidden sm:inline">|</span>
+            <Link href="/cookies" className="hover:text-white transition-colors px-1">Cookie Policy</Link>
+            <span className="text-gray-600 hidden md:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Accessibility</Link>
+            <span className="text-gray-600 hidden md:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Disclaimer</Link>
+            <span className="text-gray-600 hidden lg:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Blog</Link>
+            <span className="text-gray-600 hidden lg:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Careers</Link>
+            <span className="text-gray-600 hidden xl:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Brand Resources</Link>
+            <span className="text-gray-600 hidden xl:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">API</Link>
+            <span className="text-gray-600 hidden xl:inline">|</span>
+            <Link href="#" className="hover:text-white transition-colors px-1">Contact</Link>
           </nav>
-          <div className="mt-4 text-center">
-            <p className="text-gray-500 text-xs">{t('copyright')}</p>
+          <div className="mt-3 sm:mt-4 text-center">
+            <p className="text-gray-500 text-[10px] sm:text-xs px-4 leading-relaxed">
+              © 2025 PageShare is not a securities broker-dealer, investment adviser, or any other type of financial professional. No content on the PageShare platform should be considered an offer, solicitation of an offer, or advice to buy or sell securities or any other type of investment or financial product. By using the PageShare platform, you understand and agree that PageShare does not provide investment advice, recommend any security, transaction, or order, issue securities, produce or provide research.
+            </p>
           </div>
         </div>
       </footer>

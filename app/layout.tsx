@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import LanguageProviderWrapper from "@/components/LanguageProviderWrapper";
 
 export const metadata: Metadata = {
   title: "PageShare",
-  description: "A social platform for sharing thoughts and ideas",
+  description: "A social platform for sharing thoughts and ideas about Stock markets, NFT's and Crypto",
 };
 
 export default function RootLayout({
@@ -15,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <LanguageProviderWrapper>{children}</LanguageProviderWrapper>
+        {children}
       </body>
     </html>
   );
