@@ -1,108 +1,116 @@
 'use client';
 
-import { Settings } from 'lucide-react';
-import { WatchlistItem, Narrative } from '@/types';
+import { useState } from 'react';
+import { Settings, RefreshCw } from 'lucide-react';
+import { WatchlistItem } from '@/types';
+import { updateWatchlistPrices } from '@/utils/watchlistApi';
 
 interface RightRailProps {
   watchlist: WatchlistItem[];
-  narratives: Narrative[];
   onManageWatchlist: () => void;
   onUpgradeLabs: () => void;
+  onUpdateWatchlist: (watchlist: WatchlistItem[]) => void;
 }
 
 export default function RightRail({
   watchlist,
-  narratives,
   onManageWatchlist,
   onUpgradeLabs,
+  onUpdateWatchlist,
 }: RightRailProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (watchlist.length === 0 || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      const updatedWatchlist = await updateWatchlistPrices(watchlist);
+      onUpdateWatchlist(updatedWatchlist);
+    } catch (error) {
+      console.error('Error refreshing watchlist:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
-    <aside className="hidden lg:block w-80 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
-      {/* Watchlist Card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Watchlist</h2>
+    <aside className="hidden lg:flex flex-col w-[350px] sticky top-0 h-screen pt-6 overflow-y-auto">
+      <div className="flex flex-col gap-6 pb-6">
+        {/* Watchlist Card */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-5 flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Watchlist</h2>
+            <div className="flex items-center gap-2">
+              {watchlist.length > 0 && (
+                <button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Refresh watchlist"
+                  title="Refresh prices"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </button>
+              )}
+              <button
+                onClick={onManageWatchlist}
+                className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Manage watchlist"
+                title="Manage watchlist"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {watchlist.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <p className="text-sm mb-2">Your watchlist is empty</p>
+              <button
+                onClick={onManageWatchlist}
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                Add tickers to track
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {watchlist.map((item) => (
+                <div key={item.ticker} className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-white truncate">{item.ticker}</div>
+                    <div className="text-xs text-gray-400 truncate">{item.name}</div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <div className="font-medium text-white">${item.price.toFixed(2)}</div>
+                    <div
+                      className={`text-xs font-medium ${
+                        item.change >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}
+                    >
+                      {item.change >= 0 ? '+' : ''}
+                      {item.change.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Labs Pro Card */}
+        <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
+          <h2 className="text-lg font-semibold text-white mb-2">Labs Pro</h2>
+          <p className="text-sm text-gray-300 mb-4">
+            Premium AI tools, deeper filters, and credibility analytics.
+          </p>
           <button
-            onClick={onManageWatchlist}
-            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Manage watchlist"
+            onClick={onUpgradeLabs}
+            className="w-full px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
           >
-            <Settings className="w-4 h-4" />
+            Upgrade
           </button>
         </div>
-        <div className="space-y-3">
-          {watchlist.map((item) => (
-            <div key={item.ticker} className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">{item.ticker}</div>
-                <div className="text-xs text-gray-500">{item.name}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-medium text-gray-900">${item.price.toFixed(2)}</div>
-                <div
-                  className={`text-xs font-medium ${
-                    item.change >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {item.change >= 0 ? '+' : ''}
-                  {item.change.toFixed(1)}%
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Narratives Card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Narratives</h2>
-        </div>
-        <div className="space-y-4 mb-4">
-          {narratives.map((narrative) => (
-            <div key={narrative.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-900">{narrative.title}</h3>
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                  {narrative.score}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {narrative.relatedTickers.map((ticker) => (
-                  <span
-                    key={ticker}
-                    className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded border border-gray-200"
-                  >
-                    {ticker}
-                  </span>
-                ))}
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div
-                  className="bg-blue-600 h-1.5 rounded-full transition-all"
-                  style={{ width: `${narrative.progress}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-        <button className="w-full px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
-          Open Narrative Tracker
-        </button>
-      </div>
-
-      {/* Labs Pro Card */}
-      <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Labs Pro</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Premium AI tools, deeper filters, and credibility analytics.
-        </p>
-        <button
-          onClick={onUpgradeLabs}
-          className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
-        >
-          Upgrade
-        </button>
       </div>
     </aside>
   );

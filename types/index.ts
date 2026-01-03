@@ -1,8 +1,3 @@
-export type PostType = 'Thesis' | 'Macro' | 'Quant' | 'ETF' | 'Habit';
-export type PostStatus = 'Open' | 'Thesis held' | 'Closed';
-export type FeedTab = 'For you' | 'Following' | 'Outcomes';
-export type Horizon = '14D' | '90D' | '1Y';
-
 export interface User {
   id: string;
   displayName: string;
@@ -11,36 +6,38 @@ export interface User {
   badge?: 'Verified' | 'Public';
 }
 
-export interface Post {
+// Normal tweet/post (from TweetComposer)
+export interface Tweet {
   id: string;
   author: User;
   createdAt: string;
-  assets: string[]; // e.g., ['AAPL', 'BTC']
-  horizon: Horizon;
-  type: PostType;
-  status: PostStatus;
-  priceChange: number; // percentage since posted
-  confidence: number; // 0-100
-  sparkline: number[]; // array of values for sparkline
-  thesis: string;
-  catalysts: string[];
-  risks: string[];
-  linkedNews?: {
-    title: string;
-    url: string;
+  content: string;
+  media?: string[]; // URLs of uploaded images
+  gifUrl?: string; // URL of selected GIF
+  repostedFrom?: User; // Original author if this is a repost
+  repostType?: 'normal' | 'quote'; // Type of repost
+  originalPostId?: string; // Reference to original post ID (optimized for backend)
+  poll?: {
+    options: string[];
+    duration: number; // in days
+    createdAt: string; // when poll was created
+    votes?: { [optionIndex: number]: number }; // votes per option
+    userVote?: number; // index of option user voted for (undefined if not voted)
+    isFinished: boolean; // true if poll has ended
   };
   stats: {
     likes: number;
     comments: number;
     reposts: number;
-    bookmarks: number;
   };
   userInteractions: {
     liked: boolean;
-    bookmarked: boolean;
     reposted: boolean;
   };
 }
+
+// All posts are tweets
+export type Post = Tweet;
 
 export interface WatchlistItem {
   ticker: string;
@@ -49,11 +46,14 @@ export interface WatchlistItem {
   price: number;
 }
 
-export interface Narrative {
+export interface Comment {
   id: string;
-  title: string;
-  score: number; // 0-100
-  relatedTickers: string[];
-  progress: number; // 0-100
+  postId: string; // ID of the post this comment belongs to
+  author: User;
+  content: string;
+  createdAt: string;
+  likes: number;
+  userLiked: boolean;
+  replies?: Comment[]; // Nested replies (optional for now)
 }
 

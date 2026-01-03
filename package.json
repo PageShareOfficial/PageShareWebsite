@@ -2,6 +2,9 @@
   "name": "pageshare",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,12 +12,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@giphy/react-components": "^10.1.1",
     "@hookform/resolvers": "^5.2.2",
+    "emoji-picker-react": "^4.16.1",
     "lucide-react": "^0.562.0",
-    "next": "^14.2.5",
+    "next": "^14.2.18",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.69.0",
+    "react-icons": "^5.5.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {

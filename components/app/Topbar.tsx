@@ -1,56 +1,125 @@
 'use client';
 
-import { Search, Bell, Plus } from 'lucide-react';
-import { useState, KeyboardEvent } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { LogOut, UserPlus } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface TopbarProps {
-  onNewIdeaClick: () => void;
+  onUpgradeLabs: () => void;
 }
 
-export default function Topbar({ onNewIdeaClick }: TopbarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'n' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      onNewIdeaClick();
-    }
+export default function Topbar({ onUpgradeLabs }: TopbarProps) {
+  const router = useRouter();
+  
+  // Mock user data - in real implementation, get from session/auth context
+  const currentUser = {
+    displayName: 'John Doe',
+    handle: 'johndoe',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
   };
 
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    // TODO: Clear session/tokens
+    router.push('/');
+  };
+
+  const handleAddAccount = () => {
+    // TODO: Handle add account logic
+    router.push('/');
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
+
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="md:hidden sticky top-0 z-40 bg-black border-b border-white/10">
+      <div className="px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl mx-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search tickers, creators, narratives, news…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                aria-label="Search"
+          {/* Left: Profile Image */}
+          <div className="flex-shrink-0 relative" ref={profileMenuRef}>
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className="flex items-center"
+            >
+              <Image
+                src={currentUser.avatar}
+                alt={currentUser.displayName}
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-full"
               />
-            </div>
+            </button>
+
+            {/* Profile Dropdown Menu */}
+            {isProfileMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[200px]">
+                <div className="px-4 py-3 border-b border-white/10">
+                  <div className="font-semibold text-white text-sm">{currentUser.displayName}</div>
+                  <div className="text-gray-400 text-xs">@{currentUser.handle}</div>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsProfileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4 text-gray-300" />
+                  <span className="text-white text-sm">Logout</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleAddAccount();
+                    setIsProfileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-t border-white/10"
+                >
+                  <UserPlus className="w-4 h-4 text-gray-300" />
+                  <span className="text-white text-sm">Add another account</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center space-x-3">
+          {/* Center: App Logo */}
+          <div className="flex-1 flex items-center justify-center">
+            <Link href="/home" className="flex items-center">
+              <Image
+                src="/pageshare_final.png"
+                alt="PageShare Logo"
+                width={32}
+                height={32}
+                className="w-12 h-12 rounded"
+              />
+            </Link>
+          </div>
+
+          {/* Right: Upgrade Button */}
+          <div className="flex-shrink-0">
             <button
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label="Notifications"
+              onClick={onUpgradeLabs}
+              className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
             >
-              <Bell className="w-5 h-5" />
-            </button>
-            <button
-              onClick={onNewIdeaClick}
-              className="px-4 py-2 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Idea</span>
+              Upgrade
             </button>
           </div>
         </div>
