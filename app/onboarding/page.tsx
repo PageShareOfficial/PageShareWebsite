@@ -96,7 +96,6 @@ export default function OnboardingPage() {
     };
 
     // TODO: Send to backend API
-    console.log('Onboarding data:', onboardingPayload);
     
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));

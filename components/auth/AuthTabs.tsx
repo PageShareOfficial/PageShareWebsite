@@ -10,7 +10,6 @@ export default function AuthTabs() {
     setIsLoading(true);
     // Google authentication logic will be implemented here
     // Google OAuth will automatically handle login vs signup
-    console.log('Continue with Google clicked');
     // After implementation, this will handle authentication
     // setIsLoading(false);
   };
