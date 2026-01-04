@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/app/Sidebar';
-import Topbar from '@/components/app/Topbar';
-import ManageWatchlistModal from '@/components/app/ManageWatchlistModal';
+import Sidebar from '@/components/app/layout/Sidebar';
+import Topbar from '@/components/app/layout/Topbar';
+import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
 import { WatchlistItem } from '@/types';
 import { Settings, Plus, RefreshCw } from 'lucide-react';
 import { updateWatchlistPrices } from '@/utils/watchlistApi';

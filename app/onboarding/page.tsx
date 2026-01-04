@@ -31,19 +31,7 @@ const onboardingSchema = z.object({
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
-// Interests options
-const interestsOptions = [
-  'Stocks',
-  'ETFs',
-  'NFTs',
-  'Crypto',
-  'Options',
-  'Futures',
-  'Forex',
-  'Commodities',
-  'Bonds',
-  'Mutual Funds',
-];
+import { interestsOptions } from '@/utils/constants';
 
 export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);

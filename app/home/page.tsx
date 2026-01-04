@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/app/Sidebar';
-import Topbar from '@/components/app/Topbar';
-import Feed from '@/components/app/Feed';
-import RightRail from '@/components/app/RightRail';
-import ManageWatchlistModal from '@/components/app/ManageWatchlistModal';
-import TweetComposer from '@/components/app/TweetComposer';
+import Sidebar from '@/components/app/layout/Sidebar';
+import Topbar from '@/components/app/layout/Topbar';
+import Feed from '@/components/app/feed/Feed';
+import RightRail from '@/components/app/layout/RightRail';
+import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
+import TweetComposer from '@/components/app/composer/TweetComposer';
 import { mockPosts, isTweet } from '@/data/mockData';
 import { Post, WatchlistItem } from '@/types';
 import { createNormalRepost, createQuoteRepost, incrementRepostCount } from '@/utils/repostHelpers';

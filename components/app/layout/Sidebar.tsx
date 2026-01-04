@@ -6,7 +6,7 @@ import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, UserPlus, Pen
 import { MdOutlineWorkspacePremium } from 'react-icons/md';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import TweetComposer from './TweetComposer';
+import TweetComposer from '../composer/TweetComposer';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -79,7 +79,7 @@ export default function Sidebar() {
     { name: 'Discover', icon: Search, href: '/discover' },
     { name: 'Labs', icon: FlaskConical, href: '/labs' },
     { name: 'Watchlist', icon: List, href: '/watchlist' },
-    { name: 'Profile', icon: User, href: '/profile' },
+    { name: 'Profile', icon: User, href: `/${currentUser.handle}` },
     { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans' },
   ];
 

@@ -1,10 +1,43 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { GiBinoculars } from 'react-icons/gi';
-import Sidebar from '@/components/app/Sidebar';
-import Topbar from '@/components/app/Topbar';
+import Sidebar from '@/components/app/layout/Sidebar';
+import Topbar from '@/components/app/layout/Topbar';
+import RightRail from '@/components/app/layout/RightRail';
+import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
+import { WatchlistItem } from '@/types';
 
 export default function LabsPage() {
+  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // Load watchlist from localStorage on client side only (after mount)
+  useEffect(() => {
+    setIsClient(true);
+    
+    // Load watchlist
+    const savedWatchlist = localStorage.getItem('pageshare_watchlist');
+    if (savedWatchlist) {
+      try {
+        const parsedWatchlist = JSON.parse(savedWatchlist);
+        if (Array.isArray(parsedWatchlist)) {
+          setWatchlist(parsedWatchlist);
+        }
+      } catch {
+        // If parsing fails, keep empty watchlist
+      }
+    }
+  }, []);
+
+  // Save watchlist to localStorage whenever it changes (client side only)
+  useEffect(() => {
+    if (isClient && typeof window !== 'undefined') {
+      localStorage.setItem('pageshare_watchlist', JSON.stringify(watchlist));
+    }
+  }, [watchlist, isClient]);
+
   return (
     <div className="min-h-screen bg-black">
       <div className="flex justify-center">
@@ -44,11 +77,24 @@ export default function LabsPage() {
           </div>
         </div>
 
-        {/* Right Sidebar - Desktop Only */}
+        {/* Right Sidebar */}
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          {/* Empty right rail for consistency */}
+          <RightRail
+            watchlist={watchlist}
+            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpdateWatchlist={setWatchlist}
+          />
         </div>
       </div>
+
+      {/* Modals */}
+      <ManageWatchlistModal
+        isOpen={isManageWatchlistOpen}
+        onClose={() => setIsManageWatchlistOpen(false)}
+        watchlist={watchlist}
+        onUpdateWatchlist={setWatchlist}
+      />
     </div>
   );
 }

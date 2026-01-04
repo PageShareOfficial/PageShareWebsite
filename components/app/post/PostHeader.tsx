@@ -16,6 +16,7 @@ interface PostHeaderProps {
   onMenuClose: () => void;
   repostedBy?: { displayName: string; handle: string } | null; // Who reposted this (for original posts)
   onDelete?: (postId: string) => void;
+  onProfileClick?: (e: React.MouseEvent, handle: string) => void;
 }
 
 export default function PostHeader({
@@ -28,6 +29,7 @@ export default function PostHeader({
   onMenuClose,
   repostedBy,
   onDelete,
+  onProfileClick,
 }: PostHeaderProps) {
   return (
     <>
@@ -51,12 +53,17 @@ export default function PostHeader({
         </div>
       )}
       
-      <div className="flex items-center justify-between mb-1 w-full">
+        <div className="flex items-center justify-between mb-1 w-full">
         <div className="flex items-center space-x-2">
           {isTweet(post) && post.repostType === 'normal' && originalPost ? (
             // For normal reposts, show original author's info
             <>
-              <span className="font-semibold text-white">{originalPost.author.displayName}</span>
+              <span 
+                className="font-semibold text-white cursor-pointer hover:underline"
+                onClick={(e) => onProfileClick && onProfileClick(e, originalPost.author.handle)}
+              >
+                {originalPost.author.displayName}
+              </span>
               <span className="text-sm text-gray-400">@{originalPost.author.handle}</span>
               {originalPost.author.badge && (
                 <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
@@ -67,7 +74,12 @@ export default function PostHeader({
           ) : (
             // For normal posts or quote reposts, show current author's info
             <>
-              <span className="font-semibold text-white">{post.author.displayName}</span>
+              <span 
+                className="font-semibold text-white cursor-pointer hover:underline"
+                onClick={(e) => onProfileClick && onProfileClick(e, post.author.handle)}
+              >
+                {post.author.displayName}
+              </span>
               <span className="text-sm text-gray-400">@{post.author.handle}</span>
               {post.author.badge && (
                 <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
