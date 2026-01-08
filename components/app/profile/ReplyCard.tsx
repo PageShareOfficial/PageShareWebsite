@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Heart } from 'lucide-react';
@@ -9,12 +10,16 @@ import PostHeader from '@/components/app/post/PostHeader';
 import PostMedia from '@/components/app/post/PostMedia';
 import PostActions from '@/components/app/post/PostActions';
 import PollComponent from '@/components/app/post/PollComponent';
+import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
+import ContentMenu from '@/components/app/common/ContentMenu';
 import { isTweet } from '@/data/mockData';
 
 interface ReplyCardProps {
   originalPost: Post;
   reply: Comment;
   onCommentLike?: (commentId: string) => void;
+  onCommentPollVote?: (commentId: string, optionIndex: number) => void;
+  onCommentDelete?: (commentId: string, postId: string) => void;
   currentUserHandle?: string;
   allPosts?: Post[];
   onLike?: (postId: string) => void;
@@ -22,12 +27,15 @@ interface ReplyCardProps {
   onComment?: (postId: string) => void;
   onVote?: (postId: string, optionIndex: number) => void;
   hasUserReposted?: (postId: string) => boolean;
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string) => void;
 }
 
 export default function ReplyCard({
   originalPost,
   reply,
   onCommentLike,
+  onCommentPollVote,
+  onCommentDelete,
   currentUserHandle,
   allPosts = [],
   onLike,
@@ -35,8 +43,12 @@ export default function ReplyCard({
   onComment,
   onVote,
   hasUserReposted,
+  onReportClick,
 }: ReplyCardProps) {
   const router = useRouter();
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([]);
+
 
   const handleClick = () => {
     const username = originalPost.author.handle;
@@ -100,10 +112,6 @@ export default function ReplyCard({
                 post={originalPost}
                 originalPost={quotedPost}
                 currentUserHandle={currentUserHandle}
-                showMenu={false}
-                menuRef={{ current: null }}
-                onMenuToggle={() => {}}
-                onMenuClose={() => {}}
                 onProfileClick={(e, handle) => {
                   e.stopPropagation();
                   router.push(`/${handle}`);
@@ -297,22 +305,80 @@ export default function ReplyCard({
           
           {/* Reply content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-white text-sm">
-                {reply.author.displayName}
-              </span>
-              <span className="text-gray-400 text-sm">@{reply.author.handle}</span>
-              {reply.author.badge && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                  {reply.author.badge}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white text-sm">
+                  {reply.author.displayName}
                 </span>
-              )}
-              <span className="text-gray-500 text-sm">·</span>
-              <span className="text-gray-400 text-sm">{reply.createdAt}</span>
+                <span className="text-gray-400 text-sm">@{reply.author.handle}</span>
+                {reply.author.badge && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
+                    {reply.author.badge}
+                  </span>
+                )}
+                <span className="text-gray-500 text-sm">·</span>
+                <span className="text-gray-400 text-sm">{reply.createdAt}</span>
+              </div>
+              
+              {/* 3-dot Menu Button for Reply */}
+              <ContentMenu
+                type="comment"
+                authorHandle={reply.author.handle}
+                authorDisplayName={reply.author.displayName}
+                currentUserHandle={currentUserHandle}
+                linkUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/${originalPost.author.handle}/posts/${originalPost.id}#comment-${reply.id}`}
+                contentId={reply.id}
+                postId={originalPost.id}
+                onDelete={onCommentDelete && currentUserHandle === reply.author.handle ? () => onCommentDelete(reply.id, reply.postId) : undefined}
+                onReportClick={onReportClick}
+              />
             </div>
-            <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-3">
-              {parseCashtags(reply.content)}
-            </p>
+            {reply.content && (
+              <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-2">
+                {parseCashtags(reply.content)}
+              </p>
+            )}
+            
+            {/* Reply Media */}
+            {reply.media && reply.media.length > 0 && (
+              <div className="mb-3">
+                <PostMedia
+                  media={reply.media}
+                  onImageClick={(urls, index) => {
+                    setSelectedImageUrls(urls);
+                    setSelectedImageIndex(index);
+                  }}
+                  className="rounded-xl"
+                />
+              </div>
+            )}
+            
+            {/* Reply GIF */}
+            {reply.gifUrl && (
+              <div className="mb-3 rounded-xl overflow-hidden">
+                <img
+                  src={reply.gifUrl}
+                  alt="GIF"
+                  className="w-full rounded-xl"
+                  loading="lazy"
+                />
+              </div>
+            )}
+            
+            {/* Reply Poll */}
+            {reply.poll && (
+              <div className="mb-3">
+                <PollComponent
+                  poll={reply.poll}
+                  postId={reply.id}
+                  onVote={(commentId, optionIndex) => {
+                    if (onCommentPollVote) {
+                      onCommentPollVote(commentId, optionIndex);
+                    }
+                  }}
+                />
+              </div>
+            )}
             
             {/* Comment Like Button */}
             {onCommentLike && (
@@ -338,6 +404,28 @@ export default function ReplyCard({
           </div>
         </div>
       </article>
+
+      {/* Image Viewer Modal for Reply */}
+      {selectedImageIndex !== null && selectedImageUrls.length > 0 && (
+        <ImageViewerModal
+          imageUrls={selectedImageUrls}
+          selectedIndex={selectedImageIndex}
+          onClose={() => {
+            setSelectedImageIndex(null);
+            setSelectedImageUrls([]);
+          }}
+          onPrevious={() => {
+            setSelectedImageIndex((prev) => 
+              prev !== null ? (prev > 0 ? prev - 1 : selectedImageUrls.length - 1) : null
+            );
+          }}
+          onNext={() => {
+            setSelectedImageIndex((prev) => 
+              prev !== null ? (prev < selectedImageUrls.length - 1 ? prev + 1 : 0) : null
+            );
+          }}
+        />
+      )}
     </div>
   );
 }

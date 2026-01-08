@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Post, WatchlistItem, Comment } from '@/types';
 import { mockPosts, mockComments } from '@/data/mockData';
+import { savePostsToStorage, saveToStorage } from '@/utils/storageUtils';
 
 export function useProfileData() {
   const [posts, setPosts] = useState<Post[]>(mockPosts);
@@ -56,6 +57,37 @@ export function useProfileData() {
         } catch {
           // Ignore invalid data
         }
+      } else if (e.key && e.key.startsWith('pageshare_comments_')) {
+        // Reload comments when they change
+        const loadedComments: Comment[] = [];
+        loadedComments.push(...mockComments);
+        
+        // Get all post IDs from current posts
+        const allPostIds = new Set<string>();
+        posts.forEach((post) => {
+          allPostIds.add(post.id);
+        });
+        
+        // Load comments for each post
+        allPostIds.forEach((postId) => {
+          const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
+          if (savedComments) {
+            try {
+              const parsedComments = JSON.parse(savedComments);
+              if (Array.isArray(parsedComments)) {
+                parsedComments.forEach((comment: Comment) => {
+                  if (!loadedComments.find(c => c.id === comment.id)) {
+                    loadedComments.push(comment);
+                  }
+                });
+              }
+            } catch {
+              // Skip invalid comments
+            }
+          }
+        });
+        
+        setAllComments(loadedComments);
       }
     };
 
@@ -76,8 +108,8 @@ export function useProfileData() {
     };
   }, []);
 
-  // Load comments from localStorage after posts are loaded
-  useEffect(() => {
+  // Function to reload comments from localStorage
+  const reloadComments = () => {
     if (!isClient || posts.length === 0) return;
 
     const loadedComments: Comment[] = [];
@@ -112,19 +144,67 @@ export function useProfileData() {
     });
     
     setAllComments(loadedComments);
+  };
+
+  // Load comments from localStorage after posts are loaded
+  useEffect(() => {
+    reloadComments();
+  }, [isClient, posts]);
+
+  // Listen for custom storage events (for same-tab updates)
+  useEffect(() => {
+    if (!isClient || posts.length === 0) return;
+
+    const handleCustomStorageChange = () => {
+      // Reload comments when they change in the same tab
+      const loadedComments: Comment[] = [];
+      loadedComments.push(...mockComments);
+      
+      const allPostIds = new Set<string>();
+      posts.forEach((post) => {
+        allPostIds.add(post.id);
+      });
+      
+      allPostIds.forEach((postId) => {
+        const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
+        if (savedComments) {
+          try {
+            const parsedComments = JSON.parse(savedComments);
+            if (Array.isArray(parsedComments)) {
+              parsedComments.forEach((comment: Comment) => {
+                if (!loadedComments.find(c => c.id === comment.id)) {
+                  loadedComments.push(comment);
+                }
+              });
+            }
+          } catch {
+            // Skip invalid comments
+          }
+        }
+      });
+      
+      setAllComments(loadedComments);
+    };
+
+    // Listen for custom event dispatched when comments are saved
+    window.addEventListener('commentsUpdated', handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener('commentsUpdated', handleCustomStorageChange);
+    };
   }, [isClient, posts]);
 
   // Save posts to localStorage whenever they change (client side only)
   useEffect(() => {
     if (isClient && typeof window !== 'undefined') {
-      localStorage.setItem('pageshare_posts', JSON.stringify(posts));
+      savePostsToStorage(posts);
     }
   }, [posts, isClient]);
 
   // Save watchlist to localStorage whenever it changes
   useEffect(() => {
     if (isClient && typeof window !== 'undefined') {
-      localStorage.setItem('pageshare_watchlist', JSON.stringify(watchlist));
+      saveToStorage('pageshare_watchlist', watchlist);
     }
   }, [watchlist, isClient]);
 

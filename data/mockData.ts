@@ -842,3 +842,25 @@ export const mockUsers: { [key: string]: {
     interests: ['ETFs', 'Mutual Funds', 'Stocks', 'Bonds'],
   },
 };
+
+// Mock follow relationships for demo users
+// Format: { follower: [list of users they follow] }
+export const mockFollows: { [key: string]: string[] } = {
+  'johndoe': ['sarahchen', 'mtorres', 'emw', 'alexj', 'davidk', 'jamesb', 'oliviaw'],
+  'sarahchen': ['johndoe', 'mtorres', 'emw', 'mariag', 'davidk', 'toma', 'emmad', 'oliviaw'],
+  'mtorres': ['johndoe', 'sarahchen', 'alexj', 'chrisl', 'ryant'],
+  'emw': ['sarahchen', 'mariag', 'davidk', 'rachelg', 'toma', 'emmad'],
+  'mariag': ['johndoe', 'sarahchen', 'emw', 'alexj', 'sophiem', 'oliviaw'],
+  'alexj': ['johndoe', 'mtorres', 'mariag', 'jamesb', 'chrisl', 'ryant'],
+  'davidk': ['johndoe', 'sarahchen', 'emw', 'rachelg', 'toma', 'emmad'],
+  'lisaw': ['sarahchen', 'mariag', 'sophiem', 'chrisl', 'noahw'],
+  'jamesb': ['johndoe', 'alexj', 'ryant', 'oliviaw'],
+  'rachelg': ['emw', 'davidk', 'toma', 'emmad', 'noahw'],
+  'toma': ['sarahchen', 'emw', 'davidk', 'rachelg', 'emmad'],
+  'sophiem': ['mariag', 'lisaw', 'oliviaw', 'noahw'],
+  'chrisl': ['mtorres', 'alexj', 'lisaw', 'ryant'],
+  'emmad': ['sarahchen', 'emw', 'davidk', 'rachelg', 'toma'],
+  'ryant': ['mtorres', 'alexj', 'jamesb', 'chrisl'],
+  'oliviaw': ['johndoe', 'sarahchen', 'mariag', 'jamesb', 'sophiem'],
+  'noahw': ['lisaw', 'rachelg', 'sophiem'],
+};

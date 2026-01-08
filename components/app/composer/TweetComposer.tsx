@@ -10,6 +10,11 @@ import { Grid } from '@giphy/react-components';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
 import { parseCashtags } from '@/utils/textFormatting';
+import { useMediaUpload } from '@/hooks/useMediaUpload';
+import { usePollBuilder } from '@/hooks/usePollBuilder';
+import { useEmojiPicker } from '@/hooks/useEmojiPicker';
+import { useCharacterCounter } from '@/hooks/useCharacterCounter';
+import { useGiphySearch } from '@/hooks/useGiphySearch';
 
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -85,21 +90,70 @@ export default function TweetComposer({
   const savedState = loadStateFromStorage();
   
   const [tweetText, setTweetText] = useState(savedState?.tweetText || '');
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
-  const [selectedGif, setSelectedGif] = useState<string | null>(savedState?.selectedGif || null);
   const [showGifPicker, setShowGifPicker] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showPoll, setShowPoll] = useState(savedState?.showPoll || false);
-  const [pollOptions, setPollOptions] = useState(savedState?.pollOptions || ['', '']);
-  const [pollDuration, setPollDuration] = useState(savedState?.pollDuration || 1);
-  const [gifSearchQuery, setGifSearchQuery] = useState('');
-  const [debouncedGifSearch, setDebouncedGifSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const maxLength = 280;
+
+  // Use hooks
+  const {
+    mediaFiles,
+    mediaPreviews,
+    selectedGif,
+    handleImageUpload,
+    handleRemoveMedia,
+    handleGifSelect,
+    clearMedia,
+    setSelectedGif,
+  } = useMediaUpload(savedState?.selectedGif || null);
+
+  const {
+    showPoll,
+    pollOptions,
+    pollDuration,
+    setShowPoll,
+    addPollOption,
+    removePollOption,
+    updatePollOption,
+    setPollDuration,
+    getPollData,
+    resetPoll,
+  } = usePollBuilder(
+    savedState?.showPoll || false,
+    savedState?.pollOptions || ['', ''],
+    savedState?.pollDuration || 1
+  );
+
+  const {
+    showEmojiPicker,
+    emojiPickerRef,
+    setShowEmojiPicker,
+    handleEmojiClick,
+  } = useEmojiPicker();
+
+  const { gifSearchQuery, debouncedGifSearch, setGifSearchQuery } = useGiphySearch();
+
+  const { remainingChars, isOverLimit, charPercentage } = useCharacterCounter({
+    maxLength,
+    text: tweetText,
+  });
+
+  // Handle GIF select with proper format
+  const handleGifSelectWrapper = (gif: any) => {
+    handleGifSelect(gif.images.original.url);
+    setShowGifPicker(false);
+  };
+
+  // Handle emoji click with proper format
+  const handleEmojiClickWrapper = (emojiData: any) => {
+    if (textareaRef.current) {
+      handleEmojiClick(emojiData.emoji, textareaRef);
+    } else {
+      setTweetText((prev: string) => prev + emojiData.emoji);
+    }
+    setShowEmojiPicker(false);
+  };
 
   // Sync overlay padding with textarea
   useEffect(() => {
@@ -141,14 +195,6 @@ export default function TweetComposer({
     sessionStorage.setItem('tweetComposerState', JSON.stringify(stateToSave));
   }, [tweetText, selectedGif, showPoll, pollOptions, pollDuration]);
 
-  // Debounce GIF search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedGifSearch(gifSearchQuery);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [gifSearchQuery]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,23 +205,17 @@ export default function TweetComposer({
       return;
     }
     
-    const poll = showPoll && pollOptions.filter((opt: string) => opt.trim()).length >= 2
-      ? { options: pollOptions.filter((opt: string) => opt.trim()), duration: pollDuration }
-      : undefined;
+    const poll = getPollData();
     
     onSubmit(
       tweetText,
       mediaFiles.length > 0 ? mediaFiles : undefined,
       selectedGif || undefined,
-      poll
+      poll || undefined
     );
     setTweetText('');
-    setMediaFiles([]);
-    setMediaPreviews([]);
-    setSelectedGif(null);
-    setShowPoll(false);
-    setPollOptions(['', '']);
-    setPollDuration(1);
+    clearMedia();
+    resetPoll();
     // Clear sessionStorage after successful submit
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('tweetComposerState');
@@ -185,60 +225,6 @@ export default function TweetComposer({
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    const newFiles = [...mediaFiles, ...imageFiles].slice(0, 4); // Max 4 images
-    setMediaFiles(newFiles);
-
-    // Create previews
-    newFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setMediaPreviews(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleRemoveMedia = (index: number) => {
-    setMediaFiles((prev: File[]) => prev.filter((_: File, i: number) => i !== index));
-    setMediaPreviews((prev: string[]) => prev.filter((_: string, i: number) => i !== index));
-  };
-
-  const handleGifSelect = (gif: any) => {
-    setSelectedGif(gif.images.original.url);
-    setShowGifPicker(false);
-  };
-
-  const handleEmojiClick = (emojiData: any) => {
-    setTweetText((prev: string) => prev + emojiData.emoji);
-    setShowEmojiPicker(false);
-  };
-
-  const addPollOption = () => {
-    if (pollOptions.length < 4) {
-      setPollOptions([...pollOptions, '']);
-    }
-  };
-
-  const removePollOption = (index: number) => {
-    if (pollOptions.length > 2) {
-      setPollOptions(pollOptions.filter((_: string, i: number) => i !== index));
-    }
-  };
-
-  const updatePollOption = (index: number, value: string) => {
-    const newOptions = [...pollOptions];
-    newOptions[index] = value;
-    setPollOptions(newOptions);
-  };
-
-  const remainingChars = maxLength - tweetText.length;
-  const isOverLimit = tweetText.length > maxLength;
-  const charPercentage = (tweetText.length / maxLength) * 100;
 
   const composerContent = (
     <form onSubmit={handleSubmit}>
@@ -417,8 +403,7 @@ export default function TweetComposer({
                 <button
                   type="button"
                   onClick={() => {
-                    setShowPoll(false);
-                    setPollOptions(['', '']);
+                    resetPoll();
                   }}
                   className="text-gray-400 hover:text-white"
                 >
@@ -525,7 +510,7 @@ export default function TweetComposer({
                   <div className="w-full">
                     <Grid
                       key={debouncedGifSearch} // Force re-render when debounced search changes
-                      onGifClick={handleGifSelect}
+                      onGifClick={handleGifSelectWrapper}
                       fetchGifs={(offset) => {
                         const searchQuery = debouncedGifSearch.trim();
                         if (searchQuery) {
@@ -551,7 +536,7 @@ export default function TweetComposer({
               <div className="absolute z-20 left-0 sm:left-auto sm:right-0">
                 <div className="bg-black border border-white/10 rounded-xl overflow-hidden shadow-xl">
                   <EmojiPicker
-                    onEmojiClick={handleEmojiClick}
+                    onEmojiClick={handleEmojiClickWrapper}
                     width={350}
                     height={400}
                   />
@@ -803,7 +788,7 @@ export default function TweetComposer({
               </div>
               <div className="max-h-[60vh] overflow-y-auto">
                 <EmojiPicker
-                  onEmojiClick={handleEmojiClick}
+                    onEmojiClick={handleEmojiClickWrapper}
                   width="100%"
                   height={400}
                 />

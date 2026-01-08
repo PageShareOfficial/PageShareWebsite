@@ -1,7 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Calendar, UserPlus } from 'lucide-react';
+import { Calendar, UserPlus, UserMinus } from 'lucide-react';
 import { User } from '@/types';
 
 interface ProfileUser extends User {
@@ -22,6 +23,7 @@ interface ProfileHeaderProps {
   };
   onEditProfile?: () => void;
   onFollow?: () => void;
+  isFollowing?: boolean;
 }
 
 const formatJoinedDate = (dateString: string) => {
@@ -36,7 +38,17 @@ export default function ProfileHeader({
   stats,
   onEditProfile,
   onFollow,
+  isFollowing = false,
 }: ProfileHeaderProps) {
+  const router = useRouter();
+
+  const handleFollowersClick = () => {
+    router.push(`/${profileUser.handle}/followers`);
+  };
+
+  const handleFollowingClick = () => {
+    router.push(`/${profileUser.handle}/followings`);
+  };
   return (
     <div className="px-4 py-6 md:px-6 md:py-8">
       <div className="flex flex-col md:flex-row gap-6">
@@ -78,10 +90,23 @@ export default function ProfileHeader({
               ) : (
                 <button
                   onClick={onFollow}
-                  className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-black rounded-lg font-semibold hover:bg-gray-100 transition-colors text-xs md:text-sm flex-shrink-0 flex items-center gap-1.5 md:gap-2"
+                  className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold transition-colors text-xs md:text-sm flex-shrink-0 flex items-center gap-1.5 md:gap-2 ${
+                    isFollowing
+                      ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                      : 'bg-white text-black hover:bg-gray-100'
+                  }`}
                 >
-                  <UserPlus className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span>Follow</span>
+                  {isFollowing ? (
+                    <>
+                      <UserMinus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <span>Following</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <span>Follow</span>
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -96,13 +121,21 @@ export default function ProfileHeader({
               <span className="font-semibold text-white">{stats.posts}</span>
               <span className="text-gray-400 ml-1">Posts</span>
             </div>
-            <div className="hover:underline cursor-pointer">
+            <div 
+              onClick={handleFollowingClick}
+              className="cursor-pointer relative group"
+            >
               <span className="font-semibold text-white">{profileUser.following || 0}</span>
               <span className="text-gray-400 ml-1">Following</span>
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
             </div>
-            <div className="hover:underline cursor-pointer">
+            <div 
+              onClick={handleFollowersClick}
+              className="cursor-pointer relative group"
+            >
               <span className="font-semibold text-white">{profileUser.followers || 0}</span>
               <span className="text-gray-400 ml-1">Followers</span>
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
             </div>
           </div>
 

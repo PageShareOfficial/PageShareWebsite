@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { isTweet } from '@/data/mockData';
 import { parseCashtags } from '@/utils/textFormatting';
 import PostHeader from './PostHeader';
@@ -24,6 +24,7 @@ interface PostCardProps {
   allPosts?: Post[]; // All posts array to look up original post by ID
   isDetailPage?: boolean; // If true, disable click navigation and hover effects
   repostedBy?: { displayName: string; handle: string } | null; // Who reposted this (for original posts)
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
 }
 
 export default function PostCard({
@@ -38,6 +39,7 @@ export default function PostCard({
   allPosts = [],
   isDetailPage = false,
   repostedBy = null,
+  onReportClick,
 }: PostCardProps) {
   const router = useRouter();
   
@@ -73,8 +75,6 @@ export default function PostCard({
   };
 
   const [isLiked, setIsLiked] = useState(getInitialLikedState());
-  const [showPostMenu, setShowPostMenu] = useState(false);
-  const postMenuRef = useRef<HTMLDivElement>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([]);
   
@@ -87,22 +87,6 @@ export default function PostCard({
     }
   }, [post.userInteractions.liked, originalPost?.userInteractions.liked]);
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (postMenuRef.current && !postMenuRef.current.contains(event.target as Node)) {
-        setShowPostMenu(false);
-      }
-    };
-
-    if (showPostMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showPostMenu]);
   
   // Check if current user has reposted this post (for button color persistence)
   // Note: Only normal reposts count, quote reposts are treated as new tweets
@@ -382,13 +366,10 @@ export default function PostCard({
               post={post}
               originalPost={originalPost}
               currentUserHandle={currentUserHandle}
-              showMenu={showPostMenu}
-              menuRef={postMenuRef}
-              onMenuToggle={() => setShowPostMenu(!showPostMenu)}
-              onMenuClose={() => setShowPostMenu(false)}
               repostedBy={repostedBy}
               onDelete={onDelete}
               onProfileClick={handleProfileClick}
+              onReportClick={onReportClick}
             />
 
             {/* Content */}

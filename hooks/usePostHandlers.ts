@@ -5,13 +5,14 @@ import { createNormalRepost, createQuoteRepost, incrementRepostCount } from '@/u
 import { createTweet } from '@/utils/tweetHelpers';
 import { User } from '@/types';
 
-interface UseProfileHandlersProps {
+interface UsePostHandlersProps {
   posts: Post[];
   setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
   currentUser: User;
+  onDeleteRedirect?: (postId: string) => void;
 }
 
-export function useProfileHandlers({ posts, setPosts, currentUser }: UseProfileHandlersProps) {
+export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect }: UsePostHandlersProps) {
   const [isQuoteRepostOpen, setIsQuoteRepostOpen] = useState(false);
   const [quoteRepostPostId, setQuoteRepostPostId] = useState<string | null>(null);
 
@@ -62,13 +63,7 @@ export function useProfileHandlers({ posts, setPosts, currentUser }: UseProfileH
     const originalPost = posts.find((p) => p.id === postId);
     if (!originalPost) return;
 
-    // Quote reposts - open composer
-    if (type === 'quote') {
-      setQuoteRepostPostId(postId);
-      setIsQuoteRepostOpen(true);
-      return;
-    }
-
+    // Check if user already reposted (for undo)
     if (type === 'normal' && hasUserReposted(postId)) {
       const userRepost = findUserRepost(postId);
       if (userRepost) {
@@ -94,7 +89,10 @@ export function useProfileHandlers({ posts, setPosts, currentUser }: UseProfileH
       return;
     }
 
-    if (type === 'normal') {
+    if (type === 'quote') {
+      setQuoteRepostPostId(postId);
+      setIsQuoteRepostOpen(true);
+    } else if (type === 'normal') {
       const postToRepost = isTweet(originalPost) && originalPost.repostType === 'quote' 
         ? originalPost 
         : originalPost;
@@ -132,7 +130,7 @@ export function useProfileHandlers({ posts, setPosts, currentUser }: UseProfileH
   };
 
   const handleComment = (postId: string) => {
-    // Handle comment action
+    // Handle comment action - can be overridden by components
   };
 
   const handleDelete = (postId: string) => {
@@ -145,6 +143,11 @@ export function useProfileHandlers({ posts, setPosts, currentUser }: UseProfileH
         return true;
       });
     });
+    
+    // Call redirect callback if provided
+    if (onDeleteRedirect) {
+      onDeleteRedirect(postId);
+    }
   };
 
   const handleVote = (postId: string, optionIndex: number) => {
@@ -224,13 +227,12 @@ export function useProfileHandlers({ posts, setPosts, currentUser }: UseProfileH
         displayName: currentUser.displayName,
         handle: currentUser.handle,
         avatar: currentUser.avatar,
-        badge: currentUser.badge,
+        badge: currentUser.badge || 'Verified',
       },
       quoteText: text,
     });
 
     if (repost) {
-      // Quote reposts increase the repost count but don't set the reposted flag
       const updatedWithCount = incrementRepostCount(posts, quoteRepostPostId);
       setPosts([repost, ...updatedWithCount]);
     }

@@ -54,6 +54,16 @@ export interface Comment {
   createdAt: string;
   likes: number;
   userLiked: boolean;
+  media?: string[]; // URLs of uploaded images
+  gifUrl?: string; // URL of selected GIF
+  poll?: {
+    options: string[];
+    duration: number; // in days
+    createdAt: string; // when poll was created
+    votes?: { [optionIndex: number]: number }; // votes per option
+    userVote?: number; // index of option user voted for (undefined if not voted)
+    isFinished: boolean; // true if poll has ended
+  };
   replies?: Comment[]; // Nested replies (optional for now)
 }
 

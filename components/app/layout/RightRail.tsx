@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { RefreshCw, Plus } from 'lucide-react';
 import { WatchlistItem } from '@/types';
 import { updateWatchlistPrices } from '@/utils/watchlistApi';
 
@@ -18,6 +19,7 @@ export default function RightRail({
   onUpgradeLabs,
   onUpdateWatchlist,
 }: RightRailProps) {
+  const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -40,7 +42,12 @@ export default function RightRail({
         {/* Watchlist Card */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Watchlist</h2>
+            <button
+              onClick={() => router.push('/watchlist')}
+              className="text-lg font-semibold text-white hover:text-cyan-400 transition-colors cursor-pointer"
+            >
+              Watchlist
+            </button>
             <div className="flex items-center gap-2">
               {watchlist.length > 0 && (
                 <button
@@ -59,7 +66,7 @@ export default function RightRail({
                 aria-label="Manage watchlist"
                 title="Manage watchlist"
               >
-                <Settings className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>

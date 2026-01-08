@@ -36,6 +36,53 @@ export const getUserByUsername = (username: string): ProfileUser | null => {
   };
 };
 
+// Get current user with updated profile from localStorage
+export const getCurrentUser = (): User => {
+  if (typeof window === 'undefined') {
+    // SSR fallback
+    const mockUser = mockUsers['johndoe'];
+    return {
+      id: mockUser.id,
+      displayName: mockUser.displayName,
+      handle: mockUser.handle,
+      avatar: mockUser.avatar,
+      badge: mockUser.badge,
+    };
+  }
+
+  // Default current user handle
+  const currentUserHandle = 'johndoe';
+  const profileKey = `pageshare_profile_${currentUserHandle.toLowerCase()}`;
+  const savedProfile = localStorage.getItem(profileKey);
+  
+  // Get base user from mockUsers
+  const baseUser = mockUsers[currentUserHandle.toLowerCase()] || mockUsers['johndoe'];
+  
+  if (savedProfile) {
+    try {
+      const saved = JSON.parse(savedProfile);
+      // Merge saved profile with base user, prioritizing saved avatar and displayName
+      return {
+        id: baseUser.id,
+        displayName: saved.displayName || baseUser.displayName,
+        handle: baseUser.handle,
+        avatar: saved.avatar || baseUser.avatar,
+        badge: baseUser.badge,
+      };
+    } catch {
+      // If parsing fails, use base user
+    }
+  }
+  
+  return {
+    id: baseUser.id,
+    displayName: baseUser.displayName,
+    handle: baseUser.handle,
+    avatar: baseUser.avatar,
+    badge: baseUser.badge,
+  };
+};
+
 // Calculate user stats from posts
 export const calculateUserStats = (username: string, posts: Post[]) => {
   const userPosts = posts.filter((post) => {

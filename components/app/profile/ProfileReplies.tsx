@@ -13,6 +13,9 @@ interface ProfileRepliesProps {
   hasUserReposted: (postId: string) => boolean;
   currentUserHandle: string;
   onCommentLike?: (commentId: string) => void;
+  onCommentPollVote?: (commentId: string, optionIndex: number) => void;
+  onCommentDelete?: (commentId: string, postId: string) => void;
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string) => void;
 }
 
 export default function ProfileReplies({
@@ -24,7 +27,10 @@ export default function ProfileReplies({
   onVote,
   hasUserReposted,
   onCommentLike,
+  onCommentPollVote,
+  onCommentDelete,
   currentUserHandle,
+  onReportClick,
 }: ProfileRepliesProps) {
   if (comments.length === 0) {
     return (
@@ -46,6 +52,8 @@ export default function ProfileReplies({
             originalPost={originalPost}
             reply={comment}
             onCommentLike={onCommentLike}
+            onCommentPollVote={onCommentPollVote}
+            onCommentDelete={onCommentDelete}
             currentUserHandle={currentUserHandle}
             allPosts={posts}
             onLike={onLike}
@@ -53,6 +61,7 @@ export default function ProfileReplies({
             onComment={onComment}
             onVote={onVote}
             hasUserReposted={hasUserReposted}
+            onReportClick={onReportClick}
           />
         );
       })}

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Pencil } from 'lucide-react';
 import PostCard from '../post/PostCard';
 import TweetComposer from '../composer/TweetComposer';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface FeedProps {
   posts: Post[];
@@ -20,6 +21,7 @@ interface FeedProps {
   onNewTweet?: (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => void;
   allPosts?: Post[]; // All posts for looking up original posts in quote reposts
   showAllReposts?: boolean; // If true, show all reposts including normal reposts by current user (for profile pages)
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
 }
 
 export default function Feed({
@@ -35,15 +37,10 @@ export default function Feed({
   onNewTweet,
   allPosts,
   showAllReposts = false,
+  onReportClick,
 }: FeedProps) {
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
-
-  // Mock current user - in real implementation, get from session/auth context
-  const currentUser = {
-    displayName: 'John Doe',
-    handle: 'johndoe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
-  };
+  const { currentUser } = useCurrentUser();
 
   const handleTweetSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
     if (onNewTweet) {
@@ -227,6 +224,7 @@ export default function Feed({
                   currentUserHandle={currentUserHandle}
                   allPosts={allPosts || posts}
                   repostedBy={repostedBy}
+                  onReportClick={onReportClick}
                 />
                 {index < filteredPosts.length - 1 && (
                   <div className="border-b border-white/10" />
