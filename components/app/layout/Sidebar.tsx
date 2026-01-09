@@ -140,7 +140,7 @@ export default function Sidebar() {
       <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] flex-shrink-0 z-10">
         {/* Logo Header */}
         <div className="p-4 lg:pl-2 lg:pr-2 flex items-center justify-center lg:justify-start">
-          <Link href="/home" className="flex items-center">
+          <Link href="/home" className="flex items-center lg:px-6">
             <Image
               src="/pageshare_final.png"
               alt="PageShare Logo"
