@@ -107,7 +107,7 @@ export default function RightRail({
 
         {/* Labs Pro Card */}
         <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-white mb-2">Labs Pro</h2>
+          <h2 className="text-lg font-semibold text-white mb-2">Premium</h2>
           <p className="text-sm text-gray-300 mb-4">
             Premium AI tools, deeper filters, and credibility analytics.
           </p>
