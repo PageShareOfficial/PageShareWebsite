@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, UserPlus, Pencil, List } from 'lucide-react';
+import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, UserPlus, Pencil, List, Bookmark, Settings } from 'lucide-react';
 import { MdOutlineWorkspacePremium } from 'react-icons/md';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import TweetComposer from './TweetComposer';
+import TweetComposer from '../composer/TweetComposer';
+import { getCurrentUser } from '@/utils/profileUtils';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -14,14 +15,37 @@ export default function Sidebar() {
   const [activeNav, setActiveNav] = useState('Home');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const desktopMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  // Mock user data - in real implementation, get from session/auth context
-  const currentUser = {
-    displayName: 'John Doe',
-    handle: 'johndoe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
-  };
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+
+  // Update current user when profile changes
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+    
+    // Listen for profile updates
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('pageshare_profile_')) {
+        setCurrentUser(getCurrentUser());
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event (same-tab updates)
+    const handleProfileUpdate = () => {
+      setCurrentUser(getCurrentUser());
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -29,16 +53,19 @@ export default function Sidebar() {
       if (desktopMenuRef.current && !desktopMenuRef.current.contains(event.target as Node)) {
         setIsProfileMenuOpen(false);
       }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setIsMoreMenuOpen(false);
+      }
     };
 
-    if (isProfileMenuOpen) {
+    if (isProfileMenuOpen || isMoreMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isProfileMenuOpen]);
+  }, [isProfileMenuOpen, isMoreMenuOpen]);
 
   // Handle scroll for watchlist button fade
   useEffect(() => {
@@ -79,21 +106,31 @@ export default function Sidebar() {
     { name: 'Discover', icon: Search, href: '/discover' },
     { name: 'Labs', icon: FlaskConical, href: '/labs' },
     { name: 'Watchlist', icon: List, href: '/watchlist' },
-    { name: 'Profile', icon: User, href: '/profile' },
+    { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks' },
+    { name: 'Settings', icon: Settings, href: '/settings' },
+    { name: 'Profile', icon: User, href: `/${currentUser.handle}` },
     { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans' },
   ];
 
-  // Desktop nav items (without watchlist since it's in right rail, but with Premium)
+  // Desktop nav items (without watchlist since it's in right rail, but with Premium and Settings)
   const desktopNavItems = allNavItems.filter(item => item.name !== 'Watchlist');
   
-  // Mobile nav items (with watchlist, but without Premium - Premium is only for desktop/tablet)
-  const mobileNavItems = allNavItems.filter(item => item.name !== 'Premium');
+  // Mobile nav items: Home, Discover, Labs, Watchlist, More, Profile (More will have dropdown with Settings and Bookmarks)
+  const mobileNavItems = [
+    { name: 'Home', icon: Home, href: '/home' },
+    { name: 'Discover', icon: Search, href: '/discover' },
+    { name: 'Labs', icon: FlaskConical, href: '/labs' },
+    { name: 'Watchlist', icon: List, href: '/watchlist' },
+    { name: 'More', icon: MoreHorizontal, href: '#', isMore: true },
+    { name: 'Profile', icon: User, href: `/${currentUser.handle}` },
+  ];
   
-  // Tablet nav items (without watchlist since it's a floating button, but with Premium)
+  // Tablet nav items (without watchlist since it's a floating button, but with Premium and Settings)
   const tabletNavItems = allNavItems.filter(item => item.name !== 'Watchlist');
 
   // Determine active nav based on current pathname
   const getActiveNav = (href: string) => {
+    if (href === '#') return false;
     return pathname === href || (href === '/home' && pathname === '/');
   };
 
@@ -234,9 +271,61 @@ export default function Sidebar() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center justify-around h-16 max-w-full">
-          {mobileNavItems.map((item: typeof allNavItems[0]) => {
+          {mobileNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = getActiveNav(item.href);
+            const isActive = item.isMore ? false : getActiveNav(item.href);
+            const isMore = (item as any).isMore;
+            
+            if (isMore) {
+              return (
+                <div key={item.name} className="relative flex-1 h-full" ref={moreMenuRef}>
+                  <button
+                    onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                    className={`flex flex-col items-center justify-center w-full h-full transition-colors min-w-0 ${
+                      isMoreMenuOpen
+                        ? 'text-white'
+                        : 'text-gray-400'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 mb-1 flex-shrink-0" />
+                    <span className="text-[10px] font-medium truncate px-1">{item.name}</span>
+                  </button>
+                  
+                  {/* More Menu Dropdown */}
+                  {isMoreMenuOpen && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
+                      <Link
+                        href="/bookmarks"
+                        onClick={() => {
+                          setIsMoreMenuOpen(false);
+                          setActiveNav('Bookmarks');
+                        }}
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                          getActiveNav('/bookmarks') ? 'bg-white/10 text-white' : 'text-white'
+                        }`}
+                      >
+                        <Bookmark className="w-4 h-4" />
+                        <span className="text-sm">Bookmarks</span>
+                      </Link>
+                      <Link
+                        href="/settings"
+                        onClick={() => {
+                          setIsMoreMenuOpen(false);
+                          setActiveNav('Settings');
+                        }}
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
+                          getActiveNav('/settings') ? 'bg-white/10 text-white' : 'text-white'
+                        }`}
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span className="text-sm">Settings</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            
             return (
               <Link
                 key={item.name}

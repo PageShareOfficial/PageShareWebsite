@@ -1,33 +1,29 @@
 'use client';
 
 import Image from 'next/image';
-import { MoreHorizontal, Repeat2 } from 'lucide-react';
+import { Repeat2 } from 'lucide-react';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
-import PostMenu from './PostMenu';
+import ContentMenu from '@/components/app/common/ContentMenu';
 
 interface PostHeaderProps {
   post: Post;
   originalPost?: Post;
   currentUserHandle?: string;
-  showMenu: boolean;
-  menuRef: React.RefObject<HTMLDivElement>;
-  onMenuToggle: () => void;
-  onMenuClose: () => void;
   repostedBy?: { displayName: string; handle: string } | null; // Who reposted this (for original posts)
   onDelete?: (postId: string) => void;
+  onProfileClick?: (e: React.MouseEvent, handle: string) => void;
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
 }
 
 export default function PostHeader({
   post,
   originalPost,
   currentUserHandle,
-  showMenu,
-  menuRef,
-  onMenuToggle,
-  onMenuClose,
   repostedBy,
   onDelete,
+  onProfileClick,
+  onReportClick,
 }: PostHeaderProps) {
   return (
     <>
@@ -51,12 +47,17 @@ export default function PostHeader({
         </div>
       )}
       
-      <div className="flex items-center justify-between mb-1 w-full">
+        <div className="flex items-center justify-between mb-1 w-full">
         <div className="flex items-center space-x-2">
           {isTweet(post) && post.repostType === 'normal' && originalPost ? (
             // For normal reposts, show original author's info
             <>
-              <span className="font-semibold text-white">{originalPost.author.displayName}</span>
+              <span 
+                className="font-semibold text-white cursor-pointer hover:underline"
+                onClick={(e) => onProfileClick && onProfileClick(e, originalPost.author.handle)}
+              >
+                {originalPost.author.displayName}
+              </span>
               <span className="text-sm text-gray-400">@{originalPost.author.handle}</span>
               {originalPost.author.badge && (
                 <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
@@ -67,7 +68,12 @@ export default function PostHeader({
           ) : (
             // For normal posts or quote reposts, show current author's info
             <>
-              <span className="font-semibold text-white">{post.author.displayName}</span>
+              <span 
+                className="font-semibold text-white cursor-pointer hover:underline"
+                onClick={(e) => onProfileClick && onProfileClick(e, post.author.handle)}
+              >
+                {post.author.displayName}
+              </span>
               <span className="text-sm text-gray-400">@{post.author.handle}</span>
               {post.author.badge && (
                 <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
@@ -80,28 +86,16 @@ export default function PostHeader({
         </div>
         
         {/* 3-dot Menu Button */}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onMenuToggle();
-            }}
-            className="p-1.5 hover:bg-cyan-400/10 rounded-full transition-colors text-gray-400 hover:text-cyan-400"
-            aria-label="More options"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-          
-          {/* Dropdown Menu */}
-          {showMenu && (
-            <PostMenu
-              post={post}
-              currentUserHandle={currentUserHandle}
-              onClose={onMenuClose}
-              onDelete={onDelete}
-            />
-          )}
-        </div>
+        <ContentMenu
+          type="post"
+          authorHandle={post.author.handle}
+          authorDisplayName={post.author.displayName}
+          currentUserHandle={currentUserHandle}
+          linkUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/${post.author.handle}/posts/${post.id}`}
+          contentId={post.id}
+          onDelete={onDelete ? () => onDelete(post.id) : undefined}
+          onReportClick={onReportClick}
+        />
       </div>
     </>
   );

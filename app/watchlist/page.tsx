@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/app/Sidebar';
-import Topbar from '@/components/app/Topbar';
-import ManageWatchlistModal from '@/components/app/ManageWatchlistModal';
+import Sidebar from '@/components/app/layout/Sidebar';
+import Topbar from '@/components/app/layout/Topbar';
+import RightRail from '@/components/app/layout/RightRail';
+import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
+import Loading from '@/components/app/common/Loading';
 import { WatchlistItem } from '@/types';
-import { Settings, Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { updateWatchlistPrices } from '@/utils/watchlistApi';
 
 export default function WatchlistPage() {
@@ -54,7 +56,7 @@ export default function WatchlistPage() {
   if (!isClient) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <Loading />
       </div>
     );
   }
@@ -73,8 +75,8 @@ export default function WatchlistPage() {
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
             <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
+              {/* Header - Desktop and Tablet */}
+              <div className="hidden md:flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-white">Watchlist</h1>
                 <div className="flex items-center gap-2">
                   {watchlist.length > 0 && (
@@ -86,7 +88,44 @@ export default function WatchlistPage() {
                       title="Refresh prices"
                     >
                       <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                      <span className="hidden md:inline">Refresh</span>
+                      <span>Refresh</span>
+                    </button>
+                  )}
+                  {/* Manage button - Desktop (lg and above) with Plus icon and Manage text */}
+                  <button
+                    onClick={() => setIsManageModalOpen(true)}
+                    className="hidden lg:flex p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors items-center gap-2"
+                    aria-label="Manage watchlist"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Manage</span>
+                  </button>
+                  {/* Manage button - Tablet (md to lg) with Plus icon and Manage text */}
+                  <button
+                    onClick={() => setIsManageModalOpen(true)}
+                    className="hidden md:flex lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors items-center gap-2"
+                    aria-label="Manage watchlist"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Manage</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Header with Refresh and Manage Buttons */}
+              <div className="md:hidden flex items-center justify-between mb-6">
+                <h1 className="text-xl font-bold text-white">Watchlist</h1>
+                <div className="flex items-center gap-2">
+                  {watchlist.length > 0 && (
+                    <button
+                      onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Refresh watchlist"
+                      title="Refresh prices"
+                    >
+                      <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      <span className="text-sm">Refresh</span>
                     </button>
                   )}
                   <button
@@ -94,8 +133,8 @@ export default function WatchlistPage() {
                     className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2"
                     aria-label="Manage watchlist"
                   >
-                    <Settings className="w-5 h-5" />
-                    <span className="hidden md:inline">Manage</span>
+                    <Plus className="w-5 h-5" />
+                    <span className="text-sm">Manage</span>
                   </button>
                 </div>
               </div>
@@ -160,6 +199,16 @@ export default function WatchlistPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
+          <RightRail
+            watchlist={watchlist}
+            onManageWatchlist={() => setIsManageModalOpen(true)}
+            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpdateWatchlist={setWatchlist}
+          />
         </div>
       </div>
 
