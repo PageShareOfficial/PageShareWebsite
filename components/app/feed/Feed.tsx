@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Pencil } from 'lucide-react';
-import PostCard from './PostCard';
-import TweetComposer from './TweetComposer';
+import PostCard from '../post/PostCard';
+import TweetComposer from '../composer/TweetComposer';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface FeedProps {
   posts: Post[];
@@ -18,6 +19,9 @@ interface FeedProps {
   hasUserReposted?: (postId: string) => boolean;
   currentUserHandle?: string;
   onNewTweet?: (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => void;
+  allPosts?: Post[]; // All posts for looking up original posts in quote reposts
+  showAllReposts?: boolean; // If true, show all reposts including normal reposts by current user (for profile pages)
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
 }
 
 export default function Feed({
@@ -31,15 +35,12 @@ export default function Feed({
   hasUserReposted,
   currentUserHandle,
   onNewTweet,
+  allPosts,
+  showAllReposts = false,
+  onReportClick,
 }: FeedProps) {
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
-
-  // Mock current user - in real implementation, get from session/auth context
-  const currentUser = {
-    displayName: 'John Doe',
-    handle: 'johndoe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
-  };
+  const { currentUser } = useCurrentUser();
 
   const handleTweetSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
     if (onNewTweet) {
@@ -51,25 +52,29 @@ export default function Feed({
 
   return (
     <main className="w-full bg-black">
-      {/* Tweet Composer - Desktop & Tablet Only */}
-      <div className="hidden md:block">
-        <TweetComposer
-          currentUser={currentUser}
-          onSubmit={handleTweetSubmit}
-        />
-      </div>
+      {/* Tweet Composer - Desktop & Tablet Only - Only show if onNewTweet is provided */}
+      {onNewTweet && (
+        <div className="hidden md:block">
+          <TweetComposer
+            currentUser={currentUser}
+            onSubmit={handleTweetSubmit}
+          />
+        </div>
+      )}
 
-      {/* Floating Post Button - Mobile Only */}
-      <button
-        onClick={() => setIsComposerModalOpen(true)}
-        className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 bg-white text-black rounded-full shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
-        aria-label="New post"
-      >
-        <Pencil className="w-6 h-6" />
-      </button>
+      {/* Floating Post Button - Mobile Only - Only show if onNewTweet is provided */}
+      {onNewTweet && (
+        <button
+          onClick={() => setIsComposerModalOpen(true)}
+          className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 bg-white text-black rounded-full shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
+          aria-label="New post"
+        >
+          <Pencil className="w-6 h-6" />
+        </button>
+      )}
 
       {/* Tweet Composer Modal - Mobile */}
-      {isComposerModalOpen && (
+      {onNewTweet && isComposerModalOpen && (
         <TweetComposer
           currentUser={currentUser}
           onSubmit={handleTweetSubmit}
@@ -82,6 +87,11 @@ export default function Feed({
       <div role="feed" aria-label="Post feed">
         {posts
           .filter((post) => {
+            // If showAllReposts is true (for profile pages), show all posts without filtering
+            if (showAllReposts) {
+              return true;
+            }
+            
             // Filter logic:
             // 1. Show your reposts (with "You reposted" indicator)
             // 2. Hide self-reposts from your feed (when you repost your own post)
@@ -104,7 +114,12 @@ export default function Feed({
               // For normal reposts: 
               // - Hide YOUR repost entry from YOUR feed (show original post instead)
               // - Show OTHER USERS' repost entries (so followers see your reposts)
+              // - Unless showAllReposts is true (for profile pages)
               if (post.repostType === 'normal') {
+                if (showAllReposts) {
+                  // For profile pages, show all reposts
+                  return true;
+                }
                 if (currentUserHandle && post.author.handle === currentUserHandle) {
                   return false; // Hide your normal repost entry from your feed, original post will be shown instead
                 }
@@ -207,8 +222,9 @@ export default function Feed({
                   onDelete={onDelete}
                   hasUserReposted={hasUserReposted}
                   currentUserHandle={currentUserHandle}
-                  allPosts={posts}
+                  allPosts={allPosts || posts}
                   repostedBy={repostedBy}
+                  onReportClick={onReportClick}
                 />
                 {index < filteredPosts.length - 1 && (
                   <div className="border-b border-white/10" />

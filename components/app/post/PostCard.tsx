@@ -1,15 +1,16 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { isTweet } from '@/data/mockData';
 import { parseCashtags } from '@/utils/textFormatting';
 import PostHeader from './PostHeader';
 import PostActions from './PostActions';
 import PostMedia from './PostMedia';
 import PollComponent from './PollComponent';
-import ImageViewerModal from './ImageViewerModal';
+import ImageViewerModal from '../modals/ImageViewerModal';
 
 interface PostCardProps {
   post: Post;
@@ -23,6 +24,7 @@ interface PostCardProps {
   allPosts?: Post[]; // All posts array to look up original post by ID
   isDetailPage?: boolean; // If true, disable click navigation and hover effects
   repostedBy?: { displayName: string; handle: string } | null; // Who reposted this (for original posts)
+  onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
 }
 
 export default function PostCard({
@@ -37,7 +39,10 @@ export default function PostCard({
   allPosts = [],
   isDetailPage = false,
   repostedBy = null,
+  onReportClick,
 }: PostCardProps) {
+  const router = useRouter();
+  
   // Helper function to get original post by ID
   const getOriginalPost = (): Post | undefined => {
     if (isTweet(post) && post.repostType && post.originalPostId) {
@@ -49,6 +54,18 @@ export default function PostCard({
   // Get original post for reposts
   const originalPost = getOriginalPost();
   
+  // Navigate to user profile
+  const handleProfileClick = (e: React.MouseEvent, handle: string) => {
+    e.stopPropagation();
+    router.push(`/${handle}`);
+  };
+  
+  // Navigate to quoted post detail page
+  const handleQuotedPostClick = (e: React.MouseEvent, originalPost: Post) => {
+    e.stopPropagation();
+    router.push(`/${originalPost.author.handle}/posts/${originalPost.id}`);
+  };
+  
   // For normal reposts, check if original post is liked
   const getInitialLikedState = () => {
     if (isTweet(post) && post.repostType === 'normal' && originalPost) {
@@ -58,8 +75,6 @@ export default function PostCard({
   };
 
   const [isLiked, setIsLiked] = useState(getInitialLikedState());
-  const [showPostMenu, setShowPostMenu] = useState(false);
-  const postMenuRef = useRef<HTMLDivElement>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([]);
   
@@ -72,22 +87,6 @@ export default function PostCard({
     }
   }, [post.userInteractions.liked, originalPost?.userInteractions.liked]);
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (postMenuRef.current && !postMenuRef.current.contains(event.target as Node)) {
-        setShowPostMenu(false);
-      }
-    };
-
-    if (showPostMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showPostMenu]);
   
   // Check if current user has reposted this post (for button color persistence)
   // Note: Only normal reposts count, quote reposts are treated as new tweets
@@ -182,16 +181,31 @@ export default function PostCard({
               
               {/* Original Tweet Card */}
               {originalPost && (
-                <div className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                <div 
+                  className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+                  onClick={(e) => handleQuotedPostClick(e, originalPost)}
+                >
                   <div className="flex items-center space-x-2 mb-2">
                     <Image
                       src={originalPost.author.avatar}
                       alt={originalPost.author.displayName}
                       width={20}
                       height={20}
-                      className="w-5 h-5 rounded-full"
+                      className="w-5 h-5 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProfileClick(e, originalPost.author.handle);
+                      }}
                     />
-                    <span className="font-semibold text-white text-sm">{originalPost.author.displayName}</span>
+                    <span 
+                      className="font-semibold text-white text-sm cursor-pointer hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProfileClick(e, originalPost.author.handle);
+                      }}
+                    >
+                      {originalPost.author.displayName}
+                    </span>
                     <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
                     {originalPost.author.badge && (
                       <span className="px-1 py-0.5 text-[9px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
@@ -338,19 +352,24 @@ export default function PostCard({
             alt={post.author.displayName}
             width={40}
             height={40}
-            className="w-10 h-10 rounded-full flex-shrink-0"
+            className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              const authorHandle = (isTweet(post) && post.repostType === 'normal' && originalPost) 
+                ? originalPost.author.handle 
+                : post.author.handle;
+              handleProfileClick(e, authorHandle);
+            }}
           />
           <div className="flex-1 min-w-0">
             <PostHeader
               post={post}
               originalPost={originalPost}
               currentUserHandle={currentUserHandle}
-              showMenu={showPostMenu}
-              menuRef={postMenuRef}
-              onMenuToggle={() => setShowPostMenu(!showPostMenu)}
-              onMenuClose={() => setShowPostMenu(false)}
               repostedBy={repostedBy}
               onDelete={onDelete}
+              onProfileClick={handleProfileClick}
+              onReportClick={onReportClick}
             />
 
             {/* Content */}
