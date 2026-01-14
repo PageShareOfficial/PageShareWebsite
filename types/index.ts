@@ -44,6 +44,7 @@ export interface WatchlistItem {
   name: string;
   change: number; // percentage
   price: number;
+  image?: string; // Logo/image URL
 }
 
 export interface Comment {

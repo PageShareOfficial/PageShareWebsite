@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Pencil } from 'lucide-react';
+import { useState } from 'react';
+import { Pencil, RefreshCw } from 'lucide-react';
 import PostCard from '../post/PostCard';
 import TweetComposer from '../composer/TweetComposer';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 
 interface FeedProps {
   posts: Post[];
@@ -22,6 +22,8 @@ interface FeedProps {
   allPosts?: Post[]; // All posts for looking up original posts in quote reposts
   showAllReposts?: boolean; // If true, show all reposts including normal reposts by current user (for profile pages)
   onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
+  error?: boolean; // If true, show error state
+  onRefresh?: () => void; // Callback to refresh/retry loading posts
 }
 
 export default function Feed({
@@ -38,6 +40,8 @@ export default function Feed({
   allPosts,
   showAllReposts = false,
   onReportClick,
+  error = false,
+  onRefresh,
 }: FeedProps) {
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
   const { currentUser } = useCurrentUser();
@@ -83,10 +87,27 @@ export default function Feed({
         />
       )}
 
+      {/* Error State */}
+      {error && (
+        <div className="text-center py-12 px-4">
+          <p className="text-red-400 text-lg mb-4">Something went wrong</p>
+          <p className="text-gray-400 text-sm mb-6">Please try again</p>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Refresh
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Posts */}
-      <div role="feed" aria-label="Post feed">
-        {posts
-          .filter((post) => {
+      {!error && (
+        <div role="feed" aria-label="Post feed">
+          {posts.filter((post) => {
             // If showAllReposts is true (for profile pages), show all posts without filtering
             if (showAllReposts) {
               return true;
@@ -232,7 +253,8 @@ export default function Feed({
               </div>
             );
           })}
-      </div>
+        </div>
+      )}
     </main>
   );
 }

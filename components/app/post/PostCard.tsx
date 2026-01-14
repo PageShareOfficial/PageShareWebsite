@@ -1,16 +1,18 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
 import { useState, useEffect } from 'react';
 import { isTweet } from '@/data/mockData';
-import { parseCashtags } from '@/utils/textFormatting';
+import { parseCashtags } from '@/utils/core/textFormatting';
+import { navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
 import PostActions from './PostActions';
 import PostMedia from './PostMedia';
 import PollComponent from './PollComponent';
 import ImageViewerModal from '../modals/ImageViewerModal';
+import UserBadge from '../common/UserBadge';
+import AvatarWithFallback from '../common/AvatarWithFallback';
 
 interface PostCardProps {
   post: Post;
@@ -57,7 +59,7 @@ export default function PostCard({
   // Navigate to user profile
   const handleProfileClick = (e: React.MouseEvent, handle: string) => {
     e.stopPropagation();
-    router.push(`/${handle}`);
+    navigateToProfile(handle, router);
   };
   
   // Navigate to quoted post detail page
@@ -159,10 +161,10 @@ export default function PostCard({
     // For normal reposts, navigate to original post's comment page
     if (isTweet(post) && post.repostType === 'normal' && originalPost) {
       const username = originalPost.author.handle;
-      window.location.href = `/${username}/posts/${originalPost.id}`;
+      router.push(`/${username}/posts/${originalPost.id}`);
     } else {
       const username = post.author.handle;
-      window.location.href = `/${username}/posts/${post.id}`;
+      router.push(`/${username}/posts/${post.id}`);
     }
   };
 
@@ -186,17 +188,20 @@ export default function PostCard({
                   onClick={(e) => handleQuotedPostClick(e, originalPost)}
                 >
                   <div className="flex items-center space-x-2 mb-2">
-                    <Image
-                      src={originalPost.author.avatar}
-                      alt={originalPost.author.displayName}
-                      width={20}
-                      height={20}
-                      className="w-5 h-5 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    <div
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleProfileClick(e, originalPost.author.handle);
                       }}
-                    />
+                    >
+                      <AvatarWithFallback
+                        src={originalPost.author.avatar}
+                        alt={originalPost.author.displayName}
+                        size={20}
+                        className="w-5 h-5"
+                      />
+                    </div>
                     <span 
                       className="font-semibold text-white text-sm cursor-pointer hover:underline"
                       onClick={(e) => {
@@ -208,9 +213,7 @@ export default function PostCard({
                     </span>
                     <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
                     {originalPost.author.badge && (
-                      <span className="px-1 py-0.5 text-[9px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                        {originalPost.author.badge}
-                      </span>
+                      <UserBadge badge={originalPost.author.badge} size="sm" />
                     )}
                     <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
                   </div>
@@ -337,7 +340,7 @@ export default function PostCard({
       return;
     }
     const username = post.author.handle;
-    window.location.href = `/${username}/posts/${post.id}`;
+    router.push(`/${username}/posts/${post.id}`);
   };
 
   return (
@@ -347,12 +350,8 @@ export default function PostCard({
         onClick={handlePostClick}
       >
         <div className="flex items-start space-x-3">
-          <Image
-            src={post.author.avatar}
-            alt={post.author.displayName}
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          <div
+            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               const authorHandle = (isTweet(post) && post.repostType === 'normal' && originalPost) 
@@ -360,7 +359,13 @@ export default function PostCard({
                 : post.author.handle;
               handleProfileClick(e, authorHandle);
             }}
-          />
+          >
+            <AvatarWithFallback
+              src={post.author.avatar}
+              alt={post.author.displayName}
+              size={40}
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <PostHeader
               post={post}

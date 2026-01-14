@@ -1,42 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { GiBinoculars } from 'react-icons/gi';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import { WatchlistItem } from '@/types';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
 
 export default function LabsPage() {
+  const router = useRouter();
   const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  // Load watchlist from localStorage on client side only (after mount)
-  useEffect(() => {
-    setIsClient(true);
-    
-    // Load watchlist
-    const savedWatchlist = localStorage.getItem('pageshare_watchlist');
-    if (savedWatchlist) {
-      try {
-        const parsedWatchlist = JSON.parse(savedWatchlist);
-        if (Array.isArray(parsedWatchlist)) {
-          setWatchlist(parsedWatchlist);
-        }
-      } catch {
-        // If parsing fails, keep empty watchlist
-      }
-    }
-  }, []);
-
-  // Save watchlist to localStorage whenever it changes (client side only)
-  useEffect(() => {
-    if (isClient && typeof window !== 'undefined') {
-      localStorage.setItem('pageshare_watchlist', JSON.stringify(watchlist));
-    }
-  }, [watchlist, isClient]);
+  const { watchlist, setWatchlist } = useWatchlist();
 
   return (
     <div className="min-h-screen bg-black">
@@ -47,7 +23,7 @@ export default function LabsPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+          <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
@@ -82,7 +58,7 @@ export default function LabsPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

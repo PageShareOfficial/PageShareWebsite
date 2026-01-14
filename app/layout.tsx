@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ErrorBoundaryWrapper from "@/components/ErrorBoundaryWrapper";
 
 export const metadata: Metadata = {
   title: "PageShare",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-black">
       <body className="bg-black">
-        {children}
+        <ErrorBoundaryWrapper>
+          {children}
+        </ErrorBoundaryWrapper>
       </body>
     </html>
   );

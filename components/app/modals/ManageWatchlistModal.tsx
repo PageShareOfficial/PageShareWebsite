@@ -1,9 +1,19 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Trash2, Loader2, Search } from 'lucide-react';
 import { WatchlistItem } from '@/types';
-import { fetchTickerData, searchTickers, SearchSuggestion } from '@/utils/stockApi';
+import { fetchStockData, fetchCryptoData, SearchSuggestion, StockData } from '@/utils/api/stockApi';
+import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
+import ImageWithFallback from '@/components/app/common/ImageWithFallback';
+import { useClickOutside } from '@/hooks/common/useClickOutside';
+import Modal from '@/components/app/common/Modal';
+import { getInitials } from '@/utils/core/textFormatting';
+import Skeleton from '@/components/app/common/Skeleton';
+import TickerTypeBadge from '@/components/app/common/TickerTypeBadge';
+import EmptyState from '@/components/app/common/EmptyState';
+import TickerImage from '@/components/app/ticker/TickerImage';
+import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 
 interface ManageWatchlistModalProps {
   isOpen: boolean;
@@ -18,96 +28,49 @@ export default function ManageWatchlistModal({
   watchlist,
   onUpdateWatchlist 
 }: ManageWatchlistModalProps) {
-  const [tickerInput, setTickerInput] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [isClient, setIsClient] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Use the ticker search hook
+  const tickerSearch = useTickerSearch({
+    minQueryLength: 2,
+    debounceMs: 300,
+    enabled: isOpen, // Only enable search when modal is open
+  });
+
+  // Reset search when modal closes
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Debounced search for autocomplete
-  useEffect(() => {
-    if (!isClient) return;
-
-    // Clear previous timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    if (!isOpen) {
+      // Clear search when modal closes
+      tickerSearch.setQuery('');
+      tickerSearch.clearSuggestions();
     }
-
-    const query = tickerInput.trim();
-    
-    if (query.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setIsSearching(true);
-    
-    debounceTimerRef.current = setTimeout(async () => {
-      try {
-        const results = await searchTickers(query);
-        setSuggestions(results);
-        setShowSuggestions(results.length > 0);
-        setSelectedIndex(-1);
-      } catch (error) {
-        console.error('Error searching tickers:', error);
-        setSuggestions([]);
-        setShowSuggestions(false);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300); // 300ms debounce
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [tickerInput, isClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only depend on isOpen - tickerSearch functions are stable
 
   // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
+  useClickOutside({
+    ref: suggestionsRef,
+    handler: () => {
+      tickerSearch.setShowSuggestions(false);
+    },
+    enabled: tickerSearch.showSuggestions,
+    additionalRefs: [inputRef],
+  });
 
-    if (showSuggestions) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSuggestions]);
-
-  if (!isOpen || !isClient) return null;
+  if (!isOpen || !tickerSearch.isClient) return null;
 
   const handleSelectSuggestion = async (suggestion: SearchSuggestion) => {
-    setTickerInput(suggestion.ticker);
-    setShowSuggestions(false);
-    setSuggestions([]);
-    await handleAddTicker(suggestion.ticker);
+    tickerSearch.setQuery(suggestion.ticker);
+    tickerSearch.setShowSuggestions(false);
+    tickerSearch.clearSuggestions();
+    await handleAddTicker(suggestion.ticker, suggestion.type);
   };
 
-  const handleAddTicker = async (ticker?: string) => {
-    const tickerToAdd = ticker || tickerInput.trim().toUpperCase();
+  const handleAddTicker = async (ticker?: string, suggestedType?: 'stock' | 'crypto') => {
+    const tickerToAdd = ticker || tickerSearch.query.trim().toUpperCase();
     
     if (!tickerToAdd) {
       setError('Please enter a ticker symbol or select from suggestions');
@@ -122,11 +85,39 @@ export default function ManageWatchlistModal({
 
     setIsLoading(true);
     setError('');
-    setShowSuggestions(false);
+    tickerSearch.setShowSuggestions(false);
 
     try {
-      // Fetch real-time data from API
-      const tickerData = await fetchTickerData(tickerToAdd);
+      // Determine correct type: prioritize stock detection for common stock patterns
+      // Known crypto tickers should be crypto, everything else that looks like a stock should be stock
+      // This matches the logic from useUnifiedSearch in the discover tab
+      const knownCryptoTickers = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'AVAX', 'LTC', 'LINK', 'UNI', 'ATOM', 'ETC', 'XLM', 'ALGO', 'VET', 'ICP'];
+      const isKnownCrypto = knownCryptoTickers.includes(tickerToAdd);
+      const isLikelyStock = tickerToAdd.length <= 5 && /^[A-Z]+$/.test(tickerToAdd) && !isKnownCrypto;
+      
+      // Use correct type: if it's a known crypto, use crypto; if it's likely a stock, use stock; otherwise use suggestion type
+      const correctType = isKnownCrypto ? 'crypto' : (isLikelyStock ? 'stock' : (suggestedType === 'crypto' ? 'crypto' : 'stock'));
+
+      // Fetch real-time data from API based on determined type
+      // For stocks, try stock first to avoid false crypto matches
+      // For crypto, try crypto first
+      let tickerData: StockData | null = null;
+      
+      if (correctType === 'stock') {
+        // Try stock first for likely stocks to avoid false crypto matches
+        tickerData = await fetchStockData(tickerToAdd);
+        // Only try crypto if stock failed AND it's a known crypto (fallback)
+        if (!tickerData && isKnownCrypto) {
+          tickerData = await fetchCryptoData(tickerToAdd);
+        }
+      } else {
+        // For crypto, try crypto first
+        tickerData = await fetchCryptoData(tickerToAdd);
+        // If crypto fails and it's a likely stock, try stock as fallback
+        if (!tickerData && isLikelyStock) {
+          tickerData = await fetchStockData(tickerToAdd);
+        }
+      }
       
       if (!tickerData) {
         setError(`Ticker "${tickerToAdd}" not found. Please enter a valid US stock or cryptocurrency ticker (e.g., AAPL, BTC, ETH).`);
@@ -140,12 +131,13 @@ export default function ManageWatchlistModal({
         name: tickerData.name,
         price: tickerData.price,
         change: tickerData.change,
+        image: tickerData.image,
       };
 
       onUpdateWatchlist([...watchlist, newWatchlistItem]);
-      setTickerInput('');
+      tickerSearch.setQuery('');
       setError('');
-      setSuggestions([]);
+      tickerSearch.clearSuggestions();
     } catch (err) {
       console.error('Error fetching ticker data:', err);
       setError('Failed to fetch ticker data. Please try again.');
@@ -158,46 +150,31 @@ export default function ManageWatchlistModal({
     onUpdateWatchlist(watchlist.filter(item => item.ticker !== tickerToRemove));
   };
 
+  // Enhanced keyboard handler that handles Enter without selection (adds ticker directly)
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-        handleSelectSuggestion(suggestions[selectedIndex]);
+      if (tickerSearch.selectedIndex >= 0 && tickerSearch.suggestions[tickerSearch.selectedIndex]) {
+        // Suggestion selected, add it to watchlist
+        handleSelectSuggestion(tickerSearch.suggestions[tickerSearch.selectedIndex]);
       } else {
+        // No suggestion selected, add ticker directly
         handleAddTicker();
       }
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => 
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-    } else if (e.key === 'Escape') {
-      setShowSuggestions(false);
+    } else {
+      // Delegate other keys to hook's handler (ArrowUp/Down, Escape)
+      tickerSearch.handleKeyDown(e);
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4" 
-      onClick={onClose}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Manage Watchlist"
+      maxWidth="md"
+      className="p-6"
     >
-      <div 
-        className="bg-black border border-white/10 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto" 
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">Manage Watchlist</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
         {/* Add Ticker Section */}
         <div className="mb-6 relative">
@@ -211,15 +188,15 @@ export default function ManageWatchlistModal({
                 ref={inputRef}
                 id="ticker-input"
                 type="text"
-                value={tickerInput}
+                value={tickerSearch.query}
                 onChange={(e) => {
-                  setTickerInput(e.target.value);
+                  tickerSearch.setQuery(e.target.value);
                   setError('');
                 }}
                 onKeyDown={handleKeyPress}
                 onFocus={() => {
-                  if (suggestions.length > 0) {
-                    setShowSuggestions(true);
+                  if (tickerSearch.suggestions.length > 0) {
+                    tickerSearch.setShowSuggestions(true);
                   }
                 }}
                 placeholder="Search by ticker (AAPL) or name (Apple)..."
@@ -228,53 +205,81 @@ export default function ManageWatchlistModal({
               />
               
               {/* Autocomplete Suggestions Dropdown */}
-              {showSuggestions && suggestions.length > 0 && (
+              {tickerSearch.showSuggestions && (tickerSearch.suggestions.length > 0 || tickerSearch.isSearching) && (
                 <div
                   ref={suggestionsRef}
                   className="absolute z-50 w-full mt-1 bg-black border border-white/10 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 >
-                  {isSearching && (
-                    <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Searching...
-                    </div>
-                  )}
-                  {suggestions.map((suggestion, index) => (
-                    <button
-                      key={`${suggestion.ticker}-${index}`}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(suggestion)}
-                      className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors ${
-                        index === selectedIndex ? 'bg-white/10' : ''
-                      } ${index > 0 ? 'border-t border-white/5' : ''}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-white">
-                              {suggestion.ticker}
-                            </span>
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${
-                              suggestion.type === 'crypto'
-                                ? 'bg-purple-500/20 text-purple-300'
-                                : 'bg-blue-500/20 text-blue-300'
-                            }`}>
-                              {suggestion.type === 'crypto' ? 'Crypto' : 'Stock'}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-400 truncate mt-0.5">
-                            {suggestion.name}
+                  {/* Skeleton Loaders (shown while searching) */}
+                  {tickerSearch.isSearching && tickerSearch.suggestions.length === 0 && (
+                    <>
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                          key={`skeleton-${index}`}
+                          className={`px-4 py-3 ${index > 0 ? 'border-t border-white/5' : ''}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* Image skeleton */}
+                            <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="flex-shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-2">
+                              {/* Ticker + badge skeleton */}
+                              <div className="flex items-center gap-2">
+                                <Skeleton variant="text" width={80} height={16} />
+                                <Skeleton variant="text" width={64} height={16} />
+                              </div>
+                              {/* Name skeleton */}
+                              <Skeleton variant="text" width="67%" height={12} />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                      ))}
+                    </>
+                  )}
+                  {tickerSearch.suggestions.map((suggestion, index) => {
+                    
+                    return (
+                      <button
+                        key={`${suggestion.ticker}-${index}`}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(suggestion)}
+                        className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors ${
+                          index === tickerSearch.selectedIndex ? 'bg-white/10' : ''
+                        } ${index > 0 ? 'border-t border-white/5' : ''}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden bg-white/5">
+                            <ImageWithFallback
+                              src={suggestion.image}
+                              alt={suggestion.name}
+                              className="w-full h-full"
+                              fallback={
+                                <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-white bg-white/10">
+                                  {getInitials(suggestion.name)}
+                                </div>
+                              }
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-white">
+                                {suggestion.ticker}
+                              </span>
+                              <TickerTypeBadge type={suggestion.type} size="sm" />
+                            </div>
+                            <div className="text-sm text-gray-400 truncate mt-0.5">
+                              {suggestion.name}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
             <button
               onClick={() => handleAddTicker()}
-              disabled={isLoading || !tickerInput.trim()}
+              disabled={isLoading || !tickerSearch.query.trim()}
               className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
@@ -289,7 +294,7 @@ export default function ManageWatchlistModal({
             <p className="mt-2 text-sm text-red-400">{error}</p>
           )}
           <p className="mt-2 text-xs text-gray-500">
-            Search by ticker symbol (AAPL, BTC) or company name (Apple, Bitcoin). Select from suggestions or press Enter.
+            Search by ticker symbol (AAPL, BTC) or company name (Apple, Bitcoin).
           </p>
         </div>
 
@@ -299,45 +304,53 @@ export default function ManageWatchlistModal({
             Your Watchlist ({watchlist.length})
           </h3>
           {watchlist.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>Your watchlist is empty</p>
-              <p className="text-sm mt-1">Add tickers above to track stocks</p>
-            </div>
+            <EmptyState
+              icon="inbox"
+              title="Your watchlist is empty"
+              description="Add tickers above to track stocks"
+            />
           ) : (
-            <div className="space-y-2">
-              {watchlist.map((item) => (
-                <div
-                  key={item.ticker}
-                  className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-white">{item.ticker}</div>
-                    <div className="text-xs text-gray-400 truncate">{item.name}</div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-sm text-white">${item.price.toFixed(2)}</span>
-                      <span
-                        className={`text-xs font-medium ${
-                          item.change >= 0 ? 'text-green-400' : 'text-red-400'
-                        }`}
-                      >
-                        {item.change >= 0 ? '+' : ''}
-                        {item.change.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveTicker(item.ticker)}
-                    className="ml-3 p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors"
-                    aria-label={`Remove ${item.ticker}`}
+            <div className="space-y-3">
+              {watchlist.map((item) => {
+                return (
+                  <div
+                    key={item.ticker}
+                    className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors relative"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                    {/* Ticker Image */}
+                    <TickerImage
+                      src={item.image}
+                      ticker={item.ticker}
+                      size="sm"
+                      className="z-10"
+                    />
+                    
+                    <div className="flex-1 min-w-0 z-10">
+                      <div className="font-medium text-white">{item.ticker}</div>
+                      <div className="text-xs text-gray-400 truncate">{item.name}</div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-sm text-white">${item.price.toFixed(2)}</span>
+                        <PriceChangeDisplay 
+                          change={(item.price * item.change) / 100} 
+                          changePercent={item.change}
+                          size="sm"
+                          showIcon={false}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveTicker(item.ticker)}
+                      className="ml-3 p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 z-10"
+                      aria-label={`Remove ${item.ticker}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { MoreHorizontal, Share2, Trash2, Bookmark } from 'lucide-react';
-import { toggleBookmark, isBookmarked } from '@/utils/bookmarkUtils';
-import { muteUser, unmuteUser, isMuted } from '@/utils/muteUtils';
-import { blockUser, unblockUser, isBlocked } from '@/utils/blockUtils';
+import { toggleBookmark, isBookmarked } from '@/utils/content/bookmarkUtils';
+import { muteUser, unmuteUser, isMuted } from '@/utils/user/muteUtils';
+import { blockUser, unblockUser, isBlocked } from '@/utils/user/blockUtils';
+import { useClickOutside } from '@/hooks/common/useClickOutside';
 
 interface ContentMenuProps {
   type: 'post' | 'comment';
@@ -55,21 +56,11 @@ export default function ContentMenu({
   const isBlockedValue = checkIsBlocked();
 
   // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  useClickOutside({
+    ref: menuRef,
+    handler: () => setIsOpen(false),
+    enabled: isOpen,
+  });
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(linkUrl);

@@ -6,11 +6,13 @@ import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import { useWatchlist } from '@/hooks/useWatchlist';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { useRouter } from 'next/navigation';
 
 export default function PlansPage() {
   const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
   const { watchlist, setWatchlist } = useWatchlist();
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-black">
@@ -21,7 +23,7 @@ export default function PlansPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+          <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
@@ -56,7 +58,7 @@ export default function PlansPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>
