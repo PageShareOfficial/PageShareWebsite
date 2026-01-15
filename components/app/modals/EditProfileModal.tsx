@@ -4,10 +4,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Image from 'next/image';
 import { X, Camera, Loader2 } from 'lucide-react';
-import { interestsOptions } from '@/utils/constants';
-import { ProfileUser } from '@/utils/profileUtils';
+import { interestsOptions } from '@/utils/core/constants';
+import { ProfileUser } from '@/utils/user/profileUtils';
+import Modal from '@/components/app/common/Modal';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import FormInput from '@/components/app/common/FormInput';
+import FormErrorMessage from '@/components/app/common/FormErrorMessage';
+import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 
 // Form validation schema
 const editProfileSchema = z.object({
@@ -169,37 +173,21 @@ export default function EditProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Profile"
+      maxWidth="2xl"
     >
-      <div
-        className="bg-black border border-white/10 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-black z-10">
-          <h2 className="text-xl font-bold text-white">Edit Profile</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Content */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-6">
           {/* Profile Image Upload */}
           <div className="flex flex-col items-center">
             <div className="relative">
               <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-white/20">
-                <Image
+                <AvatarWithFallback
                   src={avatarPreview}
                   alt="Profile"
-                  width={128}
-                  height={128}
+                  size={128}
                   className="w-full h-full object-cover"
                 />
                 {isUploading && (
@@ -240,16 +228,16 @@ export default function EditProfileModal({
 
           {/* Display Name */}
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-2">
-              Display Name <span className="text-gray-500 text-xs">(optional)</span>
-            </label>
-            <input
-              {...register('displayName')}
-              type="text"
-              id="displayName"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all"
-              placeholder="Display name"
-            />
+          <FormInput
+            label={
+              <>
+                Display Name <span className="text-gray-500 text-xs">(optional)</span>
+              </>
+            }
+            id="displayName"
+            placeholder="Display name"
+            {...register('displayName')}
+          />
           </div>
 
           {/* Bio */}
@@ -265,9 +253,7 @@ export default function EditProfileModal({
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all resize-none"
               placeholder="Tell us about yourself..."
             />
-            {errors.bio && (
-              <p className="mt-1 text-sm text-red-400">{errors.bio.message}</p>
-            )}
+            <FormErrorMessage message={errors.bio?.message} className="mt-1" />
             <p className="mt-1 text-xs text-gray-500 text-right">
               {bioValue.length}/200 characters
             </p>
@@ -297,24 +283,22 @@ export default function EditProfileModal({
                 );
               })}
             </div>
-            {errors.interests && (
-              <p className="mt-2 text-sm text-red-400">{errors.interests.message}</p>
-            )}
+            <FormErrorMessage message={errors.interests?.message} className="mt-2" />
           </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/10">
-            <button
+            <SecondaryButton
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-full text-white font-semibold hover:bg-white/10 transition-colors"
+              className="flex-1 rounded-full"
             >
               Cancel
-            </button>
-            <button
+            </SecondaryButton>
+            <PrimaryButton
               type="submit"
               disabled={isSubmitting || isUploading}
-              className="flex-1 px-4 py-3 bg-white rounded-full text-black font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting || isUploading ? (
                 <>
@@ -324,11 +308,10 @@ export default function EditProfileModal({
               ) : (
                 'Save Changes'
               )}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

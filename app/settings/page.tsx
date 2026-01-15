@@ -6,15 +6,16 @@ import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
 import Loading from '@/components/app/common/Loading';
-import { getCurrentUser } from '@/utils/profileUtils';
-import { getMutedUsers, unmuteUser } from '@/utils/muteUtils';
-import { getBlockedUsers, unblockUser } from '@/utils/blockUtils';
-import { getReportsByUser, Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/reportUtils';
-import { getUserByUsername } from '@/utils/profileUtils';
-import { User, WatchlistItem } from '@/types';
+import { getCurrentUser } from '@/utils/user/profileUtils';
+import { getMutedUsers, unmuteUser } from '@/utils/user/muteUtils';
+import { getBlockedUsers, unblockUser } from '@/utils/user/blockUtils';
+import { getReportsByUser, Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/content/reportUtils';
+import { getUserByUsername } from '@/utils/user/profileUtils';
+import { User } from '@/types';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useProfileData } from '@/hooks/useProfileData';
+import { useProfileData } from '@/hooks/user/useProfileData';
+import UserBadge from '@/components/app/common/UserBadge';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -134,7 +135,7 @@ export default function SettingsPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+          <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
           {/* Desktop Header - Desktop Only */}
           <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
@@ -269,12 +270,11 @@ export default function SettingsPage() {
                               className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <Image
+                                <AvatarWithFallback
                                   src={user.avatar}
                                   alt={user.displayName}
-                                  width={48}
-                                  height={48}
-                                  className="w-12 h-12 rounded-full flex-shrink-0"
+                                  size={48}
+                                  className="flex-shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-0.5">
@@ -282,9 +282,7 @@ export default function SettingsPage() {
                                       {user.displayName}
                                     </span>
                                     {user.badge && (
-                                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30 flex-shrink-0">
-                                        {user.badge}
-                                      </span>
+                                      <UserBadge badge={user.badge} size="md" />
                                     )}
                                   </div>
                                   <p className="text-gray-400 text-sm truncate">@{user.handle}</p>
@@ -351,12 +349,11 @@ export default function SettingsPage() {
                               className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <Image
+                                <AvatarWithFallback
                                   src={user.avatar}
                                   alt={user.displayName}
-                                  width={48}
-                                  height={48}
-                                  className="w-12 h-12 rounded-full flex-shrink-0"
+                                  size={48}
+                                  className="flex-shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-0.5">
@@ -364,9 +361,7 @@ export default function SettingsPage() {
                                       {user.displayName}
                                     </span>
                                     {user.badge && (
-                                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30 flex-shrink-0">
-                                        {user.badge}
-                                      </span>
+                                      <UserBadge badge={user.badge} size="md" />
                                     )}
                                   </div>
                                   <p className="text-gray-400 text-sm truncate">@{user.handle}</p>
@@ -493,7 +488,7 @@ export default function SettingsPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

@@ -1,21 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
 import Feed from '@/components/app/feed/Feed';
 import Loading from '@/components/app/common/Loading';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import { getBookmarkedPosts } from '@/utils/bookmarkUtils';
-import { getBlockedUsers, filterBlockedPosts } from '@/utils/blockUtils';
-import { Post, WatchlistItem } from '@/types';
-import { usePostHandlers } from '@/hooks/usePostHandlers';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePostsData } from '@/hooks/usePostsData';
-import { useWatchlist } from '@/hooks/useWatchlist';
+import { getBookmarkedPosts } from '@/utils/content/bookmarkUtils';
+import { getBlockedUsers, filterBlockedPosts } from '@/utils/user/blockUtils';
+import { Post } from '@/types';
+import { usePostHandlers } from '@/hooks/post/usePostHandlers';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { usePostsData } from '@/hooks/post/usePostsData';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
 
 export default function BookmarksPage() {
+  const router = useRouter();
   const { currentUser, isClient } = useCurrentUser();
   const { posts, setPosts } = usePostsData();
   const { watchlist, setWatchlist } = useWatchlist();
@@ -73,7 +75,7 @@ export default function BookmarksPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+          <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
           {/* Desktop Header - Desktop Only */}
           <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
@@ -130,7 +132,7 @@ export default function BookmarksPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

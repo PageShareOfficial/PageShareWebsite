@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getStockLogoUrl } from '@/utils/ticker/logoUtils';
 
 // Next.js API route to search stocks by name or ticker (proxies Yahoo Finance search)
 export async function GET(request: NextRequest) {
@@ -47,6 +48,7 @@ export async function GET(request: NextRequest) {
         ticker: quote.symbol,
         name: quote.longname || quote.shortname || quote.symbol,
         type: 'stock' as const,
+        image: getStockLogoUrl(quote.symbol, quote.longname || quote.shortname || quote.symbol),
       }));
     
     return NextResponse.json({ suggestions });

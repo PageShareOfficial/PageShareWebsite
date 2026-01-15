@@ -1,18 +1,19 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
 import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
 import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
 import { Post, Comment, User } from '@/types';
-import { useMediaUpload } from '@/hooks/useMediaUpload';
-import { usePollBuilder } from '@/hooks/usePollBuilder';
-import { useEmojiPicker } from '@/hooks/useEmojiPicker';
-import { useCharacterCounter } from '@/hooks/useCharacterCounter';
-import { useGiphySearch } from '@/hooks/useGiphySearch';
+import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
+import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
+import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
+import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
+import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -39,6 +40,7 @@ export default function CommentComposer({
   setPosts,
   setComments,
 }: CommentComposerProps) {
+  const router = useRouter();
   const [commentText, setCommentText] = useState('');
   const [showGifPicker, setShowGifPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +107,7 @@ export default function CommentComposer({
   const handleCommentSubmit = async (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
     if (text.length > maxLength) {
       // Redirect to plans page
-      window.location.href = '/plans';
+      router.push('/plans');
       return;
     }
     
@@ -206,12 +208,11 @@ export default function CommentComposer({
   return (
     <div className="border-b border-white/10 px-4 py-3">
       <div className="flex items-start space-x-3">
-        <Image
+        <AvatarWithFallback
           src={currentUser.avatar}
           alt={currentUser.displayName}
-          width={40}
-          height={40}
-          className="w-10 h-10 rounded-full flex-shrink-0"
+          size={40}
+          className="flex-shrink-0"
         />
         <div className="flex-1 min-w-0 relative">
           <div className="relative">
@@ -262,7 +263,7 @@ export default function CommentComposer({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    window.location.href = '/plans';
+                    router.push('/plans');
                   }}
                   className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
                 >
@@ -279,7 +280,7 @@ export default function CommentComposer({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  window.location.href = '/plans';
+                  router.push('/plans');
                 }}
                 className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
               >

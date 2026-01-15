@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { Post, Comment } from '@/types';
-import { parseCashtags } from '@/utils/textFormatting';
+import { parseCashtags } from '@/utils/core/textFormatting';
+import { navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from '@/components/app/post/PostHeader';
 import PostMedia from '@/components/app/post/PostMedia';
 import PostActions from '@/components/app/post/PostActions';
 import PollComponent from '@/components/app/post/PollComponent';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
+import UserBadge from '@/components/app/common/UserBadge';
 import { isTweet } from '@/data/mockData';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface ReplyCardProps {
   originalPost: Post;
@@ -89,17 +91,19 @@ export default function ReplyCard({
           <div className="flex flex-col items-center flex-shrink-0 w-10">
             {/* Original post avatar */}
             <div className="pt-3 flex-shrink-0">
-              <Image
-                src={originalPost.author.avatar}
-                alt={originalPost.author.displayName}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+              <div
+                className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/${originalPost.author.handle}`);
+                  navigateToProfile(originalPost.author.handle, router);
                 }}
-              />
+              >
+                <AvatarWithFallback
+                  src={originalPost.author.avatar}
+                  alt={originalPost.author.displayName}
+                  size={40}
+                />
+              </div>
             </div>
           </div>
 
@@ -114,7 +118,7 @@ export default function ReplyCard({
                 currentUserHandle={currentUserHandle}
                 onProfileClick={(e, handle) => {
                   e.stopPropagation();
-                  router.push(`/${handle}`);
+                  navigateToProfile(handle, router);
                 }}
               />
 
@@ -129,19 +133,16 @@ export default function ReplyCard({
                     {/* Quoted post card */}
                     <div className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Image
+                        <AvatarWithFallback
                           src={quotedPost.author.avatar}
                           alt={quotedPost.author.displayName}
-                          width={20}
-                          height={20}
-                          className="w-5 h-5 rounded-full"
+                          size={20}
+                          className="w-5 h-5"
                         />
                         <span className="font-semibold text-white text-sm">{quotedPost.author.displayName}</span>
                         <span className="text-xs text-gray-400">@{quotedPost.author.handle}</span>
                         {quotedPost.author.badge && (
-                          <span className="px-1 py-0.5 text-[9px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                            {quotedPost.author.badge}
-                          </span>
+                          <UserBadge badge={quotedPost.author.badge} size="sm" />
                         )}
                         <span className="text-xs text-gray-500">· {quotedPost.createdAt}</span>
                       </div>
@@ -291,17 +292,19 @@ export default function ReplyCard({
       >
         <div className="flex items-start space-x-3 py-3">
           {/* Reply avatar */}
-          <Image
-            src={reply.author.avatar}
-            alt={reply.author.displayName}
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          <div
+            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/${reply.author.handle}`);
+              navigateToProfile(reply.author.handle, router);
             }}
-          />
+          >
+            <AvatarWithFallback
+              src={reply.author.avatar}
+              alt={reply.author.displayName}
+              size={40}
+            />
+          </div>
           
           {/* Reply content */}
           <div className="flex-1 min-w-0">
@@ -312,9 +315,7 @@ export default function ReplyCard({
                 </span>
                 <span className="text-gray-400 text-sm">@{reply.author.handle}</span>
                 {reply.author.badge && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                    {reply.author.badge}
-                  </span>
+                  <UserBadge badge={reply.author.badge} size="md" />
                 )}
                 <span className="text-gray-500 text-sm">·</span>
                 <span className="text-gray-400 text-sm">{reply.createdAt}</span>

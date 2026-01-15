@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Calendar, UserPlus, UserMinus } from 'lucide-react';
 import { User } from '@/types';
+import UserBadge from '@/components/app/common/UserBadge';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface ProfileUser extends User {
   joinedDate: string;
@@ -54,12 +55,11 @@ export default function ProfileHeader({
       <div className="flex flex-col md:flex-row gap-6">
         {/* Profile Image */}
         <div className="flex-shrink-0">
-          <Image
+          <AvatarWithFallback
             src={profileUser.avatar}
             alt={profileUser.displayName}
-            width={120}
-            height={120}
-            className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-white/20"
+            size={128}
+            className="w-24 h-24 md:w-32 md:h-32 border-2 border-white/20"
           />
         </div>
 
@@ -73,9 +73,7 @@ export default function ProfileHeader({
                   {profileUser.displayName}
                 </h1>
                 {profileUser.badge && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30 flex-shrink-0">
-                    {profileUser.badge}
-                  </span>
+                  <UserBadge badge={profileUser.badge} size="md" />
                 )}
               </div>
               

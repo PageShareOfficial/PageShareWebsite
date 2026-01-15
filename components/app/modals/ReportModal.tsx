@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { X } from 'lucide-react';
-import { reportContent, getReportReasons, ReportReason } from '@/utils/reportUtils';
+
+import Modal from '@/components/app/common/Modal';
+import { reportContent, getReportReasons, ReportReason } from '@/utils/content/reportUtils';
+import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -78,20 +80,13 @@ export default function ReportModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-md mx-4 bg-black border border-white/10 rounded-2xl shadow-xl">
-        {/* Close Button */}
-        <button
-          onClick={handleClose}
-          disabled={isSubmitting}
-          className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white disabled:opacity-50"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Content */}
-        <div className="p-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      maxWidth="md"
+      className="p-6"
+      closeOnOverlayClick={!isSubmitting}
+    >
           {showConfirmation ? (
             <div className="text-center py-4">
               <div className="mb-4">
@@ -165,28 +160,26 @@ export default function ReportModal({
 
                 {/* Actions */}
                 <div className="flex space-x-3">
-                  <button
+                  <SecondaryButton
                     type="button"
                     onClick={handleClose}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </SecondaryButton>
+                  <PrimaryButton
                     type="submit"
                     disabled={!selectedReason || isSubmitting}
-                    className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? 'Submitting...' : 'Report'}
-                  </button>
+                  </PrimaryButton>
                 </div>
               </form>
             </>
           )}
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

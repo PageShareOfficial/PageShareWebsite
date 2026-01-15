@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import { Repeat2 } from 'lucide-react';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
 import ContentMenu from '@/components/app/common/ContentMenu';
+import UserBadge from '@/components/app/common/UserBadge';
 
 interface PostHeaderProps {
   post: Post;
@@ -50,7 +50,6 @@ export default function PostHeader({
         <div className="flex items-center justify-between mb-1 w-full">
         <div className="flex items-center space-x-2">
           {isTweet(post) && post.repostType === 'normal' && originalPost ? (
-            // For normal reposts, show original author's info
             <>
               <span 
                 className="font-semibold text-white cursor-pointer hover:underline"
@@ -60,13 +59,10 @@ export default function PostHeader({
               </span>
               <span className="text-sm text-gray-400">@{originalPost.author.handle}</span>
               {originalPost.author.badge && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                  {originalPost.author.badge}
-                </span>
+                <UserBadge badge={originalPost.author.badge} size="md" />
               )}
             </>
           ) : (
-            // For normal posts or quote reposts, show current author's info
             <>
               <span 
                 className="font-semibold text-white cursor-pointer hover:underline"
@@ -76,9 +72,7 @@ export default function PostHeader({
               </span>
               <span className="text-sm text-gray-400">@{post.author.handle}</span>
               {post.author.badge && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                  {post.author.badge}
-                </span>
+                <UserBadge badge={post.author.badge} size="md" />
               )}
             </>
           )}

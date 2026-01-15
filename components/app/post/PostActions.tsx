@@ -3,6 +3,7 @@
 import { Heart, MessageCircle, Share2 } from 'lucide-react';
 import { Post } from '@/types';
 import RepostButton from './RepostButton';
+import IconActionButton from '@/components/app/common/IconActionButton';
 
 interface PostActionsProps {
   post: Post;
@@ -35,20 +36,16 @@ export default function PostActions({
 
   return (
     <div className="flex items-center text-gray-400 mt-3 pt-3 w-full">
-      <button
+      <IconActionButton
+        icon={MessageCircle}
+        count={displayStats.comments}
+        label="Comment"
         onClick={(e) => {
           e.stopPropagation();
           onComment();
         }}
-        className="flex items-center justify-center space-x-2 hover:text-cyan-400 transition-colors group flex-1"
-        aria-label="Comment"
-        title="Comment"
-      >
-        <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-cyan-400/10 transition-colors">
-          <MessageCircle className="w-5 h-5" />
-        </div>
-        <span className="text-sm">{displayStats.comments}</span>
-      </button>
+        hoverColor="cyan-400"
+      />
       
       <RepostButton
         isReposted={isReposted}
@@ -58,35 +55,26 @@ export default function PostActions({
         canUndoRepost={canUndoRepost}
       />
       
-      <button
+      <IconActionButton
+        icon={Heart}
+        count={displayStats.likes}
+        label={isLiked ? 'Unlike' : 'Like'}
         onClick={(e) => {
           e.stopPropagation();
           onLike();
         }}
-        className="flex items-center justify-center space-x-2 hover:text-red-400 transition-colors group flex-1"
-        aria-label={`${isLiked ? 'Unlike' : 'Like'} post`}
-        title={isLiked ? 'Unlike' : 'Like'}
-      >
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-          isLiked 
-            ? 'bg-red-400/20 group-hover:bg-red-400/30' 
-            : 'group-hover:bg-red-400/10'
-        }`}>
-          <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-400 text-red-400' : ''}`} />
-        </div>
-        <span className="text-sm">{displayStats.likes}</span>
-      </button>
+        isActive={isLiked}
+        activeColor="red-400"
+        hoverColor="red-400"
+      />
       
-      <button
+      <IconActionButton
+        icon={Share2}
+        label="Share"
         onClick={() => {}}
-        className="flex items-center justify-center space-x-2 hover:text-blue-400 transition-colors group flex-1"
-        aria-label="Share"
-        title="Share"
-      >
-        <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-400/10 transition-colors">
-          <Share2 className="w-5 h-5" />
-        </div>
-      </button>
+        hoverColor="blue-400"
+        showCount={false}
+      />
     </div>
   );
 }

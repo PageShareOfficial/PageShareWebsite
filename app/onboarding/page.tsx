@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { interestsOptions } from '@/utils/core/constants';
+import FormInput from '@/components/app/common/FormInput';
+import FormErrorMessage from '@/components/app/common/FormErrorMessage';
+import { PrimaryButton } from '@/components/app/common/Button';
 
 // Form validation schema
 const onboardingSchema = z.object({
@@ -30,8 +34,6 @@ const onboardingSchema = z.object({
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
-
-import { interestsOptions } from '@/utils/constants';
 
 export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,54 +121,51 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-              Username <span className="text-red-400">*</span>
-            </label>
-            <input
+            <FormInput
+              label={
+                <>
+                  Username <span className="text-red-400">*</span>
+                </>
+              }
+              id="username"
+              placeholder="Username"
               {...register('username', {
                 onChange: (e) => {
                   e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                 },
               })}
-              type="text"
-              id="username"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-              placeholder="Username"
             />
-            {errors.username && (
-              <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
-            )}
+            <FormErrorMessage message={errors.username?.message} className="mt-1" />
           </div>
 
           {/* Display Name */}
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-2">
-              Display Name <span className="text-gray-500 text-xs">(optional)</span>
-            </label>
-            <input
-              {...register('displayName')}
-              type="text"
+            <FormInput
+              label={
+                <>
+                  Display Name <span className="text-gray-500 text-xs">(optional)</span>
+                </>
+              }
               id="displayName"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
               placeholder="Display name"
+              {...register('displayName')}
             />
           </div>
 
           {/* Date of Birth */}
           <div>
-            <label htmlFor="dob" className="block text-sm font-medium text-gray-300 mb-2">
-              Date of Birth <span className="text-red-400">*</span>
-            </label>
-            <input
-              {...register('dob')}
-              type="date"
+            <FormInput
+              label={
+                <>
+                  Date of Birth <span className="text-red-400">*</span>
+                </>
+              }
               id="dob"
+              type="date"
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              {...register('dob')}
             />
-            {errors.dob && (
-              <p className="mt-1 text-sm text-red-400">{errors.dob.message}</p>
-            )}
+            <FormErrorMessage message={errors.dob?.message} className="mt-1" />
           </div>
 
           {/* Bio */}
@@ -182,9 +181,7 @@ export default function OnboardingPage() {
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
               placeholder="Tell us about yourself..."
             />
-            {errors.bio && (
-              <p className="mt-1 text-sm text-red-400">{errors.bio.message}</p>
-            )}
+            <FormErrorMessage message={errors.bio?.message} className="mt-1" />
             <p className="mt-1 text-xs text-gray-500 text-right">
               {watch('bio')?.length || 0}/200 characters
             </p>
@@ -214,19 +211,17 @@ export default function OnboardingPage() {
                 );
               })}
             </div>
-            {errors.interests && (
-              <p className="mt-2 text-sm text-red-400">{errors.interests.message}</p>
-            )}
+            <FormErrorMessage message={errors.interests?.message} className="mt-2" />
           </div>
 
           {/* Submit Button */}
-          <button
+          <PrimaryButton
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-6 py-3.5 bg-white rounded-full text-gray-900 font-semibold hover:bg-gray-100 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 rounded-full text-gray-900 font-semibold hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Setting up...' : 'Continue'}
-          </button>
+          </PrimaryButton>
         </form>
       </div>
     </div>
