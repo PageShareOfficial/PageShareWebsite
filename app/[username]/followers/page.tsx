@@ -9,10 +9,11 @@ import MobileHeader from '@/components/app/layout/MobileHeader';
 import RightRail from '@/components/app/layout/RightRail';
 import UserListItem from '@/components/app/profile/UserListItem';
 import Loading from '@/components/app/common/Loading';
-import { getUserByUsername } from '@/utils/profileUtils';
-import { getFollowers, getFollowing, followUser, unfollowUser, isFollowing, initializeMockFollows } from '@/utils/followUtils';
+import { getUserByUsername } from '@/utils/user/profileUtils';
+import { getFollowers, getFollowing, followUser, unfollowUser, isFollowing, initializeMockFollows } from '@/utils/user/followUtils';
+import { navigateToProfile } from '@/utils/core/navigationUtils';
 import { User } from '@/types';
-import { useWatchlist } from '@/hooks/useWatchlist';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
 
 export default function FollowersPage() {
@@ -86,7 +87,7 @@ export default function FollowersPage() {
         <div className="flex justify-center">
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+            <Topbar onUpgradeLabs={() => router.push('/plans')} />
             <div className="flex-1 flex pb-16 md:pb-0">
               <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center">
                 <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
@@ -110,12 +111,12 @@ export default function FollowersPage() {
           {/* Mobile Header - Mobile Only */}
           <MobileHeader 
             title={activeTab === 'followers' ? 'Followers' : 'Following'}
-            onBack={() => router.push(`/${username}`)}
+            onBack={() => navigateToProfile(username, router)}
           />
           
           {/* Top Bar - Desktop Only */}
           <div className="hidden md:block">
-            <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+            <Topbar onUpgradeLabs={() => router.push('/plans')} />
           </div>
 
           {/* Content */}
@@ -126,7 +127,7 @@ export default function FollowersPage() {
                 <div className="px-4 py-4">
                   <div className="flex items-center gap-4 mb-4">
                     <button
-                      onClick={() => router.push(`/${username}`)}
+                      onClick={() => navigateToProfile(username, router)}
                       className="p-2 hover:bg-white/10 rounded-full transition-colors"
                       aria-label="Go back"
                     >
@@ -265,7 +266,7 @@ export default function FollowersPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import Feed from '@/components/app/feed/Feed';
 import RightRail from '@/components/app/layout/RightRail';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
 import TweetComposer from '@/components/app/composer/TweetComposer';
-import { Post, WatchlistItem } from '@/types';
-import { saveToStorage } from '@/utils/storageUtils';
 import ReportModal from '@/components/app/modals/ReportModal';
-import { usePostHandlers } from '@/hooks/usePostHandlers';
-import { useReportModal } from '@/hooks/useReportModal';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePostsData } from '@/hooks/usePostsData';
-import { useWatchlist } from '@/hooks/useWatchlist';
-import { useContentFilters } from '@/hooks/useContentFilters';
-import { usePostSync } from '@/hooks/usePostSync';
+import { usePostHandlers } from '@/hooks/post/usePostHandlers';
+import { useReportModal } from '@/hooks/features/useReportModal';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { usePostsData } from '@/hooks/post/usePostsData';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { useContentFilters } from '@/hooks/features/useContentFilters';
+import { usePostSync } from '@/hooks/post/usePostSync';
 
 export default function HomePage() {
+  const router = useRouter();
   const [isNewIdeaOpen, setIsNewIdeaOpen] = useState(false);
   const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
 
@@ -73,7 +73,7 @@ export default function HomePage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+          <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
@@ -101,7 +101,7 @@ export default function HomePage() {
               <RightRail
             watchlist={watchlist}
                 onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
               />
         </div>

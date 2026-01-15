@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { LogOut, UserPlus } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useClickOutside } from '@/hooks/common/useClickOutside';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface TopbarProps {
   onUpgradeLabs: () => void;
@@ -17,7 +19,7 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
   const currentUser = {
     displayName: 'John Doe',
     handle: 'johndoe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
+    avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Brian',
   };
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -34,21 +36,11 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
   };
 
   // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setIsProfileMenuOpen(false);
-      }
-    };
-
-    if (isProfileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isProfileMenuOpen]);
+  useClickOutside({
+    ref: profileMenuRef,
+    handler: () => setIsProfileMenuOpen(false),
+    enabled: isProfileMenuOpen,
+  });
 
   return (
     <header className="md:hidden sticky top-0 z-40 bg-black border-b border-white/10">
@@ -60,12 +52,11 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className="flex items-center"
             >
-              <Image
+              <AvatarWithFallback
                 src={currentUser.avatar}
                 alt={currentUser.displayName}
-                width={32}
-                height={32}
-                className="w-8 h-8 rounded-full"
+                size={32}
+                className="w-8 h-8"
               />
             </button>
 
@@ -102,7 +93,7 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
 
           {/* Center: App Logo */}
           <div className="flex-1 flex items-center justify-center">
-            <Link href="/home" className="flex items-center">
+            <Link href="/home" prefetch={true} className="flex items-center">
               <Image
                 src="/pageshare_final.png"
                 alt="PageShare Logo"

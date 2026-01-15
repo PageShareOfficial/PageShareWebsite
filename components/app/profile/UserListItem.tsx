@@ -1,9 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { UserPlus, UserMinus } from 'lucide-react';
 import { User } from '@/types';
+import { navigateToProfile } from '@/utils/core/navigationUtils';
+import UserBadge from '@/components/app/common/UserBadge';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface UserListItemProps {
   user: User;
@@ -24,7 +26,7 @@ export default function UserListItem({
   const isOwnProfile = currentUserHandle.toLowerCase() === user.handle.toLowerCase();
 
   const handleProfileClick = () => {
-    router.push(`/${user.handle}`);
+    navigateToProfile(user.handle, router);
   };
 
   const handleFollowClick = (e: React.MouseEvent) => {
@@ -39,12 +41,11 @@ export default function UserListItem({
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Avatar */}
-        <Image
+        <AvatarWithFallback
           src={user.avatar}
           alt={user.displayName}
-          width={48}
-          height={48}
-          className="w-12 h-12 rounded-full flex-shrink-0"
+          size={48}
+          className="flex-shrink-0"
         />
 
         {/* User Info */}
@@ -54,9 +55,7 @@ export default function UserListItem({
               {user.displayName}
             </span>
             {user.badge && (
-              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30 flex-shrink-0">
-                {user.badge}
-              </span>
+              <UserBadge badge={user.badge} size="md" />
             )}
           </div>
           <p className="text-gray-400 text-sm truncate">@{user.handle}</p>

@@ -7,7 +7,9 @@ import { MdOutlineWorkspacePremium } from 'react-icons/md';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import TweetComposer from '../composer/TweetComposer';
-import { getCurrentUser } from '@/utils/profileUtils';
+import { getCurrentUser } from '@/utils/user/profileUtils';
+import { useClickOutside } from '@/hooks/common/useClickOutside';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -47,25 +49,18 @@ export default function Sidebar() {
     };
   }, []);
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (desktopMenuRef.current && !desktopMenuRef.current.contains(event.target as Node)) {
-        setIsProfileMenuOpen(false);
-      }
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        setIsMoreMenuOpen(false);
-      }
-    };
+  // Close menus when clicking outside
+  useClickOutside({
+    ref: desktopMenuRef,
+    handler: () => setIsProfileMenuOpen(false),
+    enabled: isProfileMenuOpen,
+  });
 
-    if (isProfileMenuOpen || isMoreMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isProfileMenuOpen, isMoreMenuOpen]);
+  useClickOutside({
+    ref: moreMenuRef,
+    handler: () => setIsMoreMenuOpen(false),
+    enabled: isMoreMenuOpen,
+  });
 
   // Handle scroll for watchlist button fade
   useEffect(() => {
@@ -140,7 +135,7 @@ export default function Sidebar() {
       <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] flex-shrink-0 z-10">
         {/* Logo Header */}
         <div className="p-4 lg:pl-2 lg:pr-2 flex items-center justify-center lg:justify-start">
-          <Link href="/home" className="flex items-center lg:px-6">
+          <Link href="/home" prefetch={true} className="flex items-center lg:px-6">
             <Image
               src="/pageshare_final.png"
               alt="PageShare Logo"
@@ -162,6 +157,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setActiveNav(item.name)}
                   className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
                     isActive
@@ -185,6 +181,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setActiveNav(item.name)}
                   className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
                     isActive
@@ -218,12 +215,11 @@ export default function Sidebar() {
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             className="w-full flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl hover:bg-white/5 transition-colors group"
           >
-            <Image
+            <AvatarWithFallback
               src={currentUser.avatar}
               alt={currentUser.displayName}
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-full flex-shrink-0"
+              size={40}
+              className="flex-shrink-0"
             />
             <div className="flex-1 min-w-0 text-left hidden lg:block">
               <div className="font-semibold text-white text-sm truncate">
@@ -296,6 +292,7 @@ export default function Sidebar() {
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
                       <Link
                         href="/bookmarks"
+                        prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Bookmarks');
@@ -309,6 +306,7 @@ export default function Sidebar() {
                       </Link>
                       <Link
                         href="/settings"
+                        prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Settings');
@@ -330,6 +328,7 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={true}
                 onClick={() => setActiveNav(item.name)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors min-w-0 ${
                   isActive
@@ -347,8 +346,9 @@ export default function Sidebar() {
       </nav>
 
       {/* Tablet Floating Watchlist Button - Opens Watchlist Page */}
-      <button
-        onClick={() => router.push('/watchlist')}
+      <Link
+        href="/watchlist"
+        prefetch={true}
         className={`hidden md:flex lg:hidden fixed bottom-6 right-6 z-40 items-center space-x-2 px-4 py-3 bg-white text-black rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 ${
           isScrolling ? 'opacity-30' : 'opacity-100'
         }`}
@@ -358,7 +358,7 @@ export default function Sidebar() {
         <span className="text-sm font-medium whitespace-nowrap">
           Watchlist
         </span>
-      </button>
+      </Link>
     </>
   );
 }

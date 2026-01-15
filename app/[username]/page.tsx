@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
+import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import RightRail from '@/components/app/layout/RightRail';
 import Feed from '@/components/app/feed/Feed';
 import TweetComposer from '@/components/app/composer/TweetComposer';
@@ -15,17 +17,19 @@ import ProfileTabs from '@/components/app/profile/ProfileTabs';
 import ProfileReplies from '@/components/app/profile/ProfileReplies';
 import { isTweet } from '@/data/mockData';
 import { Post, Comment } from '@/types';
-import { getUserByUsername, calculateUserStats, ProfileUser } from '@/utils/profileUtils';
-import { usePostHandlers } from '@/hooks/usePostHandlers';
-import { useReportModal } from '@/hooks/useReportModal';
-import { getFollowerCount, getFollowingCount, isFollowing, followUser, unfollowUser, initializeMockFollows } from '@/utils/followUtils';
-import { filterReportedComments } from '@/utils/reportUtils';
+import Skeleton from '@/components/app/common/Skeleton';
+import { getUserByUsername, calculateUserStats, ProfileUser } from '@/utils/user/profileUtils';
+import { usePostHandlers } from '@/hooks/post/usePostHandlers';
+import { useReportModal } from '@/hooks/features/useReportModal';
+import { getFollowerCount, getFollowingCount, isFollowing, followUser, unfollowUser, initializeMockFollows } from '@/utils/user/followUtils';
+import { filterReportedComments } from '@/utils/content/reportUtils';
 import ReportModal from '@/components/app/modals/ReportModal';
-import { useContentFilters } from '@/hooks/useContentFilters';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePostsData } from '@/hooks/usePostsData';
-import { useWatchlist } from '@/hooks/useWatchlist';
-import { useComments } from '@/hooks/useComments';
+import { useContentFilters } from '@/hooks/features/useContentFilters';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { usePostsData } from '@/hooks/post/usePostsData';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { useComments } from '@/hooks/post/useComments';
+import { isReservedRoute, isValidUsername } from '@/utils/core/routeUtils';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -75,39 +79,39 @@ export default function ProfilePage() {
   }, [searchParams]);
   
 
-  // Reserved routes that should not be treated as usernames
-  const reservedRoutes = ['discover', 'plans', 'home', 'labs', 'watchlist', 'profile', 'followers', 'followings','bookmarks'];
+  // Memoize route validation to avoid recalculating on every render
+  // Check if this is a reserved route - if so, redirect (O(1) lookup with Set)
+  const isReserved = useMemo(() => {
+    return username ? isReservedRoute(username) : false;
+  }, [username]);
   
-  // Redirect if username is a reserved route or invalid
+  // Handle reserved routes - redirect to the correct static route
   useEffect(() => {
-    if (!username) return;
-    
-    const normalizedUsername = username.toLowerCase();
-    
-    // Redirect reserved routes immediately
-    if (reservedRoutes.includes(normalizedUsername)) {
-      if (normalizedUsername === 'profile') {
-        router.replace(`/${currentUser.handle}`);
-      } else if (normalizedUsername === 'discover') {
-        router.replace('/home'); // Redirect to home if discover doesn't exist
-      } else if (normalizedUsername === 'plans') {
-        router.replace('/home'); // Redirect to home if plans doesn't exist
-      } else {
-        router.replace(`/${normalizedUsername}`);
-      }
-    }
-  }, [username, router, currentUser.handle, reservedRoutes]);
+    if (!username || !isReserved) return;
+    router.replace(`/${username.toLowerCase()}`);
+  }, [username, router, isReserved]);
 
-  // Check if this is a reserved route - if so, don't process as profile
-  const isReservedRoute = username && reservedRoutes.includes(username.toLowerCase());
+  // Memoize username validation to avoid repeated localStorage checks on every render
+  // Check if username is valid SYNCHRONOUSLY during render to prevent profile→404 flash
+  // isValidUsername checks: mock users (sync) + localStorage profile (sync, client-only)
+  // Must check before calling getUserByUsername which creates synthetic users for ANY username
+  const userIsValid = useMemo(() => {
+    if (!username || isReserved) return false;
+    return isValidUsername(username);
+  }, [username, isReserved]);
   
-  // Get profile user data (only if not a reserved route)
-  const baseProfileUser = username && !isReservedRoute ? getUserByUsername(username) : null;
+  // If username provided but invalid (not in mock data, no localStorage profile), show 404 immediately
+  if (username && !isReserved && !userIsValid) {
+    notFound();
+  }
+  
+  // Get profile user data (only reached if user is valid - getUserByUsername may still return synthetic for localStorage-only users)
+  const baseProfileUser = username && !isReserved ? getUserByUsername(username) : null;
   const isOwnProfile = currentUser.handle === username;
 
   // Load saved profile from localStorage if it exists
   useEffect(() => {
-    if (!username || isReservedRoute || !baseProfileUser) return;
+    if (!username || isReserved || !baseProfileUser) return;
 
     const profileKey = `pageshare_profile_${username.toLowerCase()}`;
     const savedProfile = localStorage.getItem(profileKey);
@@ -125,7 +129,7 @@ export default function ProfilePage() {
     } else {
       setCurrentProfileUser(baseProfileUser);
     }
-  }, [username, isReservedRoute, baseProfileUser]);
+  }, [username, isReserved, baseProfileUser]);
 
   const profileUser = currentProfileUser || baseProfileUser;
 
@@ -136,7 +140,7 @@ export default function ProfilePage() {
 
   // Load follower/following counts and follow status
   useEffect(() => {
-    if (!username || isReservedRoute) return;
+    if (!username || isReserved) return;
     
     const followers = getFollowerCount(username);
     const following = getFollowingCount(username);
@@ -145,7 +149,7 @@ export default function ProfilePage() {
     setFollowerCount(followers);
     setFollowingCount(following);
     setIsUserFollowing(followingStatus);
-  }, [username, currentUser.handle, isReservedRoute]);
+  }, [username, currentUser.handle, isReserved]);
 
 
   // Use custom hooks for data and handlers
@@ -503,7 +507,7 @@ export default function ProfilePage() {
   } : null;
 
   // If this is a reserved route, don't render profile page
-  if (isReservedRoute) {
+  if (isReserved) {
     return null; // Will be handled by redirect in useEffect
   }
 
@@ -514,7 +518,7 @@ export default function ProfilePage() {
         <div className="flex justify-center">
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+            <Topbar onUpgradeLabs={() => router.push('/plans')} />
             <div className="flex-1 flex pb-16 md:pb-0">
               <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center">
                 <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
@@ -540,8 +544,11 @@ export default function ProfilePage() {
           
           {/* Top Bar - Desktop Only */}
           <div className="hidden md:block">
-            <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+            <Topbar onUpgradeLabs={() => router.push('/plans')} />
           </div>
+
+          {/* Desktop Header with Back Button - Desktop/iPad Only */}
+          <DesktopHeader title={profileUser.displayName} subtitle={`@${profileUser.handle}`} />
 
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
@@ -566,7 +573,42 @@ export default function ProfilePage() {
 
               {/* User Posts Feed */}
               <div className="px-2 py-6 lg:px-4">
-                {activeTab === 'replies' ? (
+                {!isClient ? (
+                  // Post Skeletons while loading
+                  <div className="space-y-0">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={`post-skeleton-${index}`}>
+                        <div className="p-4 border-b border-white/10">
+                          <div className="flex gap-3">
+                            {/* Avatar skeleton */}
+                            <Skeleton variant="circular" width={48} height={48} className="flex-shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-3">
+                              {/* Header skeleton (username + handle + time) */}
+                              <div className="flex items-center gap-2">
+                                <Skeleton variant="text" width={96} height={16} />
+                                <Skeleton variant="text" width={64} height={12} />
+                                <Skeleton variant="text" width={48} height={12} />
+                              </div>
+                              {/* Content skeleton */}
+                              <div className="space-y-2">
+                                <Skeleton variant="text" width="100%" height={16} />
+                                <Skeleton variant="text" width="83%" height={16} />
+                                <Skeleton variant="text" width="67%" height={16} />
+                              </div>
+                              {/* Actions skeleton */}
+                              <div className="flex items-center gap-6 pt-2">
+                                <Skeleton variant="text" width={48} height={20} />
+                                <Skeleton variant="text" width={48} height={20} />
+                                <Skeleton variant="text" width={48} height={20} />
+                                <Skeleton variant="text" width={48} height={20} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : activeTab === 'replies' ? (
                   <ProfileReplies
                     comments={userComments}
                     posts={posts}
@@ -606,7 +648,7 @@ export default function ProfilePage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

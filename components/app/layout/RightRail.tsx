@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { WatchlistItem } from '@/types';
-import { updateWatchlistPrices } from '@/utils/watchlistApi';
+import { navigateToTicker } from '@/utils/core/navigationUtils';
+import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
+import TickerImage from '@/components/app/ticker/TickerImage';
+import Skeleton from '@/components/app/common/Skeleton';
 
 interface RightRailProps {
   watchlist: WatchlistItem[];
   onManageWatchlist: () => void;
   onUpgradeLabs: () => void;
   onUpdateWatchlist: (watchlist: WatchlistItem[]) => void;
+  isLoading?: boolean;
 }
 
 export default function RightRail({
@@ -18,23 +22,9 @@ export default function RightRail({
   onManageWatchlist,
   onUpgradeLabs,
   onUpdateWatchlist,
+  isLoading = false,
 }: RightRailProps) {
   const router = useRouter();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    if (watchlist.length === 0 || isRefreshing) return;
-    
-    setIsRefreshing(true);
-    try {
-      const updatedWatchlist = await updateWatchlistPrices(watchlist);
-      onUpdateWatchlist(updatedWatchlist);
-    } catch (error) {
-      console.error('Error refreshing watchlist:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   return (
     <aside className="hidden lg:flex flex-col w-[350px] sticky top-0 h-screen pt-6 overflow-y-auto">
@@ -42,35 +32,44 @@ export default function RightRail({
         {/* Watchlist Card */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => router.push('/watchlist')}
+            <Link
+              href="/watchlist"
+              prefetch={true}
               className="text-lg font-semibold text-white hover:text-cyan-400 transition-colors cursor-pointer"
             >
               Watchlist
+            </Link>
+            <button
+              onClick={onManageWatchlist}
+              className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Manage watchlist"
+              title="Manage watchlist"
+            >
+              <Plus className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2">
-              {watchlist.length > 0 && (
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Refresh watchlist"
-                  title="Refresh prices"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                </button>
-              )}
-              <button
-                onClick={onManageWatchlist}
-                className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors"
-                aria-label="Manage watchlist"
-                title="Manage watchlist"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
           </div>
-          {watchlist.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`skeleton-${index}`}
+                  className="flex items-center gap-3 p-2"
+                >
+                  {/* Image Skeleton */}
+                  <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" />
+                  
+                  <div className="min-w-0 flex-1">
+                    <Skeleton variant="text" width={60} height={16} className="mb-2" />
+                    <Skeleton variant="text" width="80%" height={12} />
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <Skeleton variant="text" width={50} height={16} className="mb-1" />
+                    <Skeleton variant="text" width={40} height={12} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : watchlist.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <p className="text-sm mb-2">Your watchlist is empty</p>
               <button
@@ -83,21 +82,30 @@ export default function RightRail({
           ) : (
             <div className="space-y-3">
               {watchlist.map((item) => (
-                <div key={item.ticker} className="flex items-center justify-between">
+                <div
+                  key={item.ticker}
+                  onClick={() => navigateToTicker(item.ticker, router)}
+                  className="flex items-center gap-3 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
+                >
+                  {/* Ticker Image */}
+                  <TickerImage
+                    src={item.image}
+                    ticker={item.ticker}
+                    size="sm"
+                  />
+                  
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-white truncate">{item.ticker}</div>
                     <div className="text-xs text-gray-400 truncate">{item.name}</div>
                   </div>
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className="font-medium text-white">${item.price.toFixed(2)}</div>
-                    <div
-                      className={`text-xs font-medium ${
-                        item.change >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}
-                    >
-                      {item.change >= 0 ? '+' : ''}
-                      {item.change.toFixed(1)}%
-                    </div>
+                    <PriceChangeDisplay 
+                      change={(item.price * item.change) / 100} 
+                      changePercent={item.change}
+                      size="sm"
+                      showIcon={false}
+                    />
                   </div>
                 </div>
               ))}

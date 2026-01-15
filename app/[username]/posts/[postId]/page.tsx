@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Heart } from 'lucide-react';
-import Image from 'next/image';
 import Sidebar from '@/components/app/layout/Sidebar';
 import RightRail from '@/components/app/layout/RightRail';
 import PostCard from '@/components/app/post/PostCard';
@@ -15,18 +14,20 @@ import Loading from '@/components/app/common/Loading';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ReportModal from '@/components/app/modals/ReportModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
-import { mockPosts, isTweet, mockComments } from '@/data/mockData';
-import { Post, Comment, WatchlistItem } from '@/types';
-import { parseCashtags } from '@/utils/textFormatting';
-import { savePostsToStorage, saveToStorage } from '@/utils/storageUtils';
-import { filterReportedComments } from '@/utils/reportUtils';
-import { usePostHandlers } from '@/hooks/usePostHandlers';
-import { useReportModal } from '@/hooks/useReportModal';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePostsData } from '@/hooks/usePostsData';
-import { useWatchlist } from '@/hooks/useWatchlist';
-import { usePostSync } from '@/hooks/usePostSync';
-import { useContentFilters } from '@/hooks/useContentFilters';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import UserBadge from '@/components/app/common/UserBadge';
+import { mockComments } from '@/data/mockData';
+import { Comment } from '@/types';
+import { parseCashtags } from '@/utils/core/textFormatting';
+import {  saveToStorage } from '@/utils/core/storageUtils';
+import { filterReportedComments } from '@/utils/content/reportUtils';
+import { usePostHandlers } from '@/hooks/post/usePostHandlers';
+import { useReportModal } from '@/hooks/features/useReportModal';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { usePostsData } from '@/hooks/post/usePostsData';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { usePostSync } from '@/hooks/post/usePostSync';
+import { useContentFilters } from '@/hooks/features/useContentFilters';
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -298,13 +299,11 @@ export default function PostDetailPage() {
                       className="border-b border-white/10 px-4 py-3 hover:bg-white/5 transition-colors"
                     >
                       <div className="flex items-start space-x-3">
-                        <Image
+                        <AvatarWithFallback
                           src={comment.author.avatar}
                           alt={comment.author.displayName}
-                          width={40}
-                          height={40}
-                          className="w-10 h-10 rounded-full flex-shrink-0"
-                          loading="lazy"
+                          size={40}
+                          className="flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1 w-full">
@@ -316,9 +315,7 @@ export default function PostDetailPage() {
                                 @{comment.author.handle}
                               </span>
                               {comment.author.badge && (
-                                <span className="px-1 py-0.5 text-[9px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                                  {comment.author.badge}
-                                </span>
+                                <UserBadge badge={comment.author.badge} size="sm" />
                               )}
                               <span className="text-xs text-gray-500">· {comment.createdAt}</span>
                             </div>
@@ -520,7 +517,7 @@ export default function PostDetailPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => {}}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

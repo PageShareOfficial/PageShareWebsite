@@ -1,19 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
 import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import Loading from '@/components/app/common/Loading';
 import { WatchlistItem } from '@/types';
-import { Plus, RefreshCw } from 'lucide-react';
-import { updateWatchlistPrices } from '@/utils/watchlistApi';
+import { Plus } from 'lucide-react';
+import { navigateToTicker } from '@/utils/core/navigationUtils';
+import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
+import TickerImage from '@/components/app/ticker/TickerImage';
+import Skeleton from '@/components/app/common/Skeleton';
 
 export default function WatchlistPage() {
+  const router = useRouter();
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -39,24 +42,75 @@ export default function WatchlistPage() {
     }
   }, [watchlist, isClient]);
 
-  const handleRefresh = async () => {
-    if (watchlist.length === 0 || isRefreshing) return;
-    
-    setIsRefreshing(true);
-    try {
-      const updatedWatchlist = await updateWatchlistPrices(watchlist);
-      setWatchlist(updatedWatchlist);
-    } catch (error) {
-      console.error('Error refreshing watchlist:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loading />
+      <div className="min-h-screen bg-black">
+        <div className="flex justify-center">
+          <Sidebar />
+          <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
+            <Topbar onUpgradeLabs={() => router.push('/plans')} />
+            <div className="flex-1 flex pb-16 md:pb-0">
+              <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+                {/* Header skeleton */}
+                <div className="hidden md:flex items-center justify-between mb-6">
+                  <Skeleton variant="rectangular" width={128} height={32} />
+                  <div className="flex items-center gap-2">
+                    <Skeleton variant="rectangular" width={80} height={40} />
+                    <Skeleton variant="rectangular" width={96} height={40} />
+                  </div>
+                </div>
+                {/* Mobile header skeleton */}
+                <div className="md:hidden flex items-center justify-between mb-6">
+                  <Skeleton variant="rectangular" width={96} height={28} />
+                  <div className="flex items-center gap-2">
+                    <Skeleton variant="rectangular" width={80} height={40} />
+                    <Skeleton variant="rectangular" width={80} height={40} />
+                  </div>
+                </div>
+                {/* Watchlist item skeletons */}
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <div
+                      key={`skeleton-${index}`}
+                      className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-xl"
+                    >
+                      {/* Image Skeleton */}
+                      <Skeleton variant="rectangular" width={48} height={48} rounded="rounded-lg" />
+                      
+                      <div className="flex-1 min-w-0">
+                        {/* Ticker skeleton */}
+                        <Skeleton variant="text" width={80} height={20} className="mb-2" />
+                        {/* Name skeleton */}
+                        <Skeleton variant="text" width="75%" height={14} className="mb-3" />
+                        {/* Price and Change skeletons */}
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <Skeleton variant="text" width={40} height={12} className="mb-1" />
+                            <Skeleton variant="text" width={60} height={16} />
+                          </div>
+                          <div>
+                            <Skeleton variant="text" width={50} height={12} className="mb-1" />
+                            <Skeleton variant="text" width={50} height={16} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
+            <RightRail
+              watchlist={[]}
+              onManageWatchlist={() => {}}
+              onUpgradeLabs={() => router.push('/plans')}
+              onUpdateWatchlist={() => {}}
+              isLoading={true}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -70,7 +124,7 @@ export default function WatchlistPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.href = '/plans'} />
+          <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
@@ -79,18 +133,6 @@ export default function WatchlistPage() {
               <div className="hidden md:flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-white">Watchlist</h1>
                 <div className="flex items-center gap-2">
-                  {watchlist.length > 0 && (
-                    <button
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Refresh watchlist"
-                      title="Refresh prices"
-                    >
-                      <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                      <span>Refresh</span>
-                    </button>
-                  )}
                   {/* Manage button - Desktop (lg and above) with Plus icon and Manage text */}
                   <button
                     onClick={() => setIsManageModalOpen(true)}
@@ -112,22 +154,10 @@ export default function WatchlistPage() {
                 </div>
               </div>
 
-              {/* Mobile Header with Refresh and Manage Buttons */}
+              {/* Mobile Header with Manage Button */}
               <div className="md:hidden flex items-center justify-between mb-6">
                 <h1 className="text-xl font-bold text-white">Watchlist</h1>
                 <div className="flex items-center gap-2">
-                  {watchlist.length > 0 && (
-                    <button
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Refresh watchlist"
-                      title="Refresh prices"
-                    >
-                      <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                      <span className="text-sm">Refresh</span>
-                    </button>
-                  )}
                   <button
                     onClick={() => setIsManageModalOpen(true)}
                     className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2"
@@ -143,7 +173,7 @@ export default function WatchlistPage() {
               {watchlist.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="mb-4">
-                    <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto bg-white/5 rounded-lg flex items-center justify-center">
                       <Plus className="w-8 h-8 text-gray-400" />
                     </div>
                   </div>
@@ -164,8 +194,16 @@ export default function WatchlistPage() {
                   {watchlist.map((item) => (
                     <div
                       key={item.ticker}
-                      className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
+                      onClick={() => navigateToTicker(item.ticker, router)}
+                      className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
                     >
+                      {/* Ticker Image */}
+                      <TickerImage
+                        src={item.image}
+                        ticker={item.ticker}
+                        size="md"
+                      />
+                      
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-white text-lg mb-1">
                           {item.ticker}
@@ -182,14 +220,12 @@ export default function WatchlistPage() {
                           </div>
                           <div>
                             <span className="text-xs text-gray-500">Change</span>
-                            <div
-                              className={`font-medium ${
-                                item.change >= 0 ? 'text-green-400' : 'text-red-400'
-                              }`}
-                            >
-                              {item.change >= 0 ? '+' : ''}
-                              {item.change.toFixed(1)}%
-                            </div>
+                            <PriceChangeDisplay 
+                              change={(item.price * item.change) / 100} 
+                              changePercent={item.change}
+                              size="sm"
+                              showIcon={false}
+                            />
                           </div>
                         </div>
                       </div>
@@ -206,7 +242,7 @@ export default function WatchlistPage() {
           <RightRail
             watchlist={watchlist}
             onManageWatchlist={() => setIsManageModalOpen(true)}
-            onUpgradeLabs={() => window.location.href = '/plans'}
+            onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
           />
         </div>

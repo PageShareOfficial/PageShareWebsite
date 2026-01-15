@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
 import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
 import dynamic from 'next/dynamic';
@@ -9,12 +9,14 @@ import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
 import { Post } from '@/types';
 import { isTweet } from '@/data/mockData';
-import { parseCashtags } from '@/utils/textFormatting';
-import { useMediaUpload } from '@/hooks/useMediaUpload';
-import { usePollBuilder } from '@/hooks/usePollBuilder';
-import { useEmojiPicker } from '@/hooks/useEmojiPicker';
-import { useCharacterCounter } from '@/hooks/useCharacterCounter';
-import { useGiphySearch } from '@/hooks/useGiphySearch';
+import { parseCashtags } from '@/utils/core/textFormatting';
+import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
+import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
+import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
+import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
+import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
+import UserBadge from '@/components/app/common/UserBadge';
+import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -49,6 +51,7 @@ export default function TweetComposer({
   originalPostId,
   allPosts = [],
 }: TweetComposerProps) {
+  const router = useRouter();
   // Look up original post by ID
   const originalPost = originalPostId ? allPosts.find(p => p.id === originalPostId) : undefined;
   // Load state from sessionStorage on mount
@@ -201,7 +204,7 @@ export default function TweetComposer({
     if (tweetText.trim().length === 0) return;
     if (tweetText.length > maxLength) {
       // Redirect to plans page
-      window.location.href = '/plans';
+      router.push('/plans');
       return;
     }
     
@@ -231,12 +234,11 @@ export default function TweetComposer({
       <div className="flex space-x-2 sm:space-x-3 md:space-x-3 lg:space-x-4">
         {/* User Avatar */}
         <div className="flex-shrink-0">
-          <Image
+          <AvatarWithFallback
             src={currentUser.avatar}
             alt={currentUser.displayName}
-            width={40}
-            height={40}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full"
+            size={40}
+            className="w-8 h-8 md:w-10 md:h-10"
           />
         </div>
 
@@ -331,7 +333,7 @@ export default function TweetComposer({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    window.location.href = '/plans';
+                    router.push('/plans');
                   }}
                   className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
                 >
@@ -348,7 +350,7 @@ export default function TweetComposer({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  window.location.href = '/plans';
+                  router.push('/plans');
                 }}
                 className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
               >
@@ -549,19 +551,16 @@ export default function TweetComposer({
           {originalPost && (
             <div className="mt-3 p-3 bg-white/5 rounded-xl border border-white/10">
               <div className="flex items-center space-x-2 mb-2">
-                <Image
+                <AvatarWithFallback
                   src={originalPost.author.avatar}
                   alt={originalPost.author.displayName}
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 rounded-full"
+                  size={20}
+                  className="w-5 h-5"
                 />
                 <span className="font-semibold text-white text-sm">{originalPost.author.displayName}</span>
                 <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
                 {originalPost.author.badge && (
-                  <span className="px-1 py-0.5 text-[9px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                    {originalPost.author.badge}
-                  </span>
+                  <UserBadge badge={originalPost.author.badge} size="sm" />
                 )}
                 <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
               </div>
