@@ -229,7 +229,8 @@ export async function fetchStockOverview(ticker: string): Promise<StockDetailDat
     // Fallback to Yahoo Finance if TIME_SERIES fails
     if (!priceData || !priceData.price || !priceData.previousClose) {
       try {
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker.toUpperCase()}?interval=1d&range=1d`;
+        // Fetch 5 days of data to ensure we get previous close even if market is closed
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker.toUpperCase()}?interval=1d&range=5d`;
         const yahooResponse = await fetch(url, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
           next: { revalidate: 60 },
@@ -237,18 +238,52 @@ export async function fetchStockOverview(ticker: string): Promise<StockDetailDat
         
         if (yahooResponse.ok) {
           const yahooData = await yahooResponse.json();
-          const meta = yahooData.chart?.result?.[0]?.meta;
-          if (meta?.regularMarketPrice && meta?.previousClose) {
+          const result = yahooData.chart?.result?.[0];
+          const meta = result?.meta;
+          
+          // Try to get price from various sources
+          let price = meta?.regularMarketPrice || meta?.currentPrice || meta?.chartPreviousClose;
+          let previousClose = meta?.previousClose || meta?.chartPreviousClose;
+          
+          // If we don't have previousClose from meta, try to get it from timestamps
+          if (!previousClose && result?.timestamp && result?.indicators?.quote?.[0]?.close) {
+            const timestamps = result.timestamp;
+            const closes = result.indicators.quote[0].close;
+            
+            // Get the most recent non-null close (current price)
+            let latestPrice = null;
+            let previousPrice = null;
+            
+            for (let i = closes.length - 1; i >= 0; i--) {
+              if (closes[i] !== null && closes[i] !== undefined) {
+                if (latestPrice === null) {
+                  latestPrice = closes[i];
+                } else if (previousPrice === null) {
+                  previousPrice = closes[i];
+                  break;
+                }
+              }
+            }
+            
+            if (latestPrice && previousPrice) {
+              price = latestPrice;
+              previousClose = previousPrice;
+            }
+          }
+          
+          // Use price from meta if we found it
+          if (price && previousClose && price > 0 && previousClose > 0) {
             priceData = {
-              price: meta.regularMarketPrice,
-              previousClose: meta.previousClose,
-              open: meta.regularMarketOpen || meta.regularMarketPrice,
-              high: meta.regularMarketDayHigh || meta.regularMarketPrice,
-              low: meta.regularMarketDayLow || meta.regularMarketPrice,
+              price: price,
+              previousClose: previousClose,
+              open: meta?.regularMarketOpen || meta?.open || price,
+              high: meta?.regularMarketDayHigh || meta?.dayHigh || price,
+              low: meta?.regularMarketDayLow || meta?.dayLow || price,
             };
           }
         }
       } catch (error) {
+        console.error(`Yahoo Finance fallback failed for ${ticker}:`, error);
         // Continue with whatever we have
       }
     }
