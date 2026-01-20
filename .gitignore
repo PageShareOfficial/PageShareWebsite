@@ -42,6 +42,7 @@ backend/.Python
 backend/venv/
 backend/env/
 backend/.venv
+backend/app/__pycache__/
 
 # typescript
 *.tsbuildinfo
