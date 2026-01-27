@@ -69,34 +69,34 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Supabase Project Setup**
-   - [ ] Create Supabase Dev project
-   - [ ] Create Supabase Prod project
-   - [ ] Get connection strings for both databases
-   - [ ] Document Supabase project URLs and keys
+   - [x] Create Supabase Dev project
+   - [x] Create Supabase Prod project
+   - [x] Get connection strings for both databases
+   - [x] Document Supabase project URLs and keys
 
 2. **Environment Variables Setup**
-   - [ ] Create `.env.example` file with all required variables
-   - [ ] Create `.env.local` for local development
-   - [ ] Setup environment variable validation in `config.py`
-   - [ ] Document all environment variables
+   - [x] Create `.env.example` file with all required variables
+   - [x] Create `.env.local` for local development
+   - [x] Setup environment variable validation in `config.py`
+   - [x] Document all environment variables
 
 3. **Database Connection Configuration**
-   - [ ] Create `app/config.py` with environment-based configuration
-   - [ ] Implement database URL parsing and connection logic
-   - [ ] Add configuration for Dev vs Prod database switching
-   - [ ] Test connection to both databases
+   - [x] Create `app/config.py` with environment-based configuration
+   - [x] Implement database URL parsing and connection logic
+   - [x] Add configuration for Dev vs Prod database switching
+   - [x] Test connection to both databases
 
 4. **SQLAlchemy Setup**
-   - [ ] Create `app/database.py` with SQLAlchemy engine and session
-   - [ ] Setup connection pooling
-   - [ ] Configure session management (dependency injection)
-   - [ ] Add database health check endpoint
+   - [x] Create `app/database.py` with SQLAlchemy engine and session
+   - [x] Setup connection pooling
+   - [x] Configure session management (dependency injection)
+   - [x] Add database health check endpoint
 
 5. **Alembic Migration Setup**
-   - [ ] Initialize Alembic (`alembic init`)
-   - [ ] Configure `alembic.ini` for Supabase PostgreSQL
-   - [ ] Setup `alembic/env.py` with database URL from config
-   - [ ] Create first empty migration to verify setup
+   - [x] Initialize Alembic (`alembic init`)
+   - [x] Configure `alembic.ini` for Supabase PostgreSQL
+   - [x] Setup `alembic/env.py` with database URL from config
+   - [x] Create first empty migration to verify setup
 
 **Acceptance Criteria:**
 - ✅ Can connect to both Dev and Prod databases
