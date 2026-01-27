@@ -34,6 +34,7 @@ frontend/.env
 # local env files - backend
 backend/.env*.local
 backend/.env
+backend/prod.env
 backend/__pycache__/
 backend/*.pyc
 backend/*.pyo
@@ -43,6 +44,8 @@ backend/venv/
 backend/env/
 backend/.venv
 backend/app/__pycache__/
+backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
 
 # typescript
 *.tsbuildinfo
