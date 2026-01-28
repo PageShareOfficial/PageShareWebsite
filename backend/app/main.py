@@ -2,10 +2,20 @@ from fastapi import FastAPI
 
 from .config import get_settings
 from .database import db_health_check
+from .middleware.cors import init_cors
+from .middleware.error_handler import init_error_handlers
+from .middleware.logging import init_request_logging
+from .api.auth import router as auth_router
+
 
 settings = get_settings()
 
 app = FastAPI(title="PageShare Backend", version="0.1.0")
+
+# Global middleware / handlers
+init_cors(app)
+init_error_handlers(app)
+init_request_logging(app)
 
 
 @app.get("/health")
@@ -29,3 +39,6 @@ async def health_check_db():
 async def root():
     return {"message": "PageShare Backend API"}
 
+
+# Routers
+app.include_router(auth_router, prefix="/api/v1")
