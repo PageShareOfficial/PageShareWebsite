@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 # Ensure the backend package (containing `app`) is on sys.path
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -11,6 +11,9 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from app.config import get_settings
+# Import the whole models package so every table is registered on Base.metadata
+import app.models  # noqa: F401
+from app.models import Base
 
 # this is the Alembic Config object, which provides access to the values
 # within the .ini file in use.
@@ -20,11 +23,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# For now we don't have models; this will be updated in Phase 2.
-target_metadata = None
+# Use the full ORM metadata for autogenerate.
+target_metadata = Base.metadata
 
 
 def get_url() -> str:
+    """Use DATABASE_URL (transaction pooler) for both app and migrations."""
     settings = get_settings()
     return settings.database_url
 
@@ -44,13 +48,8 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-        url=get_url(),
-    )
+    """Run migrations in 'online' mode. Use get_url() so we always hit the env-configured DB."""
+    connectable = create_engine(get_url(), poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

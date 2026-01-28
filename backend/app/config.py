@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 raw_env = os.getenv("APP_ENV", "dev")
 env_filename = ".env" if raw_env == "dev" else "prod.env"
 ENV_PATH = BASE_DIR / env_filename
-load_dotenv(dotenv_path=ENV_PATH, override=False)
+load_dotenv(dotenv_path=ENV_PATH)
 
 
 class Settings:
