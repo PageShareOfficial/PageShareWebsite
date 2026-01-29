@@ -41,6 +41,8 @@ def create_comment_endpoint(
     post = get_post_by_id(db, pid)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    poll_options = body.poll.options if body.poll else None
+    poll_duration = body.poll.duration_days if body.poll else None
     comment = create_comment(
         db,
         post_id=pid,
@@ -48,6 +50,8 @@ def create_comment_endpoint(
         content=body.content,
         media_urls=body.media_urls,
         gif_url=body.gif_url,
+        poll_options=poll_options,
+        poll_duration_days=poll_duration,
     )
     from app.models.user import User
     author = db.get(User, comment.user_id)

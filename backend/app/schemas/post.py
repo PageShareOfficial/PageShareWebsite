@@ -4,13 +4,15 @@ Post request/response schemas.
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from app.schemas.poll import PollCreate
 
 class CreatePostRequest(BaseModel):
-    """Request body for creating a post."""
+    """Request body for creating a post. Optional poll: 2-4 options, duration 1-7 days."""
 
     content: str = Field(..., min_length=1, max_length=10000)
     media_urls: Optional[List[str]] = None
     gif_url: Optional[str] = None
+    poll: Optional[PollCreate] = None
 
     class Config:
         json_schema_extra = {

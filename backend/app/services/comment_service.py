@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.comment import Comment
+from app.models.poll import Poll
 from app.models.reaction import Reaction
 from app.models.user import User
 
@@ -17,8 +18,10 @@ def create_comment(
     content: str,
     media_urls: Optional[List[str]] = None,
     gif_url: Optional[str] = None,
+    poll_options: Optional[List[str]] = None,
+    poll_duration_days: Optional[int] = None,
 ) -> Comment:
-    """Create a comment on a post."""
+    """Create a comment on a post. Optional poll: pass poll_options (2-4) and poll_duration_days (1-7) to attach a poll."""
     comment = Comment(
         post_id=post_id,
         user_id=user_id,
@@ -27,6 +30,17 @@ def create_comment(
         gif_url=gif_url,
     )
     db.add(comment)
+    db.flush()
+
+    if poll_options is not None and len(poll_options) >= 2 and poll_duration_days is not None:
+        poll = Poll(
+            post_id=None,
+            comment_id=comment.id,
+            options=poll_options,
+            duration_days=min(7, max(1, poll_duration_days)),
+        )
+        db.add(poll)
+
     db.commit()
     db.refresh(comment)
     return comment
