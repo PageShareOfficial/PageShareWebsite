@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from app.models.comment import Comment
+from app.models.poll import Poll
 from app.models.post import Post
 from app.models.reaction import Reaction
 from app.models.repost import Repost
@@ -83,9 +84,12 @@ def create_post(
     content: str,
     media_urls: Optional[List[str]] = None,
     gif_url: Optional[str] = None,
+    poll_options: Optional[List[str]] = None,
+    poll_duration_days: Optional[int] = None,
 ) -> Post:
     """
     Create a post, extract tickers from content, link post_tickers.
+    Optional poll: pass poll_options (2-4 items) and poll_duration_days (1-7) to attach a poll to the post.
     Content must be non-empty or media_urls/gif_url provided (caller/validator enforces).
     """
     post = Post(
@@ -95,13 +99,23 @@ def create_post(
         gif_url=gif_url,
     )
     db.add(post)
-    db.commit()
-    db.refresh(post)
+    db.flush()
+
+    if poll_options is not None and len(poll_options) >= 2 and poll_duration_days is not None:
+        poll = Poll(
+            post_id=post.id,
+            comment_id=None,
+            options=poll_options,
+            duration_days=min(7, max(1, poll_duration_days)),
+        )
+        db.add(poll)
 
     symbols = extract_tickers(post.content)
     if symbols:
         link_post_tickers(db, post.id, symbols)
 
+    db.commit()
+    db.refresh(post)
     return post
 
 def get_post_by_id(db: Session, post_id: UUID) -> Optional[Post]:
@@ -119,9 +133,11 @@ def list_posts(
     user_id_filter: Optional[UUID] = None,
     ticker_symbol: Optional[str] = None,
     current_user_id: Optional[UUID] = None,
+    exclude_user_ids: Optional[List[UUID]] = None,
 ) -> Tuple[List[Tuple[Post, User]], int]:
     """
     List posts (non-deleted), with author. Optional filter by user_id or ticker.
+    exclude_user_ids: exclude posts from these user ids (e.g. muted/blocked).
     Returns (list of (post, author), total_count).
     """
     per_page = min(max(1, per_page), 50)
@@ -134,6 +150,8 @@ def list_posts(
     )
     if user_id_filter is not None:
         q = q.filter(Post.user_id == user_id_filter)
+    if exclude_user_ids:
+        q = q.filter(Post.user_id.notin_(exclude_user_ids))
     if ticker_symbol:
         from app.models.post_ticker import PostTicker
         from app.models.ticker import Ticker
