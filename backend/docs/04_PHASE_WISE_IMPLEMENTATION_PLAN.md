@@ -179,42 +179,42 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **JWT Verification Service**
-   - [ ] Create `app/services/auth_service.py`
-   - [ ] Implement JWT token verification using Supabase JWT secret
-   - [ ] Implement token expiration checking
-   - [ ] Extract user ID from token claims (`sub` field)
-   - [ ] Handle invalid/expired tokens
+   - [x] Create `app/services/auth_service.py`
+   - [x] Implement JWT token verification using Supabase JWT secret
+   - [x] Implement token expiration checking
+   - [x] Extract user ID from token claims (`sub` field)
+   - [x] Handle invalid/expired tokens
 
 2. **Auth Middleware/Dependencies**
-   - [ ] Create `app/middleware/auth.py`
-   - [ ] Implement `get_current_user` dependency (required auth)
-   - [ ] Implement `get_optional_user` dependency (optional auth)
-   - [ ] Add error handling for auth failures
-   - [ ] Test middleware with valid/invalid tokens
+   - [x] Create `app/middleware/auth.py`
+   - [x] Implement `get_current_user` dependency (required auth)
+   - [x] Implement `get_optional_user` dependency (optional auth)
+   - [x] Add error handling for auth failures
+   - [x] Test middleware with valid/invalid tokens
 
 3. **CORS Configuration**
-   - [ ] Create `app/middleware/cors.py`
-   - [ ] Configure CORS for frontend origins
-   - [ ] Setup environment-based CORS origins
-   - [ ] Test CORS headers in responses
+   - [x] Create `app/middleware/cors.py`
+   - [x] Configure CORS for frontend origins
+   - [x] Setup environment-based CORS origins
+   - [x] Test CORS headers in responses
 
 4. **Error Handling Middleware**
-   - [ ] Create `app/middleware/error_handler.py`
-   - [ ] Implement global exception handler
-   - [ ] Format error responses consistently
-   - [ ] Log errors to Sentry (if configured)
-   - [ ] Test error handling with various exceptions
+   - [x] Create `app/middleware/error_handler.py`
+   - [x] Implement global exception handler
+   - [x] Format error responses consistently
+   - [x] Log errors to Sentry (if configured)
+   - [x] Test error handling with various exceptions
 
 5. **Auth Endpoints**
-   - [ ] Create `app/api/auth.py`
-   - [ ] Implement `POST /auth/verify` endpoint
-   - [ ] Test auth endpoints
-   - [ ] Document auth flow
+   - [x] Create `app/api/auth.py`
+   - [x] Implement `POST /auth/verify` endpoint
+   - [x] Test auth endpoints
+   - [x] Document auth flow
 
 6. **Request Logging Middleware** (Optional)
-   - [ ] Implement request/response logging
-   - [ ] Add request ID generation
-   - [ ] Log slow requests (>500ms)
+   - [x] Implement request/response logging
+   - [x] Add request ID generation
+   - [x] Log slow requests (>500ms)
 
 **Acceptance Criteria:**
 - ✅ JWT tokens are verified correctly
@@ -235,63 +235,63 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **User Service**
-   - [ ] Create `app/services/user_service.py`
-   - [ ] Implement user CRUD operations
-   - [ ] Implement username validation and uniqueness check
-   - [ ] Implement user search functionality
-   - [ ] Add user stats calculation
+   - [x] Create `app/services/user_service.py`
+   - [x] Implement user CRUD operations
+   - [x] Implement username validation and uniqueness check
+   - [x] Implement user search functionality
+   - [x] Add user stats calculation
 
 2. **User Schemas**
-   - [ ] Create `app/schemas/user.py`
-   - [ ] Create request schemas (CreateUser, UpdateUser)
-   - [ ] Create response schemas (UserResponse, UserProfile)
-   - [ ] Add validation rules
+   - [x] Create `app/schemas/user.py`
+   - [x] Create request schemas (CreateUser, UpdateUser)
+   - [x] Create response schemas (UserResponse, UserProfile)
+   - [x] Add validation rules
 
 3. **User API Endpoints**
-   - [ ] Create `app/api/users.py`
-   - [ ] Implement `GET /users/me` - Get current user
-   - [ ] Implement `GET /users/{user_id}` - Get user by ID
-   - [ ] Implement `PATCH /users/me` - Update user profile
-   - [ ] Add input validation
-   - [ ] Test all endpoints
+   - [x] Create `app/api/users.py`
+   - [x] Implement `GET /users/me` - Get current user
+   - [x] Implement `GET /users/{user_id}` - Get user by ID
+   - [x] Implement `PATCH /users/me` - Update user profile
+   - [x] Add input validation
+   - [x] Test all endpoints
 
 4. **Geolocation Service**
-   - [ ] Create `app/services/geolocation_service.py`
-   - [ ] Implement IP address extraction from request headers
-   - [ ] Integrate with ipapi.co or ip-api.com
-   - [ ] Implement IP hashing (SHA-256)
-   - [ ] Handle geolocation API failures gracefully
+   - [x] Create `app/services/geolocation_service.py`
+   - [x] Implement IP address extraction from request headers
+   - [x] Integrate with ip-api.com
+   - [x] Implement IP hashing (SHA-256)
+   - [x] Handle geolocation API failures gracefully
 
 5. **Onboarding Endpoint**
-   - [ ] Create `POST /users/me/onboarding` endpoint
-   - [ ] Accept timezone from frontend (browser-detected)
-   - [ ] Extract IP and get country via geolocation service
-   - [ ] Store user data with country, timezone, hashed IP
-   - [ ] Handle username conflicts
-   - [ ] Test onboarding flow
+   - [x] Create `POST /users/me/onboarding` endpoint
+   - [x] Accept timezone from frontend (browser-detected)
+   - [x] Extract IP and get country via geolocation service
+   - [x] Store user data with country, timezone, hashed IP
+   - [x] Handle username conflicts
+   - [x] Test onboarding flow
 
 6. **Storage Service**
-   - [ ] Create `app/services/storage_service.py`
-   - [ ] Implement Supabase Storage client setup
-   - [ ] Implement file upload to `profile-pictures` bucket
-   - [ ] Implement file deletion from storage
-   - [ ] Generate public URLs for uploaded files
-   - [ ] Handle upload errors
+   - [x] Create `app/services/storage_service.py`
+   - [x] Implement Supabase Storage client setup
+   - [x] Implement file upload to `profile-pictures` bucket
+   - [x] Implement file deletion from storage
+   - [x] Generate public URLs for uploaded files
+   - [x] Handle upload errors
 
 7. **Profile Picture Endpoints**
-   - [ ] Create `POST /users/me/profile-picture` endpoint
-   - [ ] Implement image validation (size, format, dimensions)
-   - [ ] Upload image to Supabase Storage
-   - [ ] Update user profile_picture_url
-   - [ ] Delete old profile picture if exists
-   - [ ] Create `DELETE /users/me/profile-picture` endpoint
+   - [x] Create `POST /users/me/profile-picture` endpoint
+   - [x] Implement image validation (size, format, dimensions)
+   - [x] Upload image to Supabase Storage
+   - [x] Update user profile_picture_url
+   - [x] Delete old profile picture if exists
+   - [x] Create `DELETE /users/me/profile-picture` endpoint
 
 8. **Media Validation Utilities**
-   - [ ] Create `app/utils/media_validator.py`
-   - [ ] Validate file types (JPEG, PNG, WebP)
-   - [ ] Validate file sizes (max 5MB)
-   - [ ] Validate image dimensions (optional)
-   - [ ] Test validation logic
+   - [x] Create `app/utils/media_validator.py`
+   - [x] Validate file types (JPEG, PNG, WebP)
+   - [x] Validate file sizes (max 5MB)
+   - [x] Validate image dimensions (optional)
+   - [x] Test validation logic
 
 **Acceptance Criteria:**
 - ✅ Users can create and update profiles

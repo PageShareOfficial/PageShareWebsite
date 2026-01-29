@@ -50,6 +50,8 @@ backend/alembic/versions/__pycache__/
 backend/app/api/__pycache__/
 backend/app/middleware/__pycache__/
 backend/app/services/__pycache__/
+backend/app/schemas/__pycache__/
+backend/app/utils/__pycache__/
 
 # typescript
 *.tsbuildinfo
