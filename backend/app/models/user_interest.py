@@ -1,9 +1,7 @@
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class UserInterest(Base):
     __tablename__ = "user_interests"
@@ -18,5 +16,3 @@ class UserInterest(Base):
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-
-

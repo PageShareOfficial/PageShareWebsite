@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Follow(Base):
     __tablename__ = "follows"
@@ -30,5 +28,3 @@ class Follow(Base):
             name="no_self_follow",
         ),
     )
-
-

@@ -1,9 +1,7 @@
 from sqlalchemy import Column, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Bookmark(Base):
     __tablename__ = "bookmarks"
@@ -27,5 +25,3 @@ class Bookmark(Base):
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-
-

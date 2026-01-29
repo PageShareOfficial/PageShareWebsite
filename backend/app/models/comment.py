@@ -8,9 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Comment(Base):
     __tablename__ = "comments"
@@ -59,5 +57,3 @@ class Comment(Base):
             name="comments_max_content_length",
         ),
     )
-
-

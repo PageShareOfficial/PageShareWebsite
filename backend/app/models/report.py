@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Report(Base):
     __tablename__ = "reports"
@@ -67,5 +65,3 @@ class Report(Base):
             name="reports_status_check",
         ),
     )
-
-

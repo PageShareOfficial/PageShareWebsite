@@ -9,9 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Post(Base):
     __tablename__ = "posts"
@@ -60,4 +58,3 @@ class Post(Base):
             name="posts_repost_type_check",
         ),
     )
-

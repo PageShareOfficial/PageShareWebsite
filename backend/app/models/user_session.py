@@ -1,9 +1,7 @@
 from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
@@ -29,5 +27,3 @@ class UserSession(Base):
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-
-
