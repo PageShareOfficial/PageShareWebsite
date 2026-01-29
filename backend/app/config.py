@@ -1,9 +1,7 @@
 import os
 from functools import lru_cache
 from pathlib import Path
-
 from dotenv import load_dotenv
-
 
 # Decide which env file to load for local development.
 # - APP_ENV=dev  -> .env
@@ -13,7 +11,6 @@ raw_env = os.getenv("APP_ENV", "dev")
 env_filename = ".env" if raw_env == "dev" else "prod.env"
 ENV_PATH = BASE_DIR / env_filename
 load_dotenv(dotenv_path=ENV_PATH)
-
 
 class Settings:
     """
@@ -52,12 +49,9 @@ class Settings:
                     f"environment: {', '.join(missing)}"
                 )
 
-
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """
     Return a cached Settings instance so env vars are only read once.
     """
     return Settings()
-
-

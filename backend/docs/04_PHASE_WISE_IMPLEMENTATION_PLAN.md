@@ -411,59 +411,59 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Follow Service**
-   - [ ] Create `app/services/follow_service.py`
-   - [ ] Implement follow/unfollow functionality
-   - [ ] Check follow relationships
-   - [ ] Calculate follower/following counts
-   - [ ] Prevent self-follow
-   - [ ] Test follow operations
+   - [x] Create `app/services/follow_service.py`
+   - [x] Implement follow/unfollow functionality
+   - [x] Check follow relationships (is_following)
+   - [x] Calculate follower/following counts (via user_service.get_user_stats)
+   - [x] Prevent self-follow
+   - [x] Test follow operations
 
 2. **Follow Schemas**
-   - [ ] Create `app/schemas/follow.py`
-   - [ ] Create request/response schemas
+   - [x] Create `app/schemas/follow.py`
+   - [x] Create request/response schemas
 
 3. **Follow API Endpoints**
-   - [ ] Create `app/api/follows.py`
-   - [ ] Implement `POST /users/{user_id}/follow` - Follow user
-   - [ ] Implement `DELETE /users/{user_id}/follow` - Unfollow user
-   - [ ] Implement `GET /users/{user_id}/followers` - List followers
-   - [ ] Implement `GET /users/{user_id}/following` - List following
-   - [ ] Test all endpoints
+   - [x] Create `app/api/follows.py`
+   - [x] Implement `POST /users/{user_id}/follow` - Follow user
+   - [x] Implement `DELETE /users/{user_id}/follow` - Unfollow user
+   - [x] Implement `GET /users/{user_id}/followers` - List followers
+   - [x] Implement `GET /users/{user_id}/following` - List following
+   - [x] Test all endpoints
 
 4. **Bookmark Service**
-   - [ ] Create `app/services/bookmark_service.py`
-   - [ ] Implement bookmark/unbookmark functionality
-   - [ ] Get user's bookmarked posts
-   - [ ] Check if post is bookmarked
-   - [ ] Test bookmark operations
+   - [x] Create `app/services/bookmark_service.py`
+   - [x] Implement bookmark/unbookmark functionality
+   - [x] Get user's bookmarked posts
+   - [x] Check if post is bookmarked
+   - [x] Test bookmark operations
 
 5. **Bookmark Schemas**
-   - [ ] Create `app/schemas/bookmark.py`
-   - [ ] Create request/response schemas
+   - [x] Create `app/schemas/bookmark.py`
+   - [x] Create request/response schemas
 
 6. **Bookmark API Endpoints**
-   - [ ] Create `app/api/bookmarks.py`
-   - [ ] Implement `POST /posts/{post_id}/bookmarks` - Bookmark post
-   - [ ] Implement `DELETE /posts/{post_id}/bookmarks` - Remove bookmark
-   - [ ] Implement `GET /bookmarks` - Get user's bookmarks
-   - [ ] Test all endpoints
+   - [x] Create `app/api/bookmarks.py`
+   - [x] Implement `POST /posts/{post_id}/bookmarks` - Bookmark post
+   - [x] Implement `DELETE /posts/{post_id}/bookmarks` - Remove bookmark
+   - [x] Implement `GET /bookmarks` - Get user's bookmarks
+   - [x] Test all endpoints
 
 7. **Content Filter Service**
-   - [ ] Create `app/services/content_filter_service.py`
-   - [ ] Implement mute user functionality
-   - [ ] Implement block user functionality
-   - [ ] Get muted/blocked users list
-   - [ ] Prevent self-mute/block
-   - [ ] Test filter operations
+   - [x] Create `app/services/content_filter_service.py`
+   - [x] Implement mute user functionality
+   - [x] Implement block user functionality
+   - [x] Get muted/blocked users list
+   - [x] Prevent self-mute/block
+   - [x] Test filter operations
 
 8. **Content Filter API Endpoints**
-   - [ ] Create `app/api/content_filters.py`
-   - [ ] Implement `POST /users/{user_id}/mute` - Mute user
-   - [ ] Implement `DELETE /users/{user_id}/mute` - Unmute user
-   - [ ] Implement `POST /users/{user_id}/block` - Block user
-   - [ ] Implement `DELETE /users/{user_id}/block` - Unblock user
-   - [ ] Implement `GET /content-filters` - Get filters
-   - [ ] Test all endpoints
+   - [x] Create `app/api/content_filters.py`
+   - [x] Implement `POST /users/{user_id}/mute` - Mute user
+   - [x] Implement `DELETE /users/{user_id}/mute` - Unmute user
+   - [x] Implement `POST /users/{user_id}/block` - Block user
+   - [x] Implement `DELETE /users/{user_id}/block` - Unblock user
+   - [x] Implement `GET /content-filters` - Get filters
+   - [x] Test all endpoints
 
 **Acceptance Criteria:**
 - ✅ Users can follow/unfollow other users

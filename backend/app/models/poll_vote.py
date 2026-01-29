@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class PollVote(Base):
     __tablename__ = "poll_votes"
@@ -35,5 +33,3 @@ class PollVote(Base):
             name="valid_option_index",
         ),
     )
-
-

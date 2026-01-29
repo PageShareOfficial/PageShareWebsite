@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -12,6 +13,7 @@ from app.schemas.user import (
 from app.services.auth_service import CurrentUser
 from app.services.geolocation_service import extract_client_ip, lookup_ip
 from app.services.storage_service import delete_profile_picture, upload_profile_picture
+from app.services.follow_service import is_following as follow_service_is_following
 from app.services.user_service import (
     apply_onboarding,
     apply_user_update,
@@ -60,8 +62,8 @@ async def get_user_profile(
         raise HTTPException(status_code=404, detail="User not found")
 
     follower_count, following_count, post_count = get_user_stats(db, user_id)
+    is_fol = follow_service_is_following(db, UUID(current_user.auth_user_id), user.id)
 
-    # For now, is_following is always False; Phase 6 will compute real follow state.
     return PublicUserResponse(
         id=str(user.id),
         username=user.username,
@@ -72,7 +74,7 @@ async def get_user_profile(
         follower_count=follower_count,
         following_count=following_count,
         post_count=post_count,
-        is_following=False,
+        is_following=is_fol,
         created_at=user.created_at,
     )
 
