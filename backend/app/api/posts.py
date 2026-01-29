@@ -82,18 +82,22 @@ def create_post_endpoint(
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    """Create a new post. Tickers are extracted from content ($TICKER, #TICKER)."""
+    """Create a new post. Tickers are extracted from content ($TICKER, #TICKER). Optional poll: 2-4 options, duration 1-7 days."""
     if not body.content.strip() and not body.media_urls and not body.gif_url:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Content, media_urls, or gif_url required",
         )
+    poll_options = body.poll.options if body.poll else None
+    poll_duration = body.poll.duration_days if body.poll else None
     post = create_post(
         db,
         user_id=UUID(current_user.auth_user_id),
         content=body.content,
         media_urls=body.media_urls,
         gif_url=body.gif_url,
+        poll_options=poll_options,
+        poll_duration_days=poll_duration,
     )
     stats = get_post_stats(db, post.id)
     tickers = get_post_tickers(db, post.id)
