@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Repost(Base):
     __tablename__ = "reposts"
@@ -36,5 +34,3 @@ class Repost(Base):
             name="reposts_type_check",
         ),
     )
-
-

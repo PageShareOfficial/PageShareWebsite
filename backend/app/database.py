@@ -3,9 +3,7 @@ from contextlib import contextmanager
 from sqlalchemy import text
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
-
 from .config import get_settings
-
 
 settings = get_settings()
 
@@ -17,7 +15,6 @@ engine: Engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
 def get_db():
     """
     FastAPI dependency that provides a database session.
@@ -27,7 +24,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 @contextmanager
 def db_session():
@@ -40,7 +36,6 @@ def db_session():
     finally:
         db.close()
 
-
 def db_health_check() -> bool:
     """
     Simple health check that attempts a trivial query.
@@ -51,5 +46,3 @@ def db_health_check() -> bool:
         return True
     except Exception:
         return False
-
-

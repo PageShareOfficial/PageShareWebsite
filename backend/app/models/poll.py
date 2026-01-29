@@ -9,9 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Poll(Base):
     __tablename__ = "polls"
@@ -57,5 +55,3 @@ class Poll(Base):
             name="min_duration",
         ),
     )
-
-

@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 from .config import get_settings
 from .database import db_health_check
 from .middleware.cors import init_cors
@@ -12,7 +11,9 @@ from .api.comments import router as comments_router
 from .api.reactions import router as reactions_router
 from .api.reposts import router as reposts_router
 from .api.tickers import router as tickers_router
-
+from .api.follows import router as follows_router
+from .api.bookmarks import router as bookmarks_router
+from .api.content_filters import router as content_filters_router
 
 settings = get_settings()
 
@@ -23,14 +24,12 @@ init_cors(app)
 init_error_handlers(app)
 init_request_logging(app)
 
-
 @app.get("/health")
 async def health_check():
     """
     Simple app-level health check.
     """
     return {"status": "ok", "env": settings.app_env}
-
 
 @app.get("/health/db")
 async def health_check_db():
@@ -40,11 +39,9 @@ async def health_check_db():
     ok = db_health_check()
     return {"database": "ok" if ok else "unreachable"}
 
-
 @app.get("/")
 async def root():
     return {"message": "PageShare Backend API"}
-
 
 # Routers
 app.include_router(auth_router, prefix="/api/v1")
@@ -54,3 +51,6 @@ app.include_router(comments_router, prefix="/api/v1")
 app.include_router(reactions_router, prefix="/api/v1")
 app.include_router(reposts_router, prefix="/api/v1")
 app.include_router(tickers_router, prefix="/api/v1")
+app.include_router(follows_router, prefix="/api/v1")
+app.include_router(bookmarks_router, prefix="/api/v1")
+app.include_router(content_filters_router, prefix="/api/v1")

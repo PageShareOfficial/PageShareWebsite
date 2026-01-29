@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Reaction(Base):
     """
@@ -45,5 +43,3 @@ class Reaction(Base):
             name="reaction_target",
         ),
     )
-
-

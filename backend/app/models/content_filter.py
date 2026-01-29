@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class ContentFilter(Base):
     __tablename__ = "content_filters"
@@ -39,5 +37,3 @@ class ContentFilter(Base):
             name="no_self_filter",
         ),
     )
-
-

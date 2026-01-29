@@ -1,11 +1,9 @@
 from sqlalchemy.orm import DeclarativeBase
 
-
 class Base(DeclarativeBase):
     """Base class for all ORM models."""
 
     pass
-
 
 # Import models so Alembic / Base.metadata can see all tables.
 # (Imports are placed at the bottom to avoid circular imports.)

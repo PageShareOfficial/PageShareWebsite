@@ -1,9 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
 from . import Base
-
 
 class Ticker(Base):
     __tablename__ = "tickers"
@@ -31,5 +29,3 @@ class Ticker(Base):
             name="tickers_type_check",
         ),
     )
-
-
