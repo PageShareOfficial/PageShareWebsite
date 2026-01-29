@@ -312,85 +312,85 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Ticker Extraction Service**
-   - [ ] Create `app/utils/ticker_extractor.py`
-   - [ ] Implement regex pattern matching (`$TICKER`, `#TICKER`)
-   - [ ] Extract ticker symbols from text
-   - [ ] Normalize ticker symbols (uppercase)
-   - [ ] Test ticker extraction
+   - [x] Create `app/utils/ticker_extractor.py`
+   - [x] Implement regex pattern matching (`$TICKER`, `#TICKER`)
+   - [x] Extract ticker symbols from text
+   - [x] Normalize ticker symbols (uppercase)
+   - [x] Test ticker extraction
 
 2. **Ticker Service**
-   - [ ] Create `app/services/ticker_service.py`
-   - [ ] Implement ticker creation/lookup
-   - [ ] Link tickers to posts
-   - [ ] Calculate trending tickers
-   - [ ] Test ticker operations
+   - [x] Create `app/services/ticker_service.py`
+   - [x] Implement ticker creation/lookup
+   - [x] Link tickers to posts
+   - [x] Calculate trending tickers (from materialized view)
+   - [x] Test ticker operations
 
 3. **Post Service**
-   - [ ] Create `app/services/post_service.py`
-   - [ ] Implement post creation with ticker extraction
-   - [ ] Implement post retrieval (single, list)
-   - [ ] Implement post deletion (soft delete)
-   - [ ] Implement post stats calculation
-   - [ ] Handle repost logic
+   - [x] Create `app/services/post_service.py`
+   - [x] Implement post creation with ticker extraction
+   - [x] Implement post retrieval (single, list)
+   - [x] Implement post deletion (soft delete)
+   - [x] Implement post stats calculation
+   - [x] Handle repost logic (in repost_service)
 
 4. **Post Schemas**
-   - [ ] Create `app/schemas/post.py`
-   - [ ] Create CreatePost, UpdatePost, PostResponse schemas
-   - [ ] Include author, stats, interactions in response
-   - [ ] Add validation rules
+   - [x] Create `app/schemas/post.py`
+   - [x] Create CreatePost, PostResponse schemas
+   - [x] Include author, stats, interactions in response
+   - [x] Add validation rules
 
 5. **Post API Endpoints**
-   - [ ] Create `app/api/posts.py`
-   - [ ] Implement `POST /posts` - Create post
-   - [ ] Implement `GET /posts` - List posts (paginated)
-   - [ ] Implement `GET /posts/{post_id}` - Get single post
-   - [ ] Implement `DELETE /posts/{post_id}` - Delete post
-   - [ ] Test all endpoints
+   - [x] Create `app/api/posts.py`
+   - [x] Implement `POST /posts` - Create post
+   - [x] Implement `GET /posts` - List posts (paginated)
+   - [x] Implement `GET /posts/{post_id}` - Get single post
+   - [x] Implement `DELETE /posts/{post_id}` - Delete post
+   - [x] Test all endpoints
 
 6. **Comment Service**
-   - [ ] Create `app/services/comment_service.py`
-   - [ ] Implement comment CRUD operations
-   - [ ] Calculate comment stats
-   - [ ] Test comment operations
+   - [x] Create `app/services/comment_service.py`
+   - [x] Implement comment CRUD operations
+   - [x] Calculate comment stats
+   - [x] Test comment operations
 
 7. **Comment Schemas**
-   - [ ] Create `app/schemas/comment.py`
-   - [ ] Create request/response schemas
-   - [ ] Add validation
+   - [x] Create `app/schemas/comment.py`
+   - [x] Create request/response schemas
+   - [x] Add validation
 
 8. **Comment API Endpoints**
-   - [ ] Create `app/api/comments.py`
-   - [ ] Implement `POST /posts/{post_id}/comments` - Create comment
-   - [ ] Implement `GET /posts/{post_id}/comments` - List comments
-   - [ ] Implement `DELETE /comments/{comment_id}` - Delete comment
-   - [ ] Test all endpoints
+   - [x] Create `app/api/comments.py`
+   - [x] Implement `POST /posts/{post_id}/comments` - Create comment
+   - [x] Implement `GET /posts/{post_id}/comments` - List comments
+   - [x] Implement `DELETE /comments/{comment_id}` - Delete comment
+   - [x] Test all endpoints
 
 9. **Reaction Service**
-   - [ ] Create `app/services/reaction_service.py`
-   - [ ] Implement reaction toggle (like/unlike)
-   - [ ] Calculate reaction counts
-   - [ ] Check if user has reacted
-   - [ ] Test reaction operations
+   - [x] Create `app/services/reaction_service.py`
+   - [x] Implement reaction toggle (like/unlike)
+   - [x] Calculate reaction counts
+   - [x] Check if user has reacted
+   - [x] Test reaction operations
 
 10. **Reaction API Endpoints**
-    - [ ] Create `app/api/reactions.py`
-    - [ ] Implement `POST /posts/{post_id}/reactions` - Toggle reaction
-    - [ ] Implement `POST /comments/{comment_id}/reactions` - Toggle reaction
-    - [ ] Test endpoints
+    - [x] Create `app/api/reactions.py`
+    - [x] Implement `POST /posts/{post_id}/reactions` - Toggle reaction
+    - [x] Implement `POST /comments/{comment_id}/reactions` - Toggle reaction
+    - [x] Test endpoints
 
 11. **Repost Service**
-    - [ ] Create `app/services/repost_service.py`
-    - [ ] Implement normal repost creation
-    - [ ] Implement quote repost creation (creates new post)
-    - [ ] Implement repost deletion
-    - [ ] Calculate repost counts
-    - [ ] Test repost operations
+    - [x] Create `app/services/repost_service.py`
+    - [x] Implement normal repost creation
+    - [x] Implement quote repost creation (creates new post)
+    - [x] Implement repost deletion
+    - [x] Calculate repost counts (in post_service)
+    - [x] Test repost operations
 
 12. **Repost API Endpoints**
-    - [ ] Create `app/api/reposts.py`
-    - [ ] Implement `POST /posts/{post_id}/reposts` - Create repost
-    - [ ] Implement `DELETE /posts/{post_id}/reposts` - Remove repost
-    - [ ] Test endpoints
+    - [x] Create `app/api/reposts.py`
+    - [x] Implement `POST /posts/{post_id}/reposts` - Create repost
+    - [x] Implement `DELETE /posts/{post_id}/reposts` - Remove repost
+    - [x] Test endpoints
 
 **Acceptance Criteria:**
 - ✅ Posts can be created with ticker extraction
