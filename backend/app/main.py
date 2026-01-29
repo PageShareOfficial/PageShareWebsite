@@ -6,6 +6,7 @@ from .middleware.cors import init_cors
 from .middleware.error_handler import init_error_handlers
 from .middleware.logging import init_request_logging
 from .api.auth import router as auth_router
+from .api.users import router as users_router
 
 
 settings = get_settings()
@@ -42,3 +43,4 @@ async def root():
 
 # Routers
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")

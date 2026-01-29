@@ -32,6 +32,9 @@ class Settings:
         self.supabase_service_role_key: str = os.getenv(
             "SUPABASE_SERVICE_ROLE_KEY", ""
         )
+        self.supabase_storage_bucket: str = os.getenv(
+            "SUPABASE_STORAGE_BUCKET", "profile-pictures"
+        )
 
         # Auth
         self.supabase_jwt_secret: str = os.getenv("SUPABASE_JWT_SECRET", "")
