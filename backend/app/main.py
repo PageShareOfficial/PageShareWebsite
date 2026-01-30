@@ -4,6 +4,7 @@ from .database import db_health_check
 from .middleware.cors import init_cors
 from .middleware.error_handler import init_error_handlers
 from .middleware.logging import init_request_logging
+from .middleware.activity import init_activity_tracking
 from .api.auth import router as auth_router
 from .api.users import router as users_router
 from .api.posts import router as posts_router
@@ -20,6 +21,8 @@ from .api.search import router as search_router
 from .api.feed import router as feed_router
 from .api.media import router as media_router
 from .api.errors import router as errors_router
+from .api.metrics import router as metrics_router
+from .api.cron import router as cron_router
 
 settings = get_settings()
 # Sentry: init only when DSN is set (optional)
@@ -40,6 +43,7 @@ app = FastAPI(title="PageShare Backend", version="0.1.0")
 init_cors(app)
 init_error_handlers(app)
 init_request_logging(app)
+init_activity_tracking(app)
 
 @app.get("/health")
 async def health_check():
@@ -77,3 +81,5 @@ app.include_router(search_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(errors_router, prefix="/api/v1")
+app.include_router(metrics_router, prefix="/api/v1")
+app.include_router(cron_router, prefix="/api/v1")
