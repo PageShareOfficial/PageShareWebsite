@@ -41,7 +41,8 @@ class Settings:
         # Sentry (optional – init only when DSN is set)
         self.sentry_dsn: str = os.getenv("SENTRY_DSN", "")
         self.sentry_environment: str = os.getenv("SENTRY_ENVIRONMENT", self.app_env)
-
+        # Cron (optional – for daily job: DB touch + materialized view refresh)
+        self.cron_secret: str = os.getenv("CRON_SECRET", "")
         # Basic safety check for critical vars in non-dev environments
         if self.app_env != "dev":
             missing = []

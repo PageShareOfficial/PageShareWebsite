@@ -71,7 +71,7 @@ def log_error_endpoint(
 @router.get("", response_model=dict)
 def list_errors_endpoint(
     db: Session = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(require_admin),
     severity: str | None = Query(None, description="Filter by severity"),
     error_type: str | None = Query(None, description="Filter by error_type"),
     resolved: bool | None = Query(None, description="Filter by resolved"),
@@ -80,7 +80,7 @@ def list_errors_endpoint(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
 ):
-    """Get paginated error logs. Auth required (admin check optional/later)."""
+    """Get paginated error logs. Admin only (user.badge == 'admin')."""
     rows, total = list_error_logs(
         db,
         severity=severity,
@@ -121,9 +121,9 @@ def list_errors_endpoint(
 def resolve_error_endpoint(
     error_id: UUID,
     db: Session = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(require_admin),
 ):
-    """Mark an error log as resolved. Auth required (admin optional/later)."""
+    """Mark an error log as resolved. Admin only (user.badge == 'admin')."""
     resolved_by = UUID(current_user.auth_user_id)
     row = resolve_error_log(db, error_id, resolved_by)
     if not row:

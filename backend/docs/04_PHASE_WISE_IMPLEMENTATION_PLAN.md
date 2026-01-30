@@ -607,9 +607,9 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Sentry Account & DSN** (separate task – manual/ops)
-   - [ ] Create Sentry account/project
-   - [ ] Get Sentry DSN
-   - [ ] Add `SENTRY_DSN` (and optional `SENTRY_ENVIRONMENT`) to env
+   - [x] Create Sentry account/project
+   - [x] Get Sentry DSN
+   - [x] Add `SENTRY_DSN` (and optional `SENTRY_ENVIRONMENT`) to env
 
 2. **Sentry Backend Integration** (code – runs only when DSN is set)
    - [x] Install `sentry-sdk` package
@@ -658,6 +658,8 @@ This document breaks down the PageShare backend implementation into manageable p
 
 **Estimated Effort:** 3-4 days
 
+**Note**:- Sentry related code is wriiten keeping the future & scalability in consideration not for present requirements
+
 ---
 
 ## Phase 10: Metrics & Analytics (Week 10-11)
@@ -668,44 +670,42 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Metrics Service**
-   - [ ] Create `app/services/metrics_service.py`
-   - [ ] Implement DAU calculation
-   - [ ] Implement MAU calculation
-   - [ ] Implement user retention calculation
-   - [ ] Implement engagement metrics calculation
-   - [ ] Implement growth metrics calculation
-   - [ ] Implement platform health metrics
-   - [ ] Use materialized views where possible
-   - [ ] Test all metric calculations
+   - [x] Create `app/services/metrics_service.py`
+   - [x] Implement DAU/MAU from `daily_metrics` materialized view
+   - [x] Implement user metrics (total_users; signups/active from daily_metrics)
+   - [x] Implement engagement metrics from `engagement_metrics` view
+   - [x] Implement growth metrics (week-over-week, month-over-month)
+   - [x] Implement platform health metrics (error_logs; API/DB/storage placeholders)
+   - [x] Use materialized views: daily_metrics, engagement_metrics; trending via ticker_service
+   - [x] Export (JSON/CSV) and dashboard composition
 
 2. **User Session Tracking**
-   - [ ] Update user activity to track sessions
-   - [ ] Implement session start/end tracking
-   - [ ] Update `last_active_at` on user activity
-   - [ ] Test session tracking
+   - [x] Update user activity: middleware touches `users.last_active_at` and `user_sessions` on each authenticated request
+   - [x] One row per user per day in `user_sessions` (session_start, session_end, actions_count); `app/services/session_service.py`, `app/middleware/activity.py`
+   - [x] Auth: decode_jwt_user_id_optional in auth_service for middleware
+   - [x] Test session tracking
 
 3. **Metrics Schemas**
-   - [ ] Create `app/schemas/metrics.py`
-   - [ ] Create metrics response schemas
-   - [ ] Structure metrics by category
+   - [x] Create `app/schemas/metrics.py`
+   - [x] Create metrics response schemas
+   - [x] Structure metrics by category
 
 4. **Metrics API Endpoints**
-   - [ ] Create `app/api/metrics.py`
-   - [ ] Implement `GET /metrics/dashboard` - All metrics
-   - [ ] Implement `GET /metrics/users` - User metrics
-   - [ ] Implement `GET /metrics/engagement` - Engagement metrics
-   - [ ] Implement `GET /metrics/growth` - Growth metrics
-   - [ ] Implement `GET /metrics/health` - Platform health
-   - [ ] Implement `GET /metrics/trending` - Trending content
-   - [ ] Implement `GET /metrics/export` - Export metrics
-   - [ ] Add admin authentication checks
-   - [ ] Test all endpoints
+   - [x] Create `app/api/metrics.py`
+   - [x] Implement `GET /metrics/dashboard` - All metrics
+   - [x] Implement `GET /metrics/users` - User metrics
+   - [x] Implement `GET /metrics/engagement` - Engagement metrics
+   - [x] Implement `GET /metrics/growth` - Growth metrics
+   - [x] Implement `GET /metrics/health` - Platform health
+   - [x] Implement `GET /metrics/trending` - Trending content
+   - [x] Implement `GET /metrics/export` - Export metrics
+   - [x] Add admin authentication checks
+   - [x] Test all endpoints
 
-5. **Materialized View Refresh Jobs** (Optional)
-   - [ ] Setup cron job or scheduled task
-   - [ ] Refresh `daily_metrics` view daily
-   - [ ] Refresh `trending_tickers` view hourly
-   - [ ] Document refresh schedule
+5. **Materialized View Refresh Jobs**
+   - [x] Backend endpoint `GET /api/v1/cron/daily` – DB touch + REFRESH MATERIALIZED VIEW (daily_metrics CONCURRENTLY, engagement_metrics, trending_tickers); auth via CRON_SECRET (header or ?secret=)
+   - [x] Config: CRON_SECRET; doc in `docs/05_VIEW_REFRESH.md`
+   - [ ] Vercel Cron or external cron to call endpoint daily (e.g. 05:00 UTC)
 
 **Acceptance Criteria:**
 - ✅ All metrics endpoints return accurate data

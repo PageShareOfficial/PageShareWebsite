@@ -73,6 +73,61 @@ Replace `psql "$DATABASE_URL"` with your actual connection method (Supabase SQL,
 
 ---
 
+## Backend cron endpoint (recommended)
+
+The backend exposes a **single daily cron endpoint** that does everything in one call:
+
+1. **DB touch** – Runs a simple query so Supabase sees activity (avoids 7-day inactivity pause).
+2. **Refresh all materialized views** – `daily_metrics` (CONCURRENTLY), `engagement_metrics`, `trending_tickers`.
+
+**One Vercel Cron job is enough** – no need to schedule separate jobs per view.
+
+**Endpoint:** `GET /api/v1/cron/daily`  
+**Auth:** Set `CRON_SECRET` in your env; send it with every request using one of:
+
+- Header: `Authorization: Bearer <CRON_SECRET>`
+- Header: `X-Cron-Secret: <CRON_SECRET>`
+- Query: `?secret=<CRON_SECRET>` (for schedulers that can’t set headers)
+
+---
+
+### Vercel Cron setup
+
+1. Add **`CRON_SECRET`** to your Vercel project env (e.g. `openssl rand -hex 32`).
+2. Add a **serverless route** that runs on schedule and calls your backend with the secret (Vercel Cron does not add custom headers to the request it sends). For example, a route that runs on the cron schedule and does:
+   - `fetch(yourBackendUrl + '/api/v1/cron/daily', { headers: { 'X-Cron-Secret': process.env.CRON_SECRET } })`
+3. In **`vercel.json`** (in the repo that deploys the backend), add:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron-daily",
+      "schedule": "0 5 * * *"
+    }
+  ]
+}
+```
+
+- **`schedule`:** `0 5 * * *` = 05:00 UTC daily.
+- **`path`:** Must be the serverless route that **you** implement (e.g. `/api/cron-daily`) and that calls `GET /api/v1/cron/daily` with the `X-Cron-Secret` header from env. If your backend is a single serverless function that already serves `/api/v1/cron/daily`, use that path and ensure the handler sends the secret (e.g. from env) when Vercel invokes it (e.g. by checking a Vercel cron header and then adding the secret to an internal call, or by reading the secret from env and forwarding).
+
+**Alternative – external cron (e.g. cron-job.org):** Call the endpoint yourself and send the secret:
+
+```bash
+curl -H "X-Cron-Secret: $CRON_SECRET" "https://your-api.vercel.app/api/v1/cron/daily"
+```
+
+Or with query param (if the scheduler can’t set headers):
+
+```text
+GET https://your-api.vercel.app/api/v1/cron/daily?secret=YOUR_CRON_SECRET
+```
+
+Run **once per day**. The endpoint runs `db_health_check()` then refreshes all three materialized views.
+
+---
+
 ## Regular view (no refresh)
 
 - **`post_stats`** – Standard view; no refresh. Each query runs the underlying `SELECT` and returns current counts.
