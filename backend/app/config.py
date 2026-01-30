@@ -38,6 +38,9 @@ class Settings:
 
         # Auth
         self.supabase_jwt_secret: str = os.getenv("SUPABASE_JWT_SECRET", "")
+        # Sentry (optional – init only when DSN is set)
+        self.sentry_dsn: str = os.getenv("SENTRY_DSN", "")
+        self.sentry_environment: str = os.getenv("SENTRY_ENVIRONMENT", self.app_env)
 
         # Basic safety check for critical vars in non-dev environments
         if self.app_env != "dev":

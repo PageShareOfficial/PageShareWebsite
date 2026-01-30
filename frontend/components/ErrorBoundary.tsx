@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import * as Sentry from '@sentry/nextjs';
+import { logErrorToBackend } from '@/utils/error/logError';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -25,27 +27,34 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error for production monitoring
-    // In production, you can integrate with error tracking services like:
-    // - Sentry: Sentry.captureException(error, { contexts: { react: errorInfo } })
-    // - LogRocket: LogRocket.captureException(error)
-    // - Custom analytics service
-    
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
-    // Store error info for debugging (only in development)
+
     if (process.env.NODE_ENV === 'development') {
       this.setState({ errorInfo });
     }
 
-    // In production, you could send to your error tracking service:
-    // Example:
-    // if (typeof window !== 'undefined' && window.errorTrackingService) {
-    //   window.errorTrackingService.logError(error, {
-    //     componentStack: errorInfo.componentStack,
-    //     errorBoundary: true,
-    //   });
-    // }
+    // Log to backend (POST /api/v1/errors/log) when NEXT_PUBLIC_API_URL is set
+    logErrorToBackend({
+      error_type: 'frontend',
+      error_code: 'COMPONENT_ERROR',
+      error_message: error.message || String(error),
+      stack_trace: error.stack ?? undefined,
+      page_url: typeof window !== 'undefined' ? window.location.pathname || window.location.href : undefined,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      severity: 'error',
+      metadata: {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+      },
+    });
+
+    try {
+      Sentry.captureException(error, {
+        contexts: { react: { componentStack: errorInfo.componentStack } },
+      });
+    } catch {
+      // ignore Sentry errors
+    }
   }
 
   resetError() {

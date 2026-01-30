@@ -606,46 +606,48 @@ This document breaks down the PageShare backend implementation into manageable p
 ### Epic: Error Tracking System
 
 #### Tasks:
-1. **Sentry Backend Integration**
+1. **Sentry Account & DSN** (separate task – manual/ops)
    - [ ] Create Sentry account/project
    - [ ] Get Sentry DSN
-   - [ ] Install `sentry-sdk` package
-   - [ ] Configure Sentry in `app/main.py`
-   - [ ] Integrate FastAPI integration
-   - [ ] Integrate SQLAlchemy integration
-   - [ ] Test error tracking
+   - [ ] Add `SENTRY_DSN` (and optional `SENTRY_ENVIRONMENT`) to env
 
-2. **Error Logging Service**
-   - [ ] Create `app/services/error_service.py`
-   - [ ] Implement error logging to database
-   - [ ] Implement error logging to Sentry
-   - [ ] Add user context to errors
-   - [ ] Add request context to errors
-   - [ ] Test error logging
+2. **Sentry Backend Integration** (code – runs only when DSN is set)
+   - [x] Install `sentry-sdk` package
+   - [x] Add Sentry config to `app/config.py`
+   - [x] Configure Sentry in `app/main.py` (FastAPI + SQLAlchemy integrations)
+   - [x] Test error tracking (e.g. trigger unhandled exception with DSN set)
 
-3. **Error Log Models & Schemas**
-   - [ ] Verify `ErrorLog` model is created (from Phase 2)
-   - [ ] Create `app/schemas/error.py`
-   - [ ] Create error request/response schemas
+3. **Error Logging Service**
+   - [x] Create `app/services/error_service.py`
+   - [x] Implement error logging to database (`error_logs`)
+   - [x] Optionally send to Sentry when DSN set (user/request context)
+   - [x] Add user context and request context to errors
+   - [x] Test error logging
 
-4. **Error API Endpoints**
-   - [ ] Create `app/api/errors.py` (or add to existing file)
-   - [ ] Implement `POST /errors/log` - Log frontend errors
-   - [ ] Implement `GET /errors` - Get error logs (admin)
-   - [ ] Implement `PATCH /errors/{error_id}/resolve` - Mark resolved
-   - [ ] Test endpoints
+4. **Error Log Models & Schemas**
+   - [x] Verify `ErrorLog` model is created (from Phase 2)
+   - [x] Create `app/schemas/error.py` (request/response schemas for log, list, resolve)
 
-5. **Global Error Handler**
-   - [ ] Update `app/middleware/error_handler.py`
-   - [ ] Log all unhandled exceptions to Sentry
-   - [ ] Log to database for critical errors
-   - [ ] Test error handler
+5. **Error API Endpoints**
+   - [x] Create `app/api/errors.py`
+   - [x] Implement `POST /errors/log` – Log frontend/client errors (no auth required)
+   - [x] Implement `GET /errors` – Get error logs (auth required; admin optional/later)
+   - [x] Implement `PATCH /errors/{error_id}/resolve` – Mark resolved (auth required; admin optional/later)
+   - [x] Wire errors router in `app/main.py`
+   - [x] Test endpoints
 
-6. **Frontend Error Tracking** (Coordination with Frontend Team)
-   - [ ] Install Sentry Next.js SDK in frontend
-   - [ ] Configure Sentry in frontend
-   - [ ] Setup error boundary
-   - [ ] Test frontend error tracking
+6. **Global Error Handler**
+   - [x] Update `app/middleware/error_handler.py`
+   - [x] Log all unhandled exceptions to Sentry (if DSN set)
+   - [x] Log to database for critical errors (unhandled → `error_logs` with severity critical)
+   - [x] Test error handler
+
+7. **Frontend Error Tracking** (separate task – coordination with Frontend Team)
+   - [x] Install Sentry Next.js SDK in frontend
+   - [x] Configure Sentry in frontend
+   - [x] Setup error boundary
+   - [x] Optionally call `POST /errors/log` from frontend to store in DB
+   - [x] Test frontend error tracking
 
 **Acceptance Criteria:**
 - ✅ Backend errors are tracked in Sentry
