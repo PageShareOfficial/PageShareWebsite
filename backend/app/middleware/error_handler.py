@@ -1,3 +1,4 @@
+import traceback
 from typing import Any, Dict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -16,6 +17,7 @@ def _error_body(code: str, message: str, details: Dict[str, Any] | None = None) 
 def init_error_handlers(app: FastAPI) -> None:
     """
     Register global exception handlers so all errors share a consistent shape.
+    Unhandled exceptions are sent to Sentry (if configured) and logged to DB as critical.
     """
 
     @app.exception_handler(AuthException)
@@ -61,4 +63,50 @@ def init_error_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content=_error_body(code, message),
+        )
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        """Log unhandled exceptions to Sentry and DB, return generic 500."""
+        request_id = getattr(request.state, "request_id", None)
+        path = getattr(request.url, "path", "") or str(request.url)
+        method = getattr(request, "method", "UNKNOWN")
+        msg = str(exc) or type(exc).__name__
+        stack = traceback.format_exc()
+
+        try:
+            import sentry_sdk
+            sentry_sdk.set_tag("request_id", request_id)
+            sentry_sdk.set_extra("request_path", path)
+            sentry_sdk.set_extra("request_method", method)
+            sentry_sdk.capture_exception(exc)
+        except Exception:
+            pass
+
+        try:
+            from app.database import db_session
+            from app.services.error_service import create_error_log
+            with db_session() as db:
+                create_error_log(
+                    db,
+                    error_type="backend",
+                    error_code="UNHANDLED_EXCEPTION",
+                    error_message=msg,
+                    stack_trace=stack[:10000] if stack else None,
+                    user_id=None,
+                    request_path=path,
+                    request_method=method,
+                    request_id=request_id,
+                    user_agent=request.headers.get("user-agent"),
+                    ip_address_hash=None,
+                    environment=None,
+                    severity="critical",
+                    also_send_to_sentry=False,
+                )
+        except Exception:
+            pass
+
+        return JSONResponse(
+            status_code=500,
+            content=_error_body("INTERNAL_ERROR", "An unexpected error occurred."),
         )

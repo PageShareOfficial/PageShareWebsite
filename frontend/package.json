@@ -14,6 +14,7 @@
   "dependencies": {
     "@giphy/react-components": "^10.1.1",
     "@hookform/resolvers": "^5.2.2",
+    "@sentry/nextjs": "^10.38.0",
     "emoji-picker-react": "^4.16.1",
     "lucide-react": "^0.562.0",
     "next": "14.2.35",

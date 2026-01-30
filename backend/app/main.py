@@ -19,8 +19,20 @@ from .api.polls import router as polls_router
 from .api.search import router as search_router
 from .api.feed import router as feed_router
 from .api.media import router as media_router
+from .api.errors import router as errors_router
 
 settings = get_settings()
+# Sentry: init only when DSN is set (optional)
+if settings.sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.sentry_environment,
+        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
+        traces_sample_rate=0.1,
+    )
 
 app = FastAPI(title="PageShare Backend", version="0.1.0")
 
@@ -64,3 +76,4 @@ app.include_router(polls_router, prefix="/api/v1")
 app.include_router(search_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
+app.include_router(errors_router, prefix="/api/v1")
