@@ -18,6 +18,7 @@ from .api.reports import router as reports_router
 from .api.polls import router as polls_router
 from .api.search import router as search_router
 from .api.feed import router as feed_router
+from .api.media import router as media_router
 
 settings = get_settings()
 
@@ -62,3 +63,4 @@ app.include_router(reports_router, prefix="/api/v1")
 app.include_router(polls_router, prefix="/api/v1")
 app.include_router(search_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
+app.include_router(media_router, prefix="/api/v1")
