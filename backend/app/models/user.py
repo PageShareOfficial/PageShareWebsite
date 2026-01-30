@@ -40,7 +40,7 @@ class User(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "badge IN ('Verified', 'Public')",
+            "badge IN ('Verified', 'Public', 'admin')",
             name="users_badge_check",
         ),
         CheckConstraint(

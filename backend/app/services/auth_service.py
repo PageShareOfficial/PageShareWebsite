@@ -39,6 +39,24 @@ def _get_jwt_secret() -> str:
         raise RuntimeError("SUPABASE_JWT_SECRET is not configured")
     return secret
 
+def decode_jwt_user_id_optional(token: str) -> str | None:
+    """
+    Decode JWT and return sub (user_id) or None if invalid/expired.
+    For middleware use only; does not raise.
+    """
+    if not token or not token.strip():
+        return None
+    try:
+        payload = jwt.decode(
+            token.strip(),
+            _get_jwt_secret(),
+            algorithms=["HS256"],
+            options={"verify_aud": False},
+        )
+        return payload.get("sub") or None
+    except Exception:
+        return None
+
 def verify_jwt(token: str) -> CurrentUser:
     """
     Verify a Supabase-issued JWT and return a CurrentUser.
