@@ -32,6 +32,9 @@ class Settings:
         self.supabase_storage_bucket: str = os.getenv(
             "SUPABASE_STORAGE_BUCKET", "profile-pictures"
         )
+        self.supabase_media_bucket: str = os.getenv(
+            "SUPABASE_MEDIA_BUCKET", "post-media"
+        )
 
         # Auth
         self.supabase_jwt_secret: str = os.getenv("SUPABASE_JWT_SECRET", "")
