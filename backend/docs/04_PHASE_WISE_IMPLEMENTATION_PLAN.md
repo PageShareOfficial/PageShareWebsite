@@ -570,24 +570,24 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Media Upload Service**
-   - [ ] Extend `app/services/storage_service.py`
-   - [ ] Implement media upload to `post-media` bucket
-   - [ ] Generate unique file names
-   - [ ] Handle multiple file uploads
-   - [ ] Test upload operations
+   - [x] Extend `app/services/storage_service.py`
+   - [x] Implement media upload to `post-media` bucket
+   - [x] Generate unique file names
+   - [x] Handle multiple file uploads
+   - [x] Test upload operations
 
 2. **Media Validation**
-   - [ ] Extend `app/utils/media_validator.py`
-   - [ ] Validate multiple file types
-   - [ ] Validate file sizes per file and total
-   - [ ] Test validation
+   - [x] Extend `app/utils/media_validator.py`
+   - [x] Validate multiple file types
+   - [x] Validate file sizes per file and total
+   - [x] Test validation
 
 3. **Media API Endpoints**
-   - [ ] Create `app/api/media.py`
-   - [ ] Implement `POST /media/upload` - Upload media files
-   - [ ] Handle multipart/form-data
-   - [ ] Return public URLs
-   - [ ] Test upload endpoint
+   - [x] Create `app/api/media.py`
+   - [x] Implement `POST /media/upload` - Upload media files
+   - [x] Handle multipart/form-data
+   - [x] Return public URLs
+   - [x] Test upload endpoint
 
 **Acceptance Criteria:**
 - ✅ Multiple media files can be uploaded

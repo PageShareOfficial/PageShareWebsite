@@ -18,9 +18,14 @@ def get_supabase_client() -> Client:
 
 def _profile_picture_path(user_id: str, filename: str) -> str:
     ts = int(time.time())
-    # Very simple sanitization of filename
     name = os.path.basename(filename).replace(" ", "_")
     return f"user_{user_id}/{ts}_{name}"
+
+def _media_path(user_id: str, filename: str) -> str:
+    """Path for post/comment media: media/user_{user_id}/{ts}_{name}."""
+    ts = int(time.time())
+    name = os.path.basename(filename).replace(" ", "_")
+    return f"media/user_{user_id}/{ts}_{name}"
 
 def upload_profile_picture(
     *,
@@ -73,3 +78,23 @@ def delete_profile_picture(
         storage_bucket.remove([object_path])
     except Exception as exc:
         logger.warning("Failed to delete profile picture %s from bucket %s: %s", object_path, bucket_name, exc)
+
+def upload_media(
+    *,
+    user_id: str,
+    file_bytes: bytes,
+    filename: str,
+    content_type: str,
+    bucket: Optional[str] = None,
+) -> str:
+    """
+    Upload a media file (for posts/comments) to the media bucket and return its public URL.
+    """
+    client = get_supabase_client()
+    bucket_name = bucket or settings.supabase_media_bucket
+    path = _media_path(user_id, filename)
+
+    logger.info("Uploading media for user %s to %s/%s", user_id, bucket_name, path)
+    storage_bucket = client.storage.from_(bucket_name)
+    storage_bucket.upload(path, file_bytes, {"content-type": content_type, "upsert": True})
+    return storage_bucket.get_public_url(path)
