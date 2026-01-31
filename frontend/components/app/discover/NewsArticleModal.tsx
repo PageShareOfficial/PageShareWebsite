@@ -62,7 +62,8 @@ export default function NewsArticleModal({
     setContentError(null);
     setIframeFailed(false);
     
-    // First, try to fetch article HTML via our proxy
+    // Fetch article HTML via Next.js route only (when available).
+    // When using backend (NEXT_PUBLIC_API_URL), article content is handled by iframe - no backend call.
     try {
       const response = await fetch(`/api/news/article?url=${encodeURIComponent(url)}`);
       
