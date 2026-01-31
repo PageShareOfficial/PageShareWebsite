@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, require_admin
 from app.schemas.error import (
     ErrorLogResponse,
     LogErrorRequest,
