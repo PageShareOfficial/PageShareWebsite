@@ -1,7 +1,7 @@
 import { NewsArticle, NewsCategory } from '@/types/discover';
 
 const CACHE_PREFIX = 'pageshare_news_cache_';
-const CACHE_EXPIRY_MS = 45 * 60 * 1000; // 45 minutes (aligns with backend, trading peaks: 9am, 12-2pm, 4pm)
+const CACHE_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
 
 interface NewsCacheEntry {
   articles: NewsArticle[];
