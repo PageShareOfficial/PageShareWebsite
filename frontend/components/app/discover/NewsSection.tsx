@@ -37,7 +37,6 @@ export default function NewsSection({
     error,
     hasMore,
     loadMore,
-    isSearching,
     refresh,
   } = useNewsFeed({
     category: debouncedCategory,
@@ -81,11 +80,11 @@ export default function NewsSection({
 
   // Infinite scroll implementation
   useEffect(() => {
-    if (!hasMore || isLoading || isSearching) return;
+    if (!hasMore || isLoading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading && !isSearching) {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
           loadMore();
         }
       },
@@ -105,7 +104,7 @@ export default function NewsSection({
         observer.unobserve(currentTarget);
       }
     };
-  }, [hasMore, isLoading, isSearching, loadMore]);
+  }, [hasMore, isLoading, loadMore]);
 
   const categories: { value: NewsCategory; label: string }[] = [
     { value: 'all', label: 'All' },
