@@ -1,5 +1,6 @@
 /**
  * Sentry client-side init. Only runs when NEXT_PUBLIC_SENTRY_DSN is set.
+ * Required by @sentry/nextjs withSentryConfig (webpack). For Turbopack, use instrumentation-client.ts.
  */
 import * as Sentry from '@sentry/nextjs';
 
