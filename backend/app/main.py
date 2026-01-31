@@ -24,7 +24,6 @@ from .api.errors import router as errors_router
 from .api.metrics import router as metrics_router
 from .api.cron import router as cron_router
 from .api.watchlist import router as watchlist_router
-from .api.news import router as news_router
 
 settings = get_settings()
 # Sentry: init only when DSN is set (optional)
@@ -86,4 +85,3 @@ app.include_router(errors_router, prefix="/api/v1")
 app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(cron_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
-app.include_router(news_router, prefix="/api/v1")
