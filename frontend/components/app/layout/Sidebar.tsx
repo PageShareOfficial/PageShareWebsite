@@ -96,15 +96,16 @@ export default function Sidebar() {
   };
 
   // All nav items including watchlist for mobile and tablet
+  // Profile uses prefetch={false} to avoid compiling /[username] before login (prevents 401s)
   const allNavItems = [
-    { name: 'Home', icon: Home, href: '/home' },
-    { name: 'Discover', icon: Search, href: '/discover' },
-    { name: 'Labs', icon: FlaskConical, href: '/labs' },
-    { name: 'Watchlist', icon: List, href: '/watchlist' },
-    { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks' },
-    { name: 'Settings', icon: Settings, href: '/settings' },
-    { name: 'Profile', icon: User, href: `/${currentUser.handle}` },
-    { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans' },
+    { name: 'Home', icon: Home, href: '/home', prefetch: true },
+    { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
+    { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
+    { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
+    { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks', prefetch: true },
+    { name: 'Settings', icon: Settings, href: '/settings', prefetch: true },
+    { name: 'Profile', icon: User, href: `/${currentUser.handle}`, prefetch: false },
+    { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans', prefetch: true },
   ];
 
   // Desktop nav items (without watchlist since it's in right rail, but with Premium and Settings)
@@ -112,12 +113,12 @@ export default function Sidebar() {
   
   // Mobile nav items: Home, Discover, Labs, Watchlist, More, Profile (More will have dropdown with Settings and Bookmarks)
   const mobileNavItems = [
-    { name: 'Home', icon: Home, href: '/home' },
-    { name: 'Discover', icon: Search, href: '/discover' },
-    { name: 'Labs', icon: FlaskConical, href: '/labs' },
-    { name: 'Watchlist', icon: List, href: '/watchlist' },
-    { name: 'More', icon: MoreHorizontal, href: '#', isMore: true },
-    { name: 'Profile', icon: User, href: `/${currentUser.handle}` },
+    { name: 'Home', icon: Home, href: '/home', prefetch: true },
+    { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
+    { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
+    { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
+    { name: 'More', icon: MoreHorizontal, href: '#', isMore: true, prefetch: true },
+    { name: 'Profile', icon: User, href: `/${currentUser.handle}`, prefetch: false },
   ];
   
   // Tablet nav items (without watchlist since it's a floating button, but with Premium and Settings)
@@ -157,7 +158,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  prefetch={true}
+                  prefetch={item.prefetch !== false}
                   onClick={() => setActiveNav(item.name)}
                   className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
                     isActive
@@ -181,7 +182,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  prefetch={true}
+                  prefetch={item.prefetch !== false}
                   onClick={() => setActiveNav(item.name)}
                   className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
                     isActive
@@ -328,7 +329,7 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                prefetch={true}
+                prefetch={(item as { prefetch?: boolean }).prefetch !== false}
                 onClick={() => setActiveNav(item.name)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors min-w-0 ${
                   isActive

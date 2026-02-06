@@ -2,16 +2,35 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingState from '@/components/app/common/LoadingState';
+import EmailSignUpForm from './EmailSignUpForm';
+import EmailSignInForm from './EmailSignInForm';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
-export default function AuthTabs() {
+type AuthTab = 'signup' | 'signin';
+type AuthView = AuthTab | 'forgot';
+
+interface AuthTabsProps {
+  initialError?: string;
+}
+
+export default function AuthTabs({ initialError }: AuthTabsProps) {
+  const [view, setView] = useState<AuthView>('signin');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(initialError ?? null);
+  const { signInWithGoogle } = useAuth();
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     setIsLoading(true);
-    // Google authentication logic will be implemented here
-    // Google OAuth will automatically handle login vs signup
-    // After implementation, this will handle authentication
-    // setIsLoading(false);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const GoogleIcon = () => (
@@ -25,30 +44,91 @@ export default function AuthTabs() {
 
   return (
     <div className="w-full max-w-lg bg-black p-6 sm:p-8 md:p-10">
-      {/* Heading */}
       <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">
         Welcome to PageShare
       </h1>
-      
-      {/* Google Auth Button */}
-      <div className="mt-8">
-        <button
-          type="button"
-          onClick={handleGoogleAuth}
-          disabled={isLoading}
-          className="w-full px-6 py-3.5 bg-white rounded-full text-gray-900 font-semibold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-        >
-          <GoogleIcon />
-          <span>{isLoading ? 'Connecting...' : 'Continue with Google'}</span>
-        </button>
-      </div>
 
-      {/* Helper Text */}
-      <p className="text-sm text-gray-400 text-center mt-4 mb-6">
-        New here? We'll create your account automatically.
-      </p>
+      {view !== 'forgot' && (
+        <div className="flex rounded-full bg-gray-900/80 p-1 mt-6 mb-6">
+          <button
+            type="button"
+            onClick={() => { setView('signup'); setError(null); }}
+            className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-colors ${
+              view === 'signup' ? 'bg-white text-gray-900' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Sign up
+          </button>
+          <button
+            type="button"
+            onClick={() => { setView('signin'); setError(null); }}
+            className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-colors ${
+              view === 'signin' ? 'bg-white text-gray-900' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Sign in
+          </button>
+        </div>
+      )}
 
-      {/* Terms Text */}
+      {view === 'forgot' && (
+        <p className="text-gray-400 text-center text-sm mt-2 mb-4">
+          Enter your email and we&apos;ll send you a reset link.
+        </p>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {view === 'forgot' ? (
+        <ForgotPasswordForm
+          onBack={() => { setView('signin'); setError(null); }}
+        />
+      ) : view === 'signup' ? (
+        <EmailSignUpForm onError={(msg) => setError(msg ?? null)} />
+      ) : (
+        <EmailSignInForm
+          onError={(msg) => setError(msg ?? null)}
+          onForgotPassword={() => { setView('forgot'); setError(null); }}
+        />
+      )}
+
+      {view !== 'forgot' && (
+        <>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-black text-gray-500">or</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleAuth}
+            disabled={isLoading}
+            className="w-full px-6 py-3.5 bg-white rounded-full text-gray-900 font-semibold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            {isLoading ? (
+              <LoadingState text="Connecting..." size="sm" inline className="text-gray-900" />
+            ) : (
+              <>
+                <GoogleIcon />
+                <span>Continue with Google</span>
+              </>
+            )}
+          </button>
+
+          <p className="text-sm text-gray-400 text-center mt-4 mb-6">
+            {view === 'signup' ? "We'll create your account automatically." : 'New here? Sign up above.'}
+          </p>
+        </>
+      )}
+
       <p className="text-[10px] sm:text-xs text-gray-500 text-center leading-relaxed px-2">
         By continuing, you agree to the{" "}
         <Link href="/terms" className="text-cyan-400 hover:underline">Terms of Service</Link>
@@ -60,4 +140,3 @@ export default function AuthTabs() {
     </div>
   );
 }
-

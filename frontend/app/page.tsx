@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import AuthTabs from '@/components/auth/AuthTabs';
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get('error');
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Background */}
@@ -75,7 +79,7 @@ export default function Home() {
 
             {/* Right Column - Auth Card */}
             <div className="flex items-center justify-center w-full">
-              <AuthTabs />
+              <AuthTabs initialError={errorParam === 'auth' ? 'Sign-in link expired or invalid. Please try signing in again.' : errorParam === 'reset_expired' ? 'Password reset link expired. Please request a new one.' : undefined} />
             </div>
           </div>
         </div>

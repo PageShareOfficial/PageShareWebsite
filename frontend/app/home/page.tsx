@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
+import { useAuth } from '@/contexts/AuthContext';
 import Topbar from '@/components/app/layout/Topbar';
 import Feed from '@/components/app/feed/Feed';
 import RightRail from '@/components/app/layout/RightRail';
@@ -16,21 +17,26 @@ import { usePostsData } from '@/hooks/post/usePostsData';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { usePostSync } from '@/hooks/post/usePostSync';
+import Loading from '@/components/app/common/Loading';
+
+function needsOnboarding(username: string): boolean {
+  return username.startsWith('user_');
+}
 
 export default function HomePage() {
   const router = useRouter();
+  const { backendUser, loading } = useAuth();
   const [isNewIdeaOpen, setIsNewIdeaOpen] = useState(false);
   const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
 
-  // Use new hooks
+  // All hooks must run unconditionally (before any early return) to satisfy Rules of Hooks
   const { currentUser, isClient } = useCurrentUser();
   const { posts, setPosts } = usePostsData({ validateReposts: true });
   const { watchlist, setWatchlist } = useWatchlist();
-  const { filterPosts } = useContentFilters({ 
-    currentUserHandle: currentUser.handle, 
-    isClient 
+  const { filterPosts } = useContentFilters({
+    currentUserHandle: currentUser.handle,
+    isClient,
   });
-  
   const {
     handleLike,
     handleRepost,
@@ -45,7 +51,6 @@ export default function HomePage() {
     quoteRepostPostId,
     setQuoteRepostPostId,
   } = usePostHandlers({ posts, setPosts, currentUser });
-
   const {
     reportModalOpen,
     reportContentType,
@@ -56,13 +61,27 @@ export default function HomePage() {
     handleReportClick,
     handleReportSubmitted,
   } = useReportModal();
-
-  // Sync posts to localStorage and repost flags
   usePostSync({ posts, setPosts, currentUserHandle: currentUser.handle, isClient });
 
-  // Filter posts to exclude muted/blocked users' posts
   const filteredPosts = filterPosts(posts);
 
+  // Redirect to onboarding if user hasn't completed it
+  useEffect(() => {
+    if (loading) return;
+    if (backendUser && needsOnboarding(backendUser.username)) {
+      router.replace('/onboarding');
+    }
+  }, [loading, backendUser, router]);
+
+  // Show loading while: checking auth, fetching backend user, or user needs onboarding
+  // (Avoids briefly showing home then redirecting when backendUser loads with user_xxx)
+  if (loading || !backendUser || needsOnboarding(backendUser.username)) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">
