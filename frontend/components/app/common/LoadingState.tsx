@@ -5,6 +5,8 @@ import { Loader2 } from 'lucide-react';
 interface LoadingStateProps {
   text?: string;
   size?: 'sm' | 'md' | 'lg';
+  /** Inline layout for buttons (spinner + text side by side) */
+  inline?: boolean;
   className?: string;
 }
 
@@ -14,6 +16,7 @@ interface LoadingStateProps {
 export default function LoadingState({ 
   text = 'Loading...', 
   size = 'md',
+  inline = false,
   className = '' 
 }: LoadingStateProps) {
   const sizeClasses = {
@@ -29,9 +32,9 @@ export default function LoadingState({
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center py-8 text-gray-400 ${className}`}>
-      <Loader2 className={`${sizeClasses[size]} animate-spin mb-4`} />
-      {text && <p className={textSizeClasses[size]}>{text}</p>}
+    <div className={`flex items-center justify-center gap-2 text-gray-400 ${inline ? 'flex-row py-0' : 'flex-col py-8'} ${className}`}>
+      <Loader2 className={`${sizeClasses[size]} animate-spin ${inline ? '' : 'mb-4'}`} />
+      {text && <span className={textSizeClasses[size]}>{text}</span>}
     </div>
   );
 }

@@ -1,48 +1,5 @@
 import { mockUsers } from '@/data/mockData';
-
-/**
- * List of reserved routes that should NOT be treated as usernames
- * These are static routes in the app that take priority over dynamic [username] routes
- * Using Set for O(1) lookup performance
- */
-export const RESERVED_ROUTES = new Set([
-  // Current routes
-  'api',
-  'bookmarks',
-  'cookies',
-  'home',
-  'labs',
-  'onboarding',
-  'plans',
-  'privacy',
-  'settings',
-  'terms',
-  'watchlist',
-  
-  // Future routes (reserve them now to prevent username conflicts)
-  'discover',
-  'explore',
-  'notifications',
-  'messages',
-  'search',
-  'trending',
-  'help',
-  'about',
-  'support',
-  'login',
-  'signup',
-  'logout',
-  'register',
-  'auth',
-  'admin',
-  'dashboard',
-  
-  // System routes
-  '_next',
-  'favicon.ico',
-  'robots.txt',
-  'sitemap.xml',
-]);
+import { RESERVED_ROUTES } from '@/utils/core/routeConstants';
 
 /**
  * Check if a route segment is a reserved route

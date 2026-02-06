@@ -58,6 +58,7 @@ class OnboardingRequest(BaseModel):
     date_of_birth: Optional[date] = None
     interests: List[constr(min_length=1, max_length=50)] = []  # type: ignore[call-arg]
     timezone: Optional[str] = None  # Browser-detected timezone
+    profile_picture_url: Optional[str] = None  # From Google OAuth (avatar_url/picture) when user doesn't upload
 
     @validator("interests", pre=True)
     def strip_interests(cls, v):

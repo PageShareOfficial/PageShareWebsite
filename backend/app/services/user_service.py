@@ -25,10 +25,11 @@ def get_or_create_user_for_auth(db: Session, current: CurrentUser) -> User:
         return user
 
     # Minimal bootstrap; onboarding will fill in more details later.
+    # Use user_{id} as placeholder so frontend can detect new users (needs onboarding).
     user = User(
         id=current.auth_user_id,
-        username=current.claims.get("email", f"user_{current.auth_user_id}").split("@")[0],
-        display_name=current.claims.get("email") or "New User",
+        username=f"user_{str(current.auth_user_id).replace('-', '').lower()[:24]}",
+        display_name=current.claims.get("name") or current.claims.get("email", "New User"),
     )
     db.add(user)
     db.commit()
@@ -122,6 +123,8 @@ def apply_onboarding(
         user.country_code = country_code
     if ip_hash:
         user.ip_address_hash = ip_hash
+    if payload.profile_picture_url:
+        user.profile_picture_url = payload.profile_picture_url
 
     db.add(user)
     db.commit()
