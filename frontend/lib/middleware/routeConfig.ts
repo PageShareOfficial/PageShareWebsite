@@ -1,42 +1,5 @@
 import { mockUsers } from '@/data/mockData';
-
-/**
- * Reserved routes that should NOT be treated as usernames.
- * These are static routes in the app that take priority over dynamic [username] routes.
- * Keep in sync with utils/routeUtils.ts
- */
-export const RESERVED_ROUTES = new Set([
-  // Current routes
-  'api',
-  'bookmarks',
-  'cookies',
-  'home',
-  'labs',
-  'onboarding',
-  'plans',
-  'privacy',
-  'settings',
-  'terms',
-  'watchlist',
-  
-  // Future routes
-  'discover',
-  'explore',
-  'notifications',
-  'messages',
-  'search',
-  'trending',
-  'help',
-  'about',
-  'support',
-  'login',
-  'signup',
-  'logout',
-  'register',
-  'auth',
-  'admin',
-  'dashboard',
-]);
+import { RESERVED_ROUTES } from '@/utils/core/routeConstants';
 
 /**
  * Get valid usernames from mock data.

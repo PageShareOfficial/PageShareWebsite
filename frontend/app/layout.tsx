@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ErrorBoundaryWrapper from "@/components/ErrorBoundaryWrapper";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "PageShare",
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="en" className="bg-black">
       <body className="bg-black">
         <ErrorBoundaryWrapper>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ErrorBoundaryWrapper>
       </body>
     </html>

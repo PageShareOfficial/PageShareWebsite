@@ -14,7 +14,8 @@ settings = get_settings()
 def get_supabase_client() -> Client:
     if not settings.supabase_url or not settings.supabase_service_role_key:
         raise RuntimeError("Supabase URL and SUPABASE_SERVICE_ROLE_KEY must be configured")
-    return create_client(settings.supabase_url, settings.supabase_service_role_key)
+    url = settings.supabase_url.rstrip("/") + "/"
+    return create_client(url, settings.supabase_service_role_key)
 
 def _profile_picture_path(user_id: str, filename: str) -> str:
     ts = int(time.time())
@@ -46,7 +47,7 @@ def upload_profile_picture(
 
     # supabase-py v2: storage.from_("bucket").upload(path, file)
     storage_bucket = client.storage.from_(bucket_name)
-    storage_bucket.upload(path, file_bytes, {"content-type": content_type, "upsert": True})
+    storage_bucket.upload(path, file_bytes, {"content-type": content_type})
 
     public_url = storage_bucket.get_public_url(path)
     return public_url
@@ -96,5 +97,5 @@ def upload_media(
 
     logger.info("Uploading media for user %s to %s/%s", user_id, bucket_name, path)
     storage_bucket = client.storage.from_(bucket_name)
-    storage_bucket.upload(path, file_bytes, {"content-type": content_type, "upsert": True})
+    storage_bucket.upload(path, file_bytes, {"content-type": content_type})
     return storage_bucket.get_public_url(path)

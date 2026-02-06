@@ -69,6 +69,17 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.reuters.com',
       },
+      // Google profile pictures (OAuth)
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      // Supabase Storage (profile pictures, media)
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
       {
         protocol: 'https',
         hostname: '**.bbc.com',
