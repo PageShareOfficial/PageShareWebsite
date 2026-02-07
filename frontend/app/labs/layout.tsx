@@ -1,0 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Labs',
+  description: 'Experimental features on PageShare',
+  robots: { index: false, follow: false },
+};
+
+export default function LabsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
+}

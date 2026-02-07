@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export const metadata = {
-  title: 'Terms of Service - PageShare',
-  description: 'Terms of Service for PageShare platform',
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description:
+    'PageShare Terms of Service. Read the terms and conditions for using our social platform for stocks, NFTs and crypto.',
 };
 
 export default function TermsPage() {

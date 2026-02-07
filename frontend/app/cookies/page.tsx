@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export const metadata = {
-  title: 'Cookie Policy - PageShare',
-  description: 'Cookie Policy for PageShare platform',
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy',
+  description:
+    'PageShare Cookie Policy. Understand how we use cookies and similar technologies on our platform.',
 };
 
 export default function CookiesPage() {

@@ -89,9 +89,9 @@ export default function Home() {
       <footer className="relative z-10 border-t border-white/10 bg-black mt-auto">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4 sm:py-6">
           <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 md:gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500">
-            <Link href="#" className="hover:text-white transition-colors px-1">About</Link>
+            <Link href="/coming-soon?page=About" className="hover:text-white transition-colors px-1">About</Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Help Center</Link>
+            <Link href="/coming-soon?page=Help-Center" className="hover:text-white transition-colors px-1">Help Center</Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link href="/terms" className="hover:text-white transition-colors px-1">Terms of Service</Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
@@ -99,19 +99,19 @@ export default function Home() {
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link href="/cookies" className="hover:text-white transition-colors px-1">Cookie Policy</Link>
             <span className="text-gray-600 hidden md:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Accessibility</Link>
+            <Link href="/coming-soon?page=Accessibility" className="hover:text-white transition-colors px-1 hidden md:inline">Accessibility</Link>
             <span className="text-gray-600 hidden md:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Disclaimer</Link>
+            <Link href="/disclaimer" className="hover:text-white transition-colors px-1">Disclaimer</Link>
             <span className="text-gray-600 hidden lg:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Blog</Link>
+            <Link href="/coming-soon?page=Blog" className="hover:text-white transition-colors px-1 hidden lg:inline">Blog</Link>
             <span className="text-gray-600 hidden lg:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Careers</Link>
+            <Link href="/coming-soon?page=Careers" className="hover:text-white transition-colors px-1 hidden lg:inline">Careers</Link>
             <span className="text-gray-600 hidden xl:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Brand Resources</Link>
+            <Link href="/coming-soon?page=Brand-Resources" className="hover:text-white transition-colors px-1 hidden xl:inline">Brand Resources</Link>
             <span className="text-gray-600 hidden xl:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">API</Link>
+            <Link href="/coming-soon?page=API" className="hover:text-white transition-colors px-1 hidden xl:inline">API</Link>
             <span className="text-gray-600 hidden xl:inline">|</span>
-            <Link href="#" className="hover:text-white transition-colors px-1">Contact</Link>
+            <Link href="/coming-soon?page=Contact" className="hover:text-white transition-colors px-1 hidden xl:inline">Contact</Link>
           </nav>
           <div className="mt-3 sm:mt-4 text-center">
             <p className="text-gray-500 text-[10px] sm:text-xs px-4 leading-relaxed">
