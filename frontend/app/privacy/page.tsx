@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export const metadata = {
-  title: 'Privacy Policy - PageShare',
-  description: 'Privacy Policy for PageShare platform',
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'PageShare Privacy Policy. Learn how we collect, use, and protect your information when you use our social platform for stocks, NFTs and crypto.',
 };
 
 export default function PrivacyPage() {
