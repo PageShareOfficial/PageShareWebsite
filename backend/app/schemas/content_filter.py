@@ -21,6 +21,7 @@ class FilteredUserItem(BaseModel):
     id: str
     username: str
     display_name: str
+    profile_picture_url: Optional[str] = None
     muted_at: Optional[datetime] = None
     blocked_at: Optional[datetime] = None
 

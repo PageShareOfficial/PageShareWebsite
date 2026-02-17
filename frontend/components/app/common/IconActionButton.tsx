@@ -13,6 +13,7 @@ interface IconActionButtonProps {
   hoverColor?: string;
   className?: string;
   showCount?: boolean;
+  disabled?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export default function IconActionButton({
   hoverColor = 'red-400',
   className = '',
   showCount = true,
+  disabled = false,
 }: IconActionButtonProps) {
   // Map color names to Tailwind classes
   const getHoverColorClass = (color: string) => {
@@ -73,10 +75,12 @@ export default function IconActionButton({
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`flex items-center justify-center space-x-2 ${getHoverColorClass(hoverColor)} transition-colors group flex-1 ${className}`}
+      disabled={disabled}
+      title={disabled ? 'Connect to the internet to continue' : label}
+      className={`flex items-center justify-center space-x-2 ${getHoverColorClass(hoverColor)} transition-colors group flex-1 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${className}`}
       aria-label={label}
-      title={label}
     >
       <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${getActiveBgClass(activeColor, isActive)}`}>
         <Icon className={`w-5 h-5 ${getActiveIconClass(activeColor, isActive)}`} />

@@ -18,6 +18,7 @@ export function createNormalRepost({ originalPost, currentUser }: CreateRepostPa
       badge: currentUser.badge || 'Verified',
     },
     createdAt: 'now',
+    createdAtRaw: new Date().toISOString(),
     content: '',
     repostType: 'normal',
     originalPostId: originalPost.id, // Store only the ID (optimized for backend)
@@ -51,6 +52,7 @@ export function createQuoteRepost({
       badge: currentUser.badge || 'Verified',
     },
     createdAt: 'now',
+    createdAtRaw: new Date().toISOString(),
     content: quoteText,
     repostType: 'quote',
     originalPostId: originalPost.id, // Store only the ID (optimized for backend)

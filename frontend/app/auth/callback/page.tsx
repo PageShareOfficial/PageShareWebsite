@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { apiGet } from '@/lib/api/client';
+import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
+import Loading from '@/components/app/common/Loading';
 
 /** User needs onboarding if username is a placeholder (starts with user_) */
 function needsOnboarding(username: string): boolean {
@@ -22,12 +23,19 @@ export default function AuthCallbackPage() {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const hasHash = hash.length > 0;
 
-    async function redirectWithSession(session: { access_token: string }) {
+    async function redirectWithSession(session: { access_token: string }, isNewLogin: boolean) {
       if (handled.current) return;
       handled.current = true;
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = getBaseUrl();
       if (apiUrl) {
+        if (isNewLogin) {
+          try {
+            await apiPost('/session/start', {}, session.access_token);
+          } catch {
+            // Non-blocking: session tracking best-effort
+          }
+        }
         try {
           const user = await apiGet<{ username: string }>('/users/me', session.access_token);
           if (needsOnboarding(user.username)) {
@@ -59,7 +67,7 @@ export default function AuthCallbackPage() {
         }
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.access_token) {
-          await redirectWithSession(session);
+          await redirectWithSession(session, true);
         } else {
           setStatus('error');
           router.replace('/?error=auth');
@@ -75,7 +83,7 @@ export default function AuthCallbackPage() {
             session?.access_token &&
             (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')
           ) {
-            await redirectWithSession(session);
+            await redirectWithSession(session, hasHash);
           }
         }
       );
@@ -84,7 +92,7 @@ export default function AuthCallbackPage() {
       // Also check immediately in case session is already set
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
-        await redirectWithSession(session);
+        await redirectWithSession(session, hasHash);
       } else if (!hasHash) {
         // No code, no hash - invalid callback
         setStatus('error');
@@ -102,10 +110,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <div className="inline-block w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-gray-400">Completing sign in...</p>
-      </div>
+      <Loading text="Completing sign in..." />
     </div>
   );
 }

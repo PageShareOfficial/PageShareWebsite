@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, NewsCategory } from '@/types/discover';
-import { getCachedNews, setCachedNews } from '@/utils/discover/newsCacheUtils';
+import { getBaseUrl } from '@/lib/api/client';
+import { getCachedNews, setCachedNews, removeExpiredNewsCacheEntries } from '@/utils/discover/newsCacheUtils';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE = getBaseUrl();
 const NEWS_ENDPOINT = API_BASE ? `${API_BASE}/api/v1/news` : '/api/news';
 
 // Page 1: 20 articles, page 2+: 10 articles
@@ -48,6 +50,11 @@ export function useNewsFeed(options: UseNewsFeedOptions = {}): UseNewsFeedResult
   const [hasMore, setHasMore] = useState(true);
 
   const ongoingRequestsRef = useRef<Map<string, Promise<{ articles: NewsArticle[]; totalArticles: number }>>>(new Map());
+
+  // Clean expired cache entries once when hook is first used
+  useEffect(() => {
+    removeExpiredNewsCacheEntries();
+  }, []);
 
   const getExpectedSize = (pageNum: number) => (pageNum === 1 ? PAGE1_SIZE : PAGE2_PLUS_SIZE);
 
@@ -132,7 +139,7 @@ export function useNewsFeed(options: UseNewsFeedOptions = {}): UseNewsFeedResult
       ongoingRequestsRef.current.set(requestKey, requestPromise);
       await requestPromise;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load news. Please try again.');
+      setError(getErrorMessage(err, 'Failed to load news. Please try again.'));
     } finally {
       setIsLoading(false);
     }

@@ -10,6 +10,7 @@ import FormInput from '@/components/app/common/FormInput';
 import Loading from '@/components/app/common/Loading';
 import { PrimaryButton } from '@/components/app/common/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 const resetSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -51,7 +52,7 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       setTimeout(() => router.push('/home'), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update password');
+      setError(getErrorMessage(err, 'Failed to update password'));
     } finally {
       setIsLoading(false);
     }

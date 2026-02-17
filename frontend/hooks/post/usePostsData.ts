@@ -1,118 +1,157 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Post } from '@/types';
-import { mockPosts, isTweet } from '@/data/mockData';
-import { savePostsToStorage } from '@/utils/core/storageUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { getBaseUrl } from '@/lib/api/client';
+import { listFeed, listPosts, mapPostResponseToPost, ListPostsResponse } from '@/lib/api/postApi';
+import {
+  CACHE_TTL_MS,
+  getFeedCache,
+  setFeedCache,
+  clearFeedCache,
+  isFeedCacheValid,
+} from '@/lib/feedCache';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 interface UsePostsDataProps {
-  initialPosts?: Post[];
-  validateReposts?: boolean;
-  postId?: string; // For post detail page - check if specific post exists
+  page?: number;
+  perPage?: number;
+  /** User ID to load that user's posts (profile). Pass null when on profile but profile not loaded yet. */
+  userId?: string | null;
+  ticker?: string;
 }
 
 interface UsePostsDataResult {
   posts: Post[];
   setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
   postsLoaded: boolean;
-  isClient: boolean;
 }
 
 /**
- * Hook to load and manage posts from localStorage
- * Handles repost validation and post existence checks
+ * Load posts from backend. Caches home feed to avoid refetch on tab switch.
  */
-export function usePostsData({ 
-  initialPosts, 
-  validateReposts = false,
-  postId 
+export function usePostsData({
+  page = 1,
+  perPage = 20,
+  userId,
+  ticker,
 }: UsePostsDataProps = {}): UsePostsDataResult {
-  const [posts, setPosts] = useState<Post[]>(initialPosts || mockPosts);
-  const [postsLoaded, setPostsLoaded] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
+  const { session } = useAuth();
+  const [posts, setPosts] = useState<Post[]>(() => {
+    const isHomeFeed = !userId && !ticker;
+    const cache = isHomeFeed ? getFeedCache() : null;
+    if (cache && isFeedCacheValid()) {
+      return cache.data;
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const isHomeFeed = !userId && !ticker;
+    const cache = isHomeFeed ? getFeedCache() : null;
+    return !(cache && isFeedCacheValid());
+  });
+  const [error, setError] = useState<string | null>(null);
+  const currentUserIdRef = useRef(userId);
+  const currentTickerRef = useRef(ticker);
   useEffect(() => {
-    setIsClient(true);
-    
-    const saved = localStorage.getItem('pageshare_posts');
-    if (saved) {
-      try {
-        const parsedPosts = JSON.parse(saved);
-        
-        if (!Array.isArray(parsedPosts) || parsedPosts.length === 0) {
-          setPosts(initialPosts || mockPosts);
-          setPostsLoaded(true);
-          return;
-        }
+    currentUserIdRef.current = userId;
+    currentTickerRef.current = ticker;
+  }, [userId, ticker]);
 
-        // For post detail page - check if specific post exists
-        if (postId) {
-          const postExists = parsedPosts.some((p: Post) => p.id === postId);
-          if (postExists) {
-            setPosts(parsedPosts);
-            setPostsLoaded(true);
+  const fetchPosts = useCallback(
+    async (forceRefresh = false) => {
+      const apiUrl = getBaseUrl();
+      if (!apiUrl) {
+        setPosts([]);
+        setLoading(false);
+        return;
+      }
+      if (userId === null) {
+        setPosts([]);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      const token = session?.access_token ?? null;
+      const isHomeFeed = !userId && !ticker;
+
+      if (isHomeFeed && !token) {
+        setLoading(false);
+        return;
+      }
+
+      const cache = isHomeFeed ? getFeedCache() : null;
+      if (isHomeFeed && !forceRefresh && cache && isFeedCacheValid()) {
+        setPosts(cache.data);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      const requestedUserId = userId ?? undefined;
+      const requestedTicker = ticker ?? undefined;
+      setLoading(true);
+      setError(null);
+      try {
+        const res: ListPostsResponse =
+          isHomeFeed && token
+            ? await listFeed(token, { page, per_page: perPage })
+            : await listPosts(token, {
+                page,
+                per_page: perPage,
+                user_id: requestedUserId,
+                ticker: requestedTicker,
+              });
+        const mapped = res.data.map((p) => mapPostResponseToPost(p));
+        if (!isHomeFeed) {
+          const currentUserId = currentUserIdRef.current ?? undefined;
+          const currentTicker = currentTickerRef.current ?? undefined;
+          if (requestedUserId !== currentUserId || requestedTicker !== currentTicker) {
             return;
           }
         }
-
-        // Validate reposts if requested
-        if (validateReposts) {
-          const hasRepostStructure = parsedPosts.some((p: Post) => {
-            if (isTweet(p)) {
-              return p.repostType !== undefined && p.originalPostId !== undefined;
-            }
-            return false;
-          });
-          
-          const hasMockReposts = parsedPosts.some((p: Post) => 
-            p.id === 'repost-1' || p.id === 'repost-2' || p.id === 'repost-3' || p.id === 'repost-4'
-          );
-          
-          const hasUserCreatedPosts = parsedPosts.some((p: Post) => {
-            const id = p.id;
-            return (id.startsWith('repost-') && id.includes('-') && id.split('-').length > 2) ||
-                   (id.startsWith('tweet-') && id.includes('-') && id.split('-').length > 2);
-          });
-          
-          if (hasUserCreatedPosts) {
-            setPosts(parsedPosts);
-          } else if (hasRepostStructure || hasMockReposts) {
-            const repostPosts = parsedPosts.filter((p: Post) => 
-              p.id === 'repost-1' || p.id === 'repost-2' || p.id === 'repost-3' || p.id === 'repost-4'
-            );
-            const allRepostsValid = repostPosts.every((p: Post) => {
-              if (isTweet(p)) {
-                return p.repostType !== undefined && p.originalPostId !== undefined;
-              }
-              return false;
-            });
-            
-            if (allRepostsValid && repostPosts.length > 0) {
-              setPosts(parsedPosts);
-            } else {
-              setPosts(initialPosts || mockPosts);
-              savePostsToStorage(initialPosts || mockPosts);
-            }
-          } else {
-            setPosts(parsedPosts);
-          }
-        } else {
-          // No validation needed, use parsed posts
-          setPosts(parsedPosts);
+        setPosts(mapped);
+        if (isHomeFeed && token) {
+          setFeedCache(mapped, Date.now());
         }
-      } catch {
-        setPosts(initialPosts || mockPosts);
+      } catch (err) {
+        const currentUserId = currentUserIdRef.current ?? undefined;
+        const currentTicker = currentTickerRef.current ?? undefined;
+        if (requestedUserId !== currentUserId || requestedTicker !== currentTicker) {
+          return;
+        }
+        setError(getErrorMessage(err, 'Failed to load posts'));
+        setPosts([]);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setPosts(initialPosts || mockPosts);
+    },
+    [session?.access_token, page, perPage, userId, ticker]
+  );
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const refetch = useCallback(() => fetchPosts(true), [fetchPosts]);
+
+  // Keep cache in sync when posts change (e.g. after adding a new post)
+  useEffect(() => {
+    const isHomeFeed = !userId && !ticker;
+    if (isHomeFeed && posts.length > 0) {
+      setFeedCache(posts, Date.now());
     }
-    
-    setPostsLoaded(true);
-  }, [initialPosts, validateReposts, postId]);
+  }, [posts, userId, ticker]);
 
   return {
     posts,
     setPosts,
-    postsLoaded,
-    isClient,
+    loading,
+    error,
+    refetch,
+    postsLoaded: !loading,
   };
 }
-

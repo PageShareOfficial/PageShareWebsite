@@ -4,91 +4,135 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
+import DeleteAccountModal from '@/components/app/modals/DeleteAccountModal';
 import Loading from '@/components/app/common/Loading';
+import LoadingState from '@/components/app/common/LoadingState';
 import { getCurrentUser } from '@/utils/user/profileUtils';
-import { getMutedUsers, unmuteUser } from '@/utils/user/muteUtils';
-import { getBlockedUsers, unblockUser } from '@/utils/user/blockUtils';
-import { getReportsByUser, Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/content/reportUtils';
-import { getUserByUsername } from '@/utils/user/profileUtils';
-import { User } from '@/types';
-import { useRouter } from 'next/navigation';
-import { useProfileData } from '@/hooks/user/useProfileData';
-import UserBadge from '@/components/app/common/UserBadge';
+import { Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/content/reportUtils';
+import { listMyReports, type ReportHistoryItemResponse } from '@/lib/api/reportApi';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { useAuth } from '@/contexts/AuthContext';
+import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import { apiDelete } from '@/lib/api/client';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { watchlist, setWatchlist, isClient: isProfileDataClient } = useProfileData();
+  const searchParams = useSearchParams();
+  const { currentUser: authCurrentUser } = useCurrentUser();
+  const { session, signOut } = useAuth();
+  const {
+    mutedUsers,
+    blockedUsers,
+    loading: filtersLoading,
+    unmute,
+    unblock,
+  } = useContentFiltersContext();
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const [isClient, setIsClient] = useState(false);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
-  const [mutedUserHandles, setMutedUserHandles] = useState<string[]>([]);
-  const [blockedUserHandles, setBlockedUserHandles] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'muted' | 'blocked' | 'reports'>('muted');
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
   const [autoHideReported, setAutoHideReported] = useState(false);
+
+  // Prefer backend user when logged in; otherwise fallback from profileUtils
+  const effectiveUser = authCurrentUser ?? currentUser;
 
   useEffect(() => {
     setIsClient(true);
     setCurrentUser(getCurrentUser());
   }, []);
 
-  // Load muted users, blocked users, reports, and auto-hide setting
   useEffect(() => {
-    if (!isClient || !currentUser.handle) return;
+    if (searchParams.get('action') === 'delete') {
+      setIsDeleteModalOpen(true);
+      router.replace('/settings', { scroll: false });
+    }
+  }, [searchParams, router]);
 
-    const loadData = () => {
-      setMutedUserHandles(getMutedUsers(currentUser.handle));
-      setBlockedUserHandles(getBlockedUsers(currentUser.handle));
-      setReports(getReportsByUser(currentUser.handle));
-      setAutoHideReported(isAutoHideReportedEnabled(currentUser.handle));
+  // Load reports and auto-hide setting
+  useEffect(() => {
+    if (!isClient || !effectiveUser.handle || !session?.access_token) return;
+
+    let cancelled = false;
+
+    const loadData = async () => {
+      setReportsLoading(true);
+      try {
+        const apiReports = await listMyReports(session.access_token);
+        if (cancelled) return;
+
+        const mapped: Report[] = apiReports
+          // We currently only support post/comment reports in the UI
+          .filter((r) => r.content_type === 'post' || r.content_type === 'comment')
+          .map((r: ReportHistoryItemResponse) => ({
+            id: r.id,
+            contentType: r.content_type === 'comment' ? 'comment' : 'post',
+            contentId: r.content_id,
+            postId: r.post_id ?? undefined,
+            reportedUserHandle: r.reported_user_handle,
+            reporterHandle: effectiveUser.handle,
+            // Backend stores the short code in report_type -> exposed as reason
+            reason: r.reason as Report['reason'],
+            description: r.description ?? undefined,
+            timestamp: r.created_at,
+          }));
+
+        setReports(mapped);
+        setAutoHideReported(isAutoHideReportedEnabled(effectiveUser.handle));
+      } catch {
+        if (!cancelled) {
+          setReports([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setReportsLoading(false);
+        }
+      }
     };
 
     loadData();
 
-    // Listen for updates
-    const handleMutedUsersUpdated = () => {
-      setMutedUserHandles(getMutedUsers(currentUser.handle));
-    };
-
-    const handleBlockedUsersUpdated = () => {
-      setBlockedUserHandles(getBlockedUsers(currentUser.handle));
-    };
-
-    const handleReportsUpdated = () => {
-      setReports(getReportsByUser(currentUser.handle));
-    };
-
     const handleAutoHideUpdated = () => {
-      setAutoHideReported(isAutoHideReportedEnabled(currentUser.handle));
+      setAutoHideReported(isAutoHideReportedEnabled(effectiveUser.handle));
     };
 
-    window.addEventListener('mutedUsersUpdated', handleMutedUsersUpdated);
-    window.addEventListener('blockedUsersUpdated', handleBlockedUsersUpdated);
-    window.addEventListener('reportsUpdated', handleReportsUpdated);
     window.addEventListener('autoHideReportedUpdated', handleAutoHideUpdated);
 
     return () => {
-      window.removeEventListener('mutedUsersUpdated', handleMutedUsersUpdated);
-      window.removeEventListener('blockedUsersUpdated', handleBlockedUsersUpdated);
-      window.removeEventListener('reportsUpdated', handleReportsUpdated);
+      cancelled = true;
       window.removeEventListener('autoHideReportedUpdated', handleAutoHideUpdated);
     };
-  }, [isClient, currentUser.handle]);
+  }, [isClient, effectiveUser.handle, session?.access_token]);
 
-  const handleUnmute = (handle: string) => {
-    unmuteUser(currentUser.handle, handle);
+  const handleUnmute = async (handle: string) => {
+    const user = mutedUsers.find((u) => u.username === handle);
+    if (!user) return;
+    await unmute(user.id);
   };
 
-  const handleUnblock = (handle: string) => {
-    unblockUser(currentUser.handle, handle);
+  const handleUnblock = async (handle: string) => {
+    const user = blockedUsers.find((u) => u.username === handle);
+    if (!user) return;
+    await unblock(user.id);
   };
 
   const handleToggleAutoHide = () => {
-    toggleAutoHideReported(currentUser.handle);
+    toggleAutoHideReported(effectiveUser.handle);
     setAutoHideReported(!autoHideReported);
   };
+
+  const handleDeleteAccount = async () => {
+    if (!session?.access_token) throw new Error('Session expired. Please sign in again.');
+    await apiDelete('/users/me', session.access_token);
+    signOut();
+  };
+
+  const deleteUsername = effectiveUser.handle;
 
   const formatTimestamp = (timestamp: string): string => {
     const date = new Date(timestamp);
@@ -226,7 +270,9 @@ export default function SettingsPage() {
                 {/* Muted Users Tab */}
                 {activeTab === 'muted' && (
                   <div>
-                    {mutedUserHandles.length === 0 ? (
+                    {filtersLoading ? (
+                      <LoadingState text="Loading muted users..." />
+                    ) : mutedUsers.length === 0 ? (
                       <div className="text-center py-16">
                         <div className="mb-4">
                           <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
@@ -252,51 +298,35 @@ export default function SettingsPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {mutedUserHandles.map((handle) => {
-                          const userProfile = getUserByUsername(handle);
-                          if (!userProfile) return null;
-
-                          const user: User = {
-                            id: userProfile.id,
-                            displayName: userProfile.displayName,
-                            handle: userProfile.handle,
-                            avatar: userProfile.avatar,
-                            badge: userProfile.badge,
-                          };
-
-                          return (
-                            <div
-                              key={handle}
-                              className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
-                            >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <AvatarWithFallback
-                                  src={user.avatar}
-                                  alt={user.displayName}
-                                  size={48}
-                                  className="flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="font-semibold text-white text-sm truncate">
-                                      {user.displayName}
-                                    </span>
-                                    {user.badge && (
-                                      <UserBadge badge={user.badge} size="md" />
-                                    )}
-                                  </div>
-                                  <p className="text-gray-400 text-sm truncate">@{user.handle}</p>
+                        {mutedUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <AvatarWithFallback
+                                src={user.profile_picture_url ?? undefined}
+                                alt={user.display_name}
+                                size={48}
+                                className="flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="font-semibold text-white text-sm truncate">
+                                    {user.display_name}
+                                  </span>
                                 </div>
+                                <p className="text-gray-400 text-sm truncate">@{user.username}</p>
                               </div>
-                              <button
-                                onClick={() => handleUnmute(handle)}
-                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors ml-4"
-                              >
-                                Unmute
-                              </button>
                             </div>
-                          );
-                        })}
+                            <button
+                              onClick={() => handleUnmute(user.username)}
+                              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors ml-4"
+                            >
+                              Unmute
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -305,7 +335,9 @@ export default function SettingsPage() {
                 {/* Blocked Users Tab */}
                 {activeTab === 'blocked' && (
                   <div>
-                    {blockedUserHandles.length === 0 ? (
+                    {filtersLoading ? (
+                      <LoadingState text="Loading blocked users..." />
+                    ) : blockedUsers.length === 0 ? (
                       <div className="text-center py-16">
                         <div className="mb-4">
                           <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
@@ -331,51 +363,35 @@ export default function SettingsPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {blockedUserHandles.map((handle) => {
-                          const userProfile = getUserByUsername(handle);
-                          if (!userProfile) return null;
-
-                          const user: User = {
-                            id: userProfile.id,
-                            displayName: userProfile.displayName,
-                            handle: userProfile.handle,
-                            avatar: userProfile.avatar,
-                            badge: userProfile.badge,
-                          };
-
-                          return (
-                            <div
-                              key={handle}
-                              className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
-                            >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <AvatarWithFallback
-                                  src={user.avatar}
-                                  alt={user.displayName}
-                                  size={48}
-                                  className="flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="font-semibold text-white text-sm truncate">
-                                      {user.displayName}
-                                    </span>
-                                    {user.badge && (
-                                      <UserBadge badge={user.badge} size="md" />
-                                    )}
-                                  </div>
-                                  <p className="text-gray-400 text-sm truncate">@{user.handle}</p>
+                        {blockedUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <AvatarWithFallback
+                                src={user.profile_picture_url ?? undefined}
+                                alt={user.display_name}
+                                size={48}
+                                className="flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="font-semibold text-white text-sm truncate">
+                                    {user.display_name}
+                                  </span>
                                 </div>
+                                <p className="text-gray-400 text-sm truncate">@{user.username}</p>
                               </div>
-                              <button
-                                onClick={() => handleUnblock(handle)}
-                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors ml-4"
-                              >
-                                Unblock
-                              </button>
                             </div>
-                          );
-                        })}
+                            <button
+                              onClick={() => handleUnblock(user.username)}
+                              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors ml-4"
+                            >
+                              Unblock
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -384,7 +400,9 @@ export default function SettingsPage() {
                 {/* Report History Tab */}
                 {activeTab === 'reports' && (
                   <div>
-                    {reports.length === 0 ? (
+                    {reportsLoading ? (
+                      <LoadingState text="Loading report history..." />
+                    ) : reports.length === 0 ? (
                       <div className="text-center py-16">
                         <div className="mb-4">
                           <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
@@ -410,10 +428,7 @@ export default function SettingsPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {reports.map((report) => {
-                          const reportedUser = getUserByUsername(report.reportedUserHandle);
-                          
-                          return (
+                        {reports.map((report) => (
                             <div
                               key={report.id}
                               className="p-4 bg-white/5 border border-white/10 rounded-xl"
@@ -437,11 +452,6 @@ export default function SettingsPage() {
                                       </>
                                     )}
                                   </div>
-                                  {reportedUser && (
-                                    <div className="text-sm text-gray-400 mb-1">
-                                      {reportedUser.displayName}
-                                    </div>
-                                  )}
                                   <div className="text-sm text-gray-500 mb-2">
                                     {formatTimestamp(report.timestamp)}
                                   </div>
@@ -472,12 +482,28 @@ export default function SettingsPage() {
                                 )}
                               </div>
                             </div>
-                          );
-                        })}
+                        ))}
                       </div>
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Delete Account - Danger Zone */}
+              <div className="px-2 py-8 lg:px-4 border-t border-white/10">
+                <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+                  <h2 className="text-lg font-bold text-red-400 mb-1">Delete account</h2>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Permanently delete your account and all associated data. This action cannot be
+                    undone.
+                  </p>
+                  <button
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Delete my account
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -487,19 +513,20 @@ export default function SettingsPage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
-      {/* Manage Watchlist Modal */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        username={deleteUsername}
+        onConfirm={handleDeleteAccount}
       />
     </div>
   );

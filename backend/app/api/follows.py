@@ -16,7 +16,10 @@ from app.services.follow_service import (
     list_following,
     unfollow_user,
 )
+from app.api.deps import get_user_or_404
 from app.services.user_service import get_user_by_id
+from app.utils.http import parse_uuid_or_404
+from app.utils.responses import paginated_response
 
 router = APIRouter(tags=["follows"])
 
@@ -27,12 +30,8 @@ def follow_user_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Follow a user. 409 if already following or self."""
-    try:
-        target_id = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not get_user_by_id(db, user_id):
-        raise HTTPException(status_code=404, detail="User not found")
+    target_id = parse_uuid_or_404(user_id, "User not found")
+    get_user_or_404(db, user_id)
     try:
         follower_count = follow_user(db, UUID(current_user.auth_user_id), target_id)
         return {"data": FollowToggleResponse(following=True, follower_count=follower_count)}
@@ -50,13 +49,10 @@ def unfollow_user_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Unfollow a user. 404 if not following."""
-    try:
-        target_id = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
+    target_id = parse_uuid_or_404(user_id, "User not found")
     result = unfollow_user(db, UUID(current_user.auth_user_id), target_id)
     if result is None:
-        raise HTTPException(status_code=404, detail="Follow relationship not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Follow relationship not found")
     return {"data": FollowToggleResponse(following=False, follower_count=result)}
 
 @router.get("/users/{user_id}/followers", response_model=dict)
@@ -68,12 +64,8 @@ def list_followers_endpoint(
     per_page: int = Query(20, ge=1, le=50),
 ):
     """List user's followers (paginated). Optional auth for is_following on each."""
-    try:
-        uid = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not get_user_by_id(db, user_id):
-        raise HTTPException(status_code=404, detail="User not found")
+    uid = parse_uuid_or_404(user_id, "User not found")
+    get_user_or_404(db, user_id)
     current_id = UUID(current_user.auth_user_id) if current_user else None
     rows, total = list_followers(db, uid, page=page, per_page=per_page, current_user_id=current_id)
     # For each follower, is_following = whether current user follows that follower
@@ -90,10 +82,7 @@ def list_followers_endpoint(
                 followed_at=followed_at,
             )
         )
-    return {
-        "data": data,
-        "pagination": {"page": page, "per_page": per_page, "total": total},
-    }
+    return paginated_response(data, page, per_page, total)
 
 @router.get("/users/{user_id}/following", response_model=dict)
 def list_following_endpoint(
@@ -104,12 +93,8 @@ def list_following_endpoint(
     per_page: int = Query(20, ge=1, le=50),
 ):
     """List users that user_id follows (paginated). is_following=true for listed users."""
-    try:
-        uid = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not get_user_by_id(db, user_id):
-        raise HTTPException(status_code=404, detail="User not found")
+    uid = parse_uuid_or_404(user_id, "User not found")
+    get_user_or_404(db, user_id)
     current_id = UUID(current_user.auth_user_id) if current_user else None
     rows, total = list_following(db, uid, page=page, per_page=per_page, current_user_id=current_id)
     data = []
@@ -126,7 +111,4 @@ def list_following_endpoint(
                 followed_at=followed_at,
             )
         )
-    return {
-        "data": data,
-        "pagination": {"page": page, "per_page": per_page, "total": total},
-    }
+    return paginated_response(data, page, per_page, total)

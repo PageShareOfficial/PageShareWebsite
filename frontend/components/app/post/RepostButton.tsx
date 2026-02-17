@@ -10,6 +10,7 @@ interface RepostButtonProps {
   onNormalRepost: () => void;
   onQuoteRepost: () => void;
   canUndoRepost?: boolean;
+  disabled?: boolean;
 }
 
 export default function RepostButton({
@@ -18,8 +19,8 @@ export default function RepostButton({
   onNormalRepost,
   onQuoteRepost,
   canUndoRepost = false,
+  disabled = false,
 }: RepostButtonProps) {
-  // Debug logging removed for cleaner console
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -46,11 +47,12 @@ export default function RepostButton({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setShowMenu((prev) => !prev);
+          if (!disabled) setShowMenu((prev) => !prev);
         }}
-        className="flex items-center justify-center space-x-2 hover:text-green-400 transition-colors group w-full cursor-pointer"
+        disabled={disabled}
+        className="flex items-center justify-center space-x-2 hover:text-green-400 transition-colors group w-full cursor-pointer disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
         aria-label="Repost"
-        title={canUndoRepost ? 'Undo repost' : isReposted ? 'Reposted' : 'Repost'}
+        title={disabled ? 'Connect to the internet to continue' : canUndoRepost ? 'Undo repost' : isReposted ? 'Reposted' : 'Repost'}
         type="button"
         style={{ pointerEvents: 'auto', zIndex: 10 }}
       >
@@ -63,7 +65,7 @@ export default function RepostButton({
         >
           <Repeat2 className={`w-5 h-5 ${isReposted ? 'text-green-400' : ''}`} />
         </div>
-        <span className="text-sm">{repostCount}</span>
+        <span className={`text-sm ${isReposted ? 'text-green-400' : ''}`}>{repostCount}</span>
       </button>
 
       {showMenu && (

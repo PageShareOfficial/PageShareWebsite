@@ -17,6 +17,7 @@ from . import (  # noqa: E402,F401
     repost,
     follow,
     bookmark,
+    recent_search,
     poll,
     poll_vote,
     content_filter,

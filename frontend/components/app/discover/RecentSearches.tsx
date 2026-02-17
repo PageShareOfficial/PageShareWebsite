@@ -1,12 +1,13 @@
 'use client';
 
-import { X, User, DollarSign, TrendingUp, Clock } from 'lucide-react';
+import { X, User, TrendingUp, Clock } from 'lucide-react';
 import { useRecentSearches } from '@/hooks/discover/useRecentSearches';
 import { RecentSearch } from '@/types/discover';
+import { formatTimeAgo } from '@/utils/core/dateUtils';
 import { useRouter } from 'next/navigation';
 
 interface RecentSearchesProps {
-  onSearchClick?: (query: string, type: 'account' | 'stock' | 'crypto') => void;
+  onSearchClick?: (query: string, type: 'account' | 'ticker') => void;
   maxDisplay?: number; // Max items to display per type
   className?: string;
 }
@@ -51,59 +52,35 @@ export default function RecentSearches({
     removeSearch(id);
   };
 
-  const getTypeIcon = (type: 'account' | 'stock' | 'crypto') => {
+  const getTypeIcon = (type: 'account' | 'ticker') => {
     switch (type) {
       case 'account':
         return <User className="w-4 h-4" />;
-      case 'crypto':
+      case 'ticker':
         return <TrendingUp className="w-4 h-4" />;
-      case 'stock':
-        return <DollarSign className="w-4 h-4" />;
     }
   };
 
-  const getTypeLabel = (type: 'account' | 'stock' | 'crypto') => {
+  const getTypeLabel = (type: 'account' | 'ticker') => {
     switch (type) {
       case 'account':
         return 'Accounts';
-      case 'crypto':
-        return 'Crypto';
-      case 'stock':
-        return 'Stocks';
+      case 'ticker':
+        return 'Tickers';
     }
   };
 
-  const getTypeColor = (type: 'account' | 'stock' | 'crypto') => {
+  const getTypeColor = (type: 'account' | 'ticker') => {
     switch (type) {
       case 'account':
         return 'text-blue-400';
-      case 'crypto':
+      case 'ticker':
         return 'text-purple-400';
-      case 'stock':
-        return 'text-green-400';
     }
   };
 
-  // Format timestamp to relative time
-  const formatTimeAgo = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return date.toLocaleDateString();
-  };
-
   const displayAccounts = recentSearchesByType.accounts.slice(0, maxDisplay);
-  const displayStocks = recentSearchesByType.stocks.slice(0, maxDisplay);
-  const displayCryptos = recentSearchesByType.cryptos.slice(0, maxDisplay);
+  const displayTickers = recentSearchesByType.tickers.slice(0, maxDisplay);
   const hasAnySearches = recentSearches.length > 0;
 
   return (
@@ -171,55 +148,15 @@ export default function RecentSearches({
             </div>
           )}
 
-          {/* Stocks */}
-          {displayStocks.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                {getTypeLabel('stock')}
-              </h4>
-              <div className="space-y-1">
-                {displayStocks.map((search) => (
-                  <div
-                    key={search.id}
-                    onClick={() => handleSearchClick(search)}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {getTypeIcon(search.type)}
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-white truncate">
-                          {search.resultId || search.query}
-                        </div>
-                        <div className="text-xs text-gray-400 flex items-center gap-1">
-                          <span className="truncate">{search.resultName || search.query}</span>
-                          <span>·</span>
-                          <span>{formatTimeAgo(search.timestamp)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => handleRemoveClick(e, search.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
-                      aria-label="Remove search"
-                    >
-                      <X className="w-3 h-3 text-gray-400" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Crypto */}
-          {displayCryptos.length > 0 && (
+          {/* Tickers */}
+          {displayTickers.length > 0 && (
             <div>
               <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-purple-400" />
-                {getTypeLabel('crypto')}
+                {getTypeLabel('ticker')}
               </h4>
               <div className="space-y-1">
-                {displayCryptos.map((search) => (
+                {displayTickers.map((search) => (
                   <div
                     key={search.id}
                     onClick={() => handleSearchClick(search)}

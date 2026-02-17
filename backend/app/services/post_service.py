@@ -166,6 +166,73 @@ def list_posts(
     rows = q.order_by(Post.created_at.desc()).offset(offset).limit(per_page).all()
     return rows, total
 
+def list_posts_for_user_profile(
+    db: Session,
+    user_id: UUID,
+    page: int = 1,
+    per_page: int = 20,
+    current_user_id: Optional[UUID] = None,
+) -> Tuple[List[Tuple[Post, User, bool]], int]:
+    """
+    List posts for a user's profile.
+    - Shows posts the profile user OWNS: originals + their quote reposts (they are the author).
+    - Shows originals of posts the profile user normally reposted (so they see what they reposted).
+    - Never shows someone else's quote repost (e.g. a quote of the profile user's post by another user).
+    Returns (list of (post, author, is_normal_repost_by_user)), total_count.
+    """
+    per_page = min(max(1, per_page), 50)
+    # 1) Posts owned by the profile user: originals (repost_type NULL) + their quote reposts (repost_type 'quote')
+    own_rows = (
+        db.query(Post, User)
+        .join(User, Post.user_id == User.id)
+        .filter(Post.deleted_at.is_(None), Post.user_id == user_id)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
+    # 2) Normal reposts by this user: get (original post_id, repost.created_at)
+    repost_rows = (
+        db.query(Repost.post_id, Repost.created_at)
+        .filter(Repost.user_id == user_id, Repost.type == "normal")
+        .order_by(Repost.created_at.desc())
+        .all()
+    )
+    own_ids = {p.id for p, _ in own_rows}
+    repost_post_ids = [r[0] for r in repost_rows if r[0] not in own_ids]
+    repost_created = {r[0]: r[1] for r in repost_rows}
+    merged: List[Tuple[datetime, Post, User, bool]] = []
+    for post, author in own_rows:
+        merged.append((post.created_at, post, author, False))
+    if repost_post_ids:
+        repost_posts = (
+            db.query(Post, User)
+            .join(User, Post.user_id == User.id)
+            .filter(Post.id.in_(repost_post_ids), Post.deleted_at.is_(None))
+            .all()
+        )
+        for post, author in repost_posts:
+            # Do not show on profile a quote repost that quotes this user's post (owner sees their own posts only)
+            if getattr(post, "repost_type", None) == "quote" and getattr(post, "original_post_id", None) in own_ids:
+                continue
+            merged.append((repost_created[post.id], post, author, True))
+    merged.sort(key=lambda x: x[0], reverse=True)
+    # Exclude any quote repost not owned by the profile user (safety)
+    merged = [(ts, p, u, is_rep) for ts, p, u, is_rep in merged if getattr(p, "repost_type", None) != "quote" or p.user_id == user_id]
+    # Never show on a user's profile a quote repost that quotes THIS profile user's post (so UserA's profile doesn't show UserB's quote of UserA).
+    # Exclude only when the quoted original is in own_ids; UserB's quote of UserA stays on UserB's profile (UserA's id not in own_ids when viewing UserB).
+    merged = [
+        (ts, p, u, is_rep)
+        for ts, p, u, is_rep in merged
+        if not (
+            getattr(p, "repost_type", None) == "quote"
+            and getattr(p, "original_post_id", None) is not None
+            and (getattr(p, "original_post_id", None) in own_ids)
+        )
+    ]
+    total = len(merged)
+    offset = (page - 1) * per_page
+    page_slice = merged[offset : offset + per_page]
+    return [(p, u, is_rep) for _, p, u, is_rep in page_slice], total
+
 def delete_post(db: Session, post_id: UUID, owner_user_id: UUID) -> bool:
     """
     Soft-delete a post. Returns True if deleted, False if not found or not owner.

@@ -7,6 +7,7 @@ import LoadingState from '@/components/app/common/LoadingState';
 import EmailSignUpForm from './EmailSignUpForm';
 import EmailSignInForm from './EmailSignInForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 type AuthTab = 'signup' | 'signin';
 type AuthView = AuthTab | 'forgot';
@@ -27,7 +28,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+      setError(getErrorMessage(err, 'Sign in failed'));
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TickerDetailData, TickerType } from '@/types/ticker';
-
+import { getTickerFromCache, setTickerCache } from '@/lib/tickerCache';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 interface UseTickerDetailOptions {
   ticker: string;
   enabled?: boolean; // Default: true
@@ -35,17 +36,29 @@ export function useTickerDetail(options: UseTickerDetailOptions): UseTickerDetai
     setIsClient(true);
   }, []);
 
-  // Fetch ticker detail data
-  const fetchData = useCallback(async () => {
+  // Fetch ticker detail data (uses in-memory cache to avoid refetch on revisit)
+  const fetchData = useCallback(async (skipCache = false) => {
     if (!enabled || !isClient || !ticker) {
       return;
+    }
+
+    const symbol = ticker.toUpperCase();
+    if (!skipCache) {
+      const cached = getTickerFromCache(symbol);
+      if (cached) {
+      setData(cached.data);
+      setType(cached.type);
+      setError(null);
+      setIsLoading(false);
+      return;
+      }
     }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/ticker/${ticker.toUpperCase()}`);
+      const response = await fetch(`/api/ticker/${symbol}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -60,12 +73,12 @@ export function useTickerDetail(options: UseTickerDetailOptions): UseTickerDetai
       }
 
       const result = await response.json();
-      
+      setTickerCache(symbol, result);
       setData(result.data);
       setType(result.type);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch ticker data');
+      setError(getErrorMessage(err, 'Failed to fetch ticker data'));
       setData(null);
       setType(null);
     } finally {
@@ -80,9 +93,9 @@ export function useTickerDetail(options: UseTickerDetailOptions): UseTickerDetai
     }
   }, [ticker, enabled, isClient, fetchData]);
 
-  // Refetch function
+  // Refetch function (bypasses cache to get fresh data)
   const refetch = useCallback(async () => {
-    await fetchData();
+    await fetchData(true);
   }, [fetchData]);
 
   return {

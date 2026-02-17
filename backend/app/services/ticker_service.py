@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.models.post_ticker import PostTicker
 from app.models.ticker import Ticker
+from app.utils.ticker_type import detect_ticker_type
 
 def get_or_create_ticker(db: Session, symbol: str) -> Ticker:
     """
@@ -16,8 +17,15 @@ def get_or_create_ticker(db: Session, symbol: str) -> Ticker:
     symbol = symbol.strip().upper()
     ticker = db.query(Ticker).filter(Ticker.symbol == symbol).first()
     if ticker:
+        # Backfill type for legacy rows where it was not set yet.
+        if ticker.type is None:
+            ticker.type = detect_ticker_type(symbol)
+            db.add(ticker)
+            db.commit()
+            db.refresh(ticker)
         return ticker
-    ticker = Ticker(symbol=symbol)
+
+    ticker = Ticker(symbol=symbol, type=detect_ticker_type(symbol))
     db.add(ticker)
     db.commit()
     db.refresh(ticker)

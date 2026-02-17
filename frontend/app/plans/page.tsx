@@ -1,17 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { MdOutlineWorkspacePremium } from 'react-icons/md';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useRouter } from 'next/navigation';
 
 export default function PlansPage() {
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
-  const { watchlist, setWatchlist } = useWatchlist();
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const router = useRouter();
 
   return (
@@ -57,20 +54,14 @@ export default function PlansPage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
-      {/* Modals */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ Comment request/response schemas.
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from app.schemas.poll import PollCreate
+from app.schemas.poll import PollCreate, PollInfo
 
 class CreateCommentRequest(BaseModel):
     """Request body for creating a comment. Optional poll: 2-4 options, duration 1-7 days."""
@@ -34,3 +34,4 @@ class CommentResponse(BaseModel):
     likes: int = 0
     user_liked: bool = False
     created_at: datetime
+    poll: Optional[PollInfo] = None

@@ -11,19 +11,25 @@ export interface Tweet {
   id: string;
   author: User;
   createdAt: string;
+  /** Raw ISO timestamp from backend when available (used for full date/time views). */
+  createdAtRaw?: string;
   content: string;
   media?: string[]; // URLs of uploaded images
   gifUrl?: string; // URL of selected GIF
   repostedFrom?: User; // Original author if this is a repost
   repostType?: 'normal' | 'quote'; // Type of repost
   originalPostId?: string; // Reference to original post ID (optimized for backend)
+  /** When present, the original post that was quoted (from API). Use this to render the quoted tweet card. */
+  quotedPost?: Post;
   poll?: {
+    pollId?: string; // backend poll id for voting
     options: string[];
-    duration: number; // in days
+    duration: number; // in days (for display when no expiresAt)
     createdAt: string; // when poll was created
     votes?: { [optionIndex: number]: number }; // votes per option
     userVote?: number; // index of option user voted for (undefined if not voted)
     isFinished: boolean; // true if poll has ended
+    expiresAt?: string; // ISO date when poll ends (from backend)
   };
   stats: {
     likes: number;
@@ -58,12 +64,14 @@ export interface Comment {
   media?: string[]; // URLs of uploaded images
   gifUrl?: string; // URL of selected GIF
   poll?: {
+    pollId?: string; // backend poll id for voting
     options: string[];
     duration: number; // in days
     createdAt: string; // when poll was created
     votes?: { [optionIndex: number]: number }; // votes per option
     userVote?: number; // index of option user voted for (undefined if not voted)
     isFinished: boolean; // true if poll has ended
+    expiresAt?: string; // ISO date when poll ends (from backend)
   };
   replies?: Comment[]; // Nested replies (optional for now)
 }

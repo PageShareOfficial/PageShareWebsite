@@ -1,64 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
 import Feed from '@/components/app/feed/Feed';
 import Loading from '@/components/app/common/Loading';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import { getBookmarkedPosts } from '@/utils/content/bookmarkUtils';
-import { getBlockedUsers, filterBlockedPosts } from '@/utils/user/blockUtils';
-import { Post } from '@/types';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
-import { usePostsData } from '@/hooks/post/usePostsData';
+import { useBookmarks } from '@/contexts/BookmarkContext';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { useContentFilters } from '@/hooks/features/useContentFilters';
 
 export default function BookmarksPage() {
-  const router = useRouter();
   const { currentUser, isClient } = useCurrentUser();
-  const { posts, setPosts } = usePostsData();
-  const { watchlist, setWatchlist } = useWatchlist();
-  
-  const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
-  
+  const { bookmarkedPosts, loading: bookmarksLoading, error: bookmarksError, refetch } = useBookmarks();
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
+  const { filterPosts } = useContentFilters({ currentUserHandle: currentUser.handle, isClient });
+
   const { handleLike, handleRepost, handleComment, handleVote, handleDelete, hasUserReposted } =
-    usePostHandlers({ posts, setPosts, currentUser });
+    usePostHandlers({ posts: bookmarkedPosts, setPosts: () => {}, currentUser, onDeleteSuccess: refetch });
 
-  // Load bookmarked posts
-  useEffect(() => {
-    if (!isClient || !currentUser.handle) return;
-
-    const loadBookmarkedPosts = () => {
-      const blockedUsers = getBlockedUsers(currentUser.handle);
-      let bookmarked = getBookmarkedPosts(currentUser.handle, posts);
-      
-      // Filter out blocked users' posts
-      bookmarked = filterBlockedPosts(bookmarked, blockedUsers);
-      
-      setBookmarkedPosts(bookmarked);
-    };
-
-    loadBookmarkedPosts();
-
-    // Listen for bookmark updates
-    const handleBookmarksUpdated = () => {
-      loadBookmarkedPosts();
-    };
-
-    window.addEventListener('bookmarksUpdated', handleBookmarksUpdated);
-    window.addEventListener('blockedUsersUpdated', handleBookmarksUpdated);
-
-    return () => {
-      window.removeEventListener('bookmarksUpdated', handleBookmarksUpdated);
-      window.removeEventListener('blockedUsersUpdated', handleBookmarksUpdated);
-    };
-  }, [isClient, posts, currentUser.handle]);
+  const filteredPosts = filterPosts(bookmarkedPosts);
 
   if (!isClient) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
+
+  if (bookmarksLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loading />
@@ -75,7 +48,7 @@ export default function BookmarksPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
           {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => router.push('/plans')} />
+          <Topbar onUpgradeLabs={() => window.location.assign('/plans')} />
 
           {/* Desktop Header - Desktop Only */}
           <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
@@ -85,7 +58,17 @@ export default function BookmarksPage() {
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
             <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
-              {bookmarkedPosts.length === 0 ? (
+              {bookmarksError ? (
+                <div className="text-center py-16">
+                  <p className="text-red-400 mb-4">{bookmarksError}</p>
+                  <button
+                    onClick={() => refetch()}
+                    className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-100"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : filteredPosts.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="mb-4">
                     <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
@@ -111,7 +94,7 @@ export default function BookmarksPage() {
                 </div>
               ) : (
                 <Feed
-                  posts={bookmarkedPosts}
+                  posts={filteredPosts}
                   onNewIdeaClick={() => {}}
                   onLike={handleLike}
                   onRepost={handleRepost}
@@ -120,7 +103,7 @@ export default function BookmarksPage() {
                   onDelete={handleDelete}
                   hasUserReposted={hasUserReposted}
                   currentUserHandle={currentUser.handle}
-                  allPosts={posts}
+                  allPosts={filteredPosts}
                 />
               )}
             </div>
@@ -131,20 +114,14 @@ export default function BookmarksPage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => router.push('/plans')}
+            onManageWatchlist={openManageModal}
+            onUpgradeLabs={() => window.location.assign('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
-      {/* Manage Watchlist Modal */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
     </div>
   );
 }

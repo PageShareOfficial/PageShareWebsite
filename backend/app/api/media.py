@@ -40,7 +40,7 @@ async def upload_media_files(
         file_bytes = await validate_image_file(file)
         content_type = file.content_type or "image/jpeg"
         url = upload_media(
-            user_id=current_user.user_id,
+            user_id=current_user.auth_user_id,
             file_bytes=file_bytes,
             filename=file.filename.strip(),
             content_type=content_type,

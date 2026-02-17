@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChartDataPoint } from '@/types/ticker';
 import { TickerType } from '@/types/ticker';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 interface UseTickerChartOptions {
   ticker: string;
@@ -89,7 +90,7 @@ export function useTickerChart(options: UseTickerChartOptions): UseTickerChartRe
       setData(result.data || []);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch chart data');
+      setError(getErrorMessage(err, 'Failed to fetch chart data'));
       setData([]);
     } finally {
       setIsLoading(false);

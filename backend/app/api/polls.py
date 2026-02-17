@@ -9,6 +9,7 @@ from app.middleware.auth import get_current_user, get_optional_user
 from app.schemas.poll import PollResultsResponse, VoteRequest, VoteResponse
 from app.services.auth_service import CurrentUser
 from app.services.poll_service import get_poll_by_id, get_results, vote
+from app.utils.http import parse_uuid_or_404
 from typing import Optional
 
 router = APIRouter(prefix="/polls", tags=["polls"])
@@ -21,10 +22,7 @@ def vote_poll_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Vote on a poll option. 409 if already voted, 422 if expired or invalid option."""
-    try:
-        pid = UUID(poll_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Poll not found")
+    pid = parse_uuid_or_404(poll_id, "Poll not found")
     try:
         results, total = vote(db, pid, UUID(current_user.auth_user_id), body.option_index)
         return {
@@ -37,7 +35,7 @@ def vote_poll_endpoint(
         }
     except ValueError as e:
         if "Poll not found" in str(e):
-            raise HTTPException(status_code=404, detail="Poll not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
         if "Poll expired" in str(e):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -59,19 +57,16 @@ def get_poll_results_endpoint(
     current_user: Optional[CurrentUser] = Depends(get_optional_user),
 ):
     """Get poll results. Optional auth for user_vote."""
-    try:
-        pid = UUID(poll_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Poll not found")
+    pid = parse_uuid_or_404(poll_id, "Poll not found")
     poll = get_poll_by_id(db, pid)
     if not poll:
-        raise HTTPException(status_code=404, detail="Poll not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
     try:
         results, total, user_vote, is_finished, expires_at = get_results(
             db, pid, UUID(current_user.auth_user_id) if current_user else None
         )
     except ValueError:
-        raise HTTPException(status_code=404, detail="Poll not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
     return {
         "data": PollResultsResponse(
             poll_id=str(poll.id),

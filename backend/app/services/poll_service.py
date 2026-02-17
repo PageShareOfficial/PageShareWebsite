@@ -14,6 +14,22 @@ def get_poll_by_id(db: Session, poll_id: UUID) -> Optional[Poll]:
     """Get poll by id."""
     return db.get(Poll, poll_id)
 
+def get_poll_by_post_id(db: Session, post_id: UUID) -> Optional[Poll]:
+    """Get poll attached to a post, if any."""
+    return (
+        db.query(Poll)
+        .filter(Poll.post_id == post_id)
+        .first()
+    )
+
+def get_poll_by_comment_id(db: Session, comment_id: UUID) -> Optional[Poll]:
+    """Get poll attached to a comment, if any."""
+    return (
+        db.query(Poll)
+        .filter(Poll.comment_id == comment_id)
+        .first()
+    )
+
 def _poll_expires_at(poll: Poll) -> datetime:
     """Return poll expiry (created_at + duration_days)."""
     base = poll.created_at
@@ -32,7 +48,8 @@ def vote(
     option_index: int,
 ) -> Tuple[Dict[int, int], int]:
     """
-    Record vote. Returns (results map option_index -> count, total_votes).
+    Record vote. One vote per user; votes cannot be changed once submitted.
+    Returns (results map option_index -> count, total_votes).
     Raises ValueError if poll not found, expired, invalid option_index, or already voted.
     """
     poll = get_poll_by_id(db, poll_id)
@@ -91,6 +108,96 @@ def get_results(
             user_vote = v[0]
 
     return results, total, user_vote, is_finished, expires_at
+
+def get_poll_info_for_post(
+    db: Session,
+    post_id: UUID,
+    user_id: Optional[UUID] = None,
+) -> Optional[tuple]:
+    """
+    If the post has a poll, return (poll_id, options, results, total_votes, user_vote, is_finished, expires_at).
+    Otherwise return None.
+    """
+    poll = get_poll_by_post_id(db, post_id)
+    if not poll:
+        return None
+    results, total, user_vote, is_finished, expires_at = get_results(db, poll.id, user_id)
+    return (str(poll.id), poll.options or [], results, total, user_vote, is_finished, expires_at)
+
+def get_poll_info_for_comment(
+    db: Session,
+    comment_id: UUID,
+    user_id: Optional[UUID] = None,
+) -> Optional[tuple]:
+    """
+    If the comment has a poll, return (poll_id, options, results, total_votes, user_vote, is_finished, expires_at).
+    Otherwise return None.
+    """
+    poll = get_poll_by_comment_id(db, comment_id)
+    if not poll:
+        return None
+    results, total, user_vote, is_finished, expires_at = get_results(db, poll.id, user_id)
+    return (str(poll.id), poll.options or [], results, total, user_vote, is_finished, expires_at)
+
+def get_polls_for_posts(
+    db: Session,
+    post_ids: List[UUID],
+    user_id: Optional[UUID] = None,
+) -> Dict[UUID, tuple]:
+    """Return map post_id -> (poll_id, options, results, total, user_vote, is_finished, expires_at)."""
+    if not post_ids:
+        return {}
+    polls = (
+        db.query(Poll)
+        .filter(Poll.post_id.in_(post_ids))
+        .all()
+    )
+    out = {}
+    for poll in polls:
+        if poll.post_id:
+            results, total, user_vote, is_finished, expires_at = get_results(
+                db, poll.id, user_id
+            )
+            out[poll.post_id] = (
+                str(poll.id),
+                poll.options or [],
+                results,
+                total,
+                user_vote,
+                is_finished,
+                expires_at,
+            )
+    return out
+
+def get_polls_for_comments(
+    db: Session,
+    comment_ids: List[UUID],
+    user_id: Optional[UUID] = None,
+) -> Dict[UUID, tuple]:
+    """Return map comment_id -> (poll_id, options, results, total, user_vote, is_finished, expires_at)."""
+    if not comment_ids:
+        return {}
+    polls = (
+        db.query(Poll)
+        .filter(Poll.comment_id.in_(comment_ids))
+        .all()
+    )
+    out: Dict[UUID, tuple] = {}
+    for poll in polls:
+        if poll.comment_id:
+            results, total, user_vote, is_finished, expires_at = get_results(
+                db, poll.id, user_id
+            )
+            out[poll.comment_id] = (
+                str(poll.id),
+                poll.options or [],
+                results,
+                total,
+                user_vote,
+                is_finished,
+                expires_at,
+            )
+    return out
 
 def user_has_voted(db: Session, poll_id: UUID, user_id: UUID) -> bool:
     """Return True if user has voted on this poll."""

@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiPost, apiUploadProfilePicture } from '@/lib/api/client';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 // Form validation schema
 const onboardingSchema = z.object({
@@ -124,7 +125,7 @@ export default function OnboardingPage() {
       await refreshBackendUser();
       router.push('/home');
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Onboarding failed');
+      setSubmitError(getErrorMessage(err, 'Onboarding failed'));
     } finally {
       setIsSubmitting(false);
     }

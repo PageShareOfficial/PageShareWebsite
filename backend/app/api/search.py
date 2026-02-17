@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.search import SearchResponseData, SearchTickerItem, SearchUserItem
 from app.services.search_service import search_tickers, search_users
+from app.utils.responses import paginated_response
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -46,11 +47,9 @@ def search_endpoint(
         ]
 
     total = total_users + total_tickers
-    return {
-        "data": SearchResponseData(users=users, tickers=tickers),
-        "pagination": {
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-        },
-    }
+    return paginated_response(
+        SearchResponseData(users=users, tickers=tickers),
+        page,
+        per_page,
+        total,
+    )

@@ -4,12 +4,12 @@ Post request/response schemas.
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from app.schemas.poll import PollCreate
+from app.schemas.poll import PollCreate, PollInfo
 
 class CreatePostRequest(BaseModel):
-    """Request body for creating a post. Optional poll: 2-4 options, duration 1-7 days."""
+    """Request body for creating a post. Content can be empty when media_urls or gif_url is provided. Optional poll: 2-4 options, duration 1-7 days."""
 
-    content: str = Field(..., min_length=1, max_length=10000)
+    content: str = Field(default="", max_length=10000)
     media_urls: Optional[List[str]] = None
     gif_url: Optional[str] = None
     poll: Optional[PollCreate] = None
@@ -63,9 +63,20 @@ class PostResponse(BaseModel):
     user_interactions: UserInteractions = Field(default_factory=UserInteractions)
     tickers: List[TickerInfo] = Field(default_factory=list)
     created_at: datetime
+    poll: Optional[PollInfo] = None
 
     class Config:
         from_attributes = True
+
+class OriginalPostInResponse(BaseModel):
+    """Embedded original post for quote reposts (so the client can render the quoted tweet)."""
+
+    id: str
+    author: PostAuthor
+    content: str
+    media_urls: Optional[List[str]] = None
+    gif_url: Optional[str] = None
+    created_at: datetime
 
 class PostInFeedResponse(BaseModel):
     """Post in list/feed (includes author)."""
@@ -79,3 +90,8 @@ class PostInFeedResponse(BaseModel):
     user_interactions: UserInteractions = Field(default_factory=UserInteractions)
     tickers: List[TickerInfo] = Field(default_factory=list)
     created_at: datetime
+    poll: Optional[PollInfo] = None
+    original_post_id: Optional[str] = None
+    repost_type: Optional[str] = None
+    reposted_by_profile_user: Optional[bool] = None
+    original_post: Optional[OriginalPostInResponse] = None

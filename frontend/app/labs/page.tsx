@@ -1,18 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GiBinoculars } from 'react-icons/gi';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
 
 export default function LabsPage() {
   const router = useRouter();
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
-  const { watchlist, setWatchlist } = useWatchlist();
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
 
   return (
     <div className="min-h-screen bg-black">
@@ -57,20 +54,14 @@ export default function LabsPage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
-      {/* Modals */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
     </div>
   );
 }

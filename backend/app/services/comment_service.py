@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from app.models.comment import Comment
 from app.models.poll import Poll
 from app.models.reaction import Reaction
@@ -71,6 +71,33 @@ def list_comments(
         db.query(Comment, User)
         .join(User, Comment.user_id == User.id)
         .filter(Comment.post_id == post_id, Comment.deleted_at.is_(None))
+    )
+    total = q.count()
+    rows = q.order_by(Comment.created_at.desc()).offset(offset).limit(per_page).all()
+    return rows, total
+
+def list_comments_by_user(
+    db: Session,
+    user_id: UUID,
+    page: int = 1,
+    per_page: int = 20,
+) -> Tuple[List[Tuple[Comment, User, "Post", User]], int]:
+    """
+    List comments (replies) written by a user (non-deleted), with comment author and post + post author.
+    Returns (list of (comment, comment_author, post, post_author)), total_count).
+    """
+    from app.models.post import Post
+
+    per_page = min(max(1, per_page), 50)
+    offset = (page - 1) * per_page
+    post_author = aliased(User)
+    q = (
+        db.query(Comment, User, Post, post_author)
+        .join(User, Comment.user_id == User.id)
+        .join(Post, Comment.post_id == Post.id)
+        .join(post_author, Post.user_id == post_author.id)
+        .filter(Post.deleted_at.is_(None))
+        .filter(Comment.user_id == user_id, Comment.deleted_at.is_(None))
     )
     total = q.count()
     rows = q.order_by(Comment.created_at.desc()).offset(offset).limit(per_page).all()

@@ -2,37 +2,35 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { LogOut, UserPlus } from 'lucide-react';
+import { LogOut, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
+import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
 
 interface TopbarProps {
   onUpgradeLabs: () => void;
 }
 
 export default function Topbar({ onUpgradeLabs }: TopbarProps) {
-  const router = useRouter();
-  
-  // Mock user data - in real implementation, get from session/auth context
-  const currentUser = {
-    displayName: 'John Doe',
-    handle: 'johndoe',
-    avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Brian',
+  const { currentUser } = useCurrentUser();
+  const { signOut } = useAuth();
+  const isOnline = useOnlineStatus();
+  const { setShowOfflineOverlay } = useOfflineOverlay();
+
+  const handleUpgradeClick = () => {
+    if (isOnline) onUpgradeLabs();
+    else setShowOfflineOverlay(true);
   };
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
-    // TODO: Clear session/tokens
-    router.push('/');
-  };
-
-  const handleAddAccount = () => {
-    // TODO: Handle add account logic
-    router.push('/');
+    signOut();
   };
 
   // Close menu when clicking outside
@@ -67,25 +65,23 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
                   <div className="font-semibold text-white text-sm">{currentUser.displayName}</div>
                   <div className="text-gray-400 text-xs">@{currentUser.handle}</div>
                 </div>
+                <Link
+                  href="/settings?action=delete"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="text-sm">Delete account</span>
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();
                     setIsProfileMenuOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-t border-white/10"
                 >
                   <LogOut className="w-4 h-4 text-gray-300" />
                   <span className="text-white text-sm">Logout</span>
-                </button>
-                <button
-                  onClick={() => {
-                    handleAddAccount();
-                    setIsProfileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-t border-white/10"
-                >
-                  <UserPlus className="w-4 h-4 text-gray-300" />
-                  <span className="text-white text-sm">Add another account</span>
                 </button>
               </div>
             )}
@@ -107,8 +103,11 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
           {/* Right: Upgrade Button */}
           <div className="flex-shrink-0">
             <button
-              onClick={onUpgradeLabs}
-              className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
+              type="button"
+              onClick={handleUpgradeClick}
+              disabled={!isOnline}
+              title={!isOnline ? 'Connect to the internet to continue' : undefined}
+              className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
             >
               Upgrade
             </button>

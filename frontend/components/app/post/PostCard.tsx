@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
 import { useState, useEffect } from 'react';
-import { isTweet } from '@/data/mockData';
+import { isTweet } from '@/utils/content/postUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
@@ -27,6 +27,8 @@ interface PostCardProps {
   isDetailPage?: boolean; // If true, disable click navigation and hover effects
   repostedBy?: { displayName: string; handle: string } | null; // Who reposted this (for original posts)
   onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
+  /** When true, hide actions and menu (e.g. for unauthenticated viewers of shared post link) */
+  readOnly?: boolean;
 }
 
 export default function PostCard({
@@ -42,12 +44,14 @@ export default function PostCard({
   isDetailPage = false,
   repostedBy = null,
   onReportClick,
+  readOnly = false,
 }: PostCardProps) {
   const router = useRouter();
   
-  // Helper function to get original post by ID
+  // Helper function to get original post by ID (use embedded quotedPost from API when present, else find in allPosts)
   const getOriginalPost = (): Post | undefined => {
     if (isTweet(post) && post.repostType && post.originalPostId) {
+      if (post.quotedPost) return post.quotedPost;
       return allPosts.find(p => p.id === post.originalPostId);
     }
     return undefined;
@@ -91,20 +95,24 @@ export default function PostCard({
 
   
   // Check if current user has reposted this post (for button color persistence)
-  // Note: Only normal reposts count, quote reposts are treated as new tweets
+  // Use API reposted flag first (survives refresh); fallback to hasUserReposted (wrapper in list) or "this card is my repost"
   const getPostIdToCheck = () => {
     if (isTweet(post) && post.repostType === 'normal' && post.originalPostId) {
       return post.originalPostId;
     }
     return post.id;
   };
-  
+
   const postIdToCheck = getPostIdToCheck();
-  // Check if this post has been normal reposted by the current user
-  // For quote reposts, we check if the quote repost itself has been normal reposted
-  // For normal reposts, we check if the original post has been normal reposted
-  // For regular posts, we check if the post itself has been normal reposted
-  const isReposted = hasUserReposted ? hasUserReposted(postIdToCheck) : false;
+  const isReposted =
+    Boolean(post.userInteractions?.reposted) ||
+    (hasUserReposted ? hasUserReposted(postIdToCheck) : false) ||
+    Boolean(
+      currentUserHandle &&
+        isTweet(post) &&
+        post.repostType === 'normal' &&
+        post.author.handle === currentUserHandle
+    );
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -173,16 +181,32 @@ export default function PostCard({
     if (isTweet(post)) {
       return (
         <>
-          {/* Quote Repost */}
-          {post.repostType === 'quote' && originalPost ? (
+          {/* Quote repost: show when repostType is 'quote' OR we have originalPostId (profile list from API) */}
+          {(post.repostType === 'quote' || (post.originalPostId && post.repostType !== 'normal')) ? (
             <>
-              {/* User's quote comment */}
+              {/* User's quote comment – always show (text, media, gif from the quote post) */}
               <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
-                {parseCashtags(post.content)}
+                {parseCashtags(typeof post.content === 'string' ? post.content : '')}
               </p>
-              
-              {/* Original Tweet Card */}
-              {originalPost && (
+              {post.media && post.media.length > 0 && (
+                <PostMedia
+                  media={post.media}
+                  onImageClick={handleImageClick}
+                  className="mb-3"
+                />
+              )}
+              {post.gifUrl && (
+                <div className="mb-3 rounded-xl overflow-hidden">
+                  <img
+                    src={post.gifUrl}
+                    alt="GIF"
+                    className="w-full rounded-xl"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              {/* Original Tweet Card (when we have the original in allPosts) */}
+              {originalPost ? (
                 <div 
                   className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
                   onClick={(e) => handleQuotedPostClick(e, originalPost)}
@@ -217,7 +241,6 @@ export default function PostCard({
                     )}
                     <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
                   </div>
-                  {/* Render original post content */}
                   {originalPost && isTweet(originalPost) && (
                     <>
                       <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
@@ -248,7 +271,9 @@ export default function PostCard({
                     </>
                   )}
                 </div>
-              )}
+              ) : post.originalPostId ? (
+                <p className="text-sm text-gray-500 italic">Quoted post</p>
+              ) : null}
             </>
           ) : (
             <>
@@ -375,12 +400,14 @@ export default function PostCard({
               onDelete={onDelete}
               onProfileClick={handleProfileClick}
               onReportClick={onReportClick}
+              readOnly={readOnly}
             />
 
             {/* Content */}
             {renderContent()}
 
-            {/* Action Icons */}
+            {/* Action Icons - hidden when readOnly */}
+            {!readOnly && (
             <PostActions
               post={post}
               originalPost={originalPost}
@@ -392,6 +419,7 @@ export default function PostCard({
               onQuoteRepost={handleQuoteRepost}
               canUndoRepost={isReposted}
             />
+            )}
           </div>
         </div>
       </article>
