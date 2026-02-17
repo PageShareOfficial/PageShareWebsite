@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
@@ -8,28 +9,39 @@ import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import RightRail from '@/components/app/layout/RightRail';
-import Feed from '@/components/app/feed/Feed';
-import TweetComposer from '@/components/app/composer/TweetComposer';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import EditProfileModal from '@/components/app/modals/EditProfileModal';
-import ProfileHeader from '@/components/app/profile/ProfileHeader';
+import ProfileHeader, { ProfileHeaderSkeleton } from '@/components/app/profile/ProfileHeader';
+import Loading from '@/components/app/common/Loading';
 import ProfileTabs from '@/components/app/profile/ProfileTabs';
 import ProfileReplies from '@/components/app/profile/ProfileReplies';
-import { isTweet } from '@/data/mockData';
 import { Post, Comment } from '@/types';
-import Skeleton from '@/components/app/common/Skeleton';
-import { getUserByUsername, calculateUserStats, ProfileUser } from '@/utils/user/profileUtils';
+import { calculateUserStats, ProfileUser } from '@/utils/user/profileUtils';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
-import { getFollowerCount, getFollowingCount, isFollowing, followUser, unfollowUser, initializeMockFollows } from '@/utils/user/followUtils';
-import { filterReportedComments } from '@/utils/content/reportUtils';
-import ReportModal from '@/components/app/modals/ReportModal';
+const Feed = dynamic(() => import('@/components/app/feed/Feed'), { ssr: false, loading: () => <Loading /> });
+const TweetComposer = dynamic(() => import('@/components/app/composer/TweetComposer'), { ssr: false });
+const EditProfileModal = dynamic(() => import('@/components/app/modals/EditProfileModal'), { ssr: false });
+const ReportModal = dynamic(() => import('@/components/app/modals/ReportModal'), { ssr: false });
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
-import { useComments } from '@/hooks/post/useComments';
-import { isReservedRoute, isValidUsername } from '@/utils/core/routeUtils';
+import { isReservedRoute } from '@/utils/core/routeUtils';
+import { getBaseUrl } from '@/lib/api/client';
+import {
+  getProfileByUsername,
+  followUserApi,
+  unfollowUserApi,
+  listUserReplies,
+  listUserLikes,
+  type ProfileByUsernameResponse,
+  type UserReplyItem,
+  type PollInReplyResponse,
+} from '@/lib/api/userApi';
+import { toggleCommentReaction, deleteComment } from '@/lib/api/commentApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { mapPostResponseToPost, votePoll } from '@/lib/api/postApi';
+import LoadingState from '@/components/app/common/LoadingState';
+import { formatRelativeTime } from '@/utils/core/dateUtils';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -47,16 +59,16 @@ export default function ProfilePage() {
   };
   
   const [activeTab, setActiveTab] = useState<'posts' | 'replies' | 'likes'>(getInitialTab);
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [isUserFollowing, setIsUserFollowing] = useState(false);
-  const [currentProfileUser, setCurrentProfileUser] = useState<ProfileUser | null>(null);
-
-  // Use new hooks
-  const { currentUser, isClient } = useCurrentUser();
-  const { filterPosts, filterComments } = useContentFilters({ 
+  const [backendProfile, setBackendProfile] = useState<ProfileByUsernameResponse | null>(null);
+  const [profileNotFound, setProfileNotFound] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const repliesFetchedForIdRef = useRef<string | null>(null);
+  const likesFetchedForIdRef = useRef<string | null>(null);
+  const { currentUser, isClient, refreshUser } = useCurrentUser();
+  const { session } = useAuth();
+  const apiUrl = getBaseUrl();
+  const { filterPosts } = useContentFilters({ 
     currentUserHandle: currentUser.handle, 
     isClient 
   });
@@ -77,6 +89,59 @@ export default function ProfilePage() {
       setActiveTab('posts');
     }
   }, [searchParams]);
+
+  // Fetch replies only once per profile when Replies tab is active; keep data when switching tabs
+  useEffect(() => {
+    if (activeTab !== 'replies' || !backendProfile?.id) return;
+    if (repliesFetchedForIdRef.current === backendProfile.id) return;
+    let cancelled = false;
+    repliesFetchedForIdRef.current = backendProfile.id;
+    setRepliesLoading(true);
+    listUserReplies(backendProfile.id, session?.access_token ?? null, { page: 1, per_page: 50 })
+      .then((res) => {
+        if (!cancelled) setUserReplies(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUserReplies([]);
+          repliesFetchedForIdRef.current = null;
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setRepliesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, backendProfile?.id, session?.access_token]);
+
+  // Fetch likes only once per profile when Likes tab is active; keep data when switching tabs
+  useEffect(() => {
+    if (activeTab !== 'likes' || !backendProfile?.id) return;
+    if (likesFetchedForIdRef.current === backendProfile.id) return;
+    let cancelled = false;
+    likesFetchedForIdRef.current = backendProfile.id;
+    setLikesLoading(true);
+    listUserLikes(backendProfile.id, session?.access_token ?? null, { page: 1, per_page: 50 })
+      .then((res) => {
+        if (!cancelled) {
+          const mapped = res.data.map((p) => mapPostResponseToPost(p));
+          setUserLikes(mapped);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUserLikes([]);
+          likesFetchedForIdRef.current = null;
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLikesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, backendProfile?.id, session?.access_token]);
   
 
   // Memoize route validation to avoid recalculating on every render
@@ -91,71 +156,68 @@ export default function ProfilePage() {
     router.replace(`/${username.toLowerCase()}`);
   }, [username, router, isReserved]);
 
-  // Memoize username validation to avoid repeated localStorage checks on every render
-  // Check if username is valid SYNCHRONOUSLY during render to prevent profile→404 flash
-  // isValidUsername checks: mock users (sync) + localStorage profile (sync, client-only)
-  // Must check before calling getUserByUsername which creates synthetic users for ANY username
-  const userIsValid = useMemo(() => {
-    if (!username || isReserved) return false;
-    return isValidUsername(username);
-  }, [username, isReserved]);
-  
-  // If username provided but invalid (not in mock data, no localStorage profile), show 404 immediately
-  if (username && !isReserved && !userIsValid) {
-    notFound();
+  // Backend is the only source of truth: 404 when backend returns 404 or when API is not configured
+  if (username && !isReserved) {
+    if (!apiUrl) notFound();
+    if (profileNotFound) notFound();
   }
-  
-  // Get profile user data (only reached if user is valid - getUserByUsername may still return synthetic for localStorage-only users)
-  const baseProfileUser = username && !isReserved ? getUserByUsername(username) : null;
-  const isOwnProfile = currentUser.handle === username;
 
-  // Load saved profile from localStorage if it exists
+  const isOwnProfile = backendProfile ? currentUser.handle === backendProfile.username : currentUser.handle === username.toLowerCase();
+
+  // Fetch profile by username from backend. Runs on every mount/navigation to this page
+  // (no client cache), so opening /[username] always triggers one GET /users/by-username/{username}.
   useEffect(() => {
-    if (!username || isReserved || !baseProfileUser) return;
+    if (!apiUrl || !username || isReserved) return;
+    let cancelled = false;
+    getProfileByUsername(username, session?.access_token ?? null)
+      .then((data) => {
+        if (cancelled) return;
+        if (data === null) setProfileNotFound(true);
+        else setBackendProfile(data);
+      })
+      .catch(() => {
+        if (!cancelled) setProfileNotFound(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiUrl, username, isReserved, session?.access_token]);
 
-    const profileKey = `pageshare_profile_${username.toLowerCase()}`;
-    const savedProfile = localStorage.getItem(profileKey);
-    
-    if (savedProfile) {
-      try {
-        const saved = JSON.parse(savedProfile);
-        setCurrentProfileUser({
-          ...baseProfileUser,
-          ...saved,
-        });
-      } catch {
-        setCurrentProfileUser(baseProfileUser);
+  // Header profile from backend only
+  const headerProfile: ProfileUser | null = backendProfile
+    ? {
+        id: backendProfile.id,
+        displayName: backendProfile.display_name,
+        handle: backendProfile.username,
+        avatar: backendProfile.profile_picture_url ?? '',
+        badge: backendProfile.badge === 'Verified' ? 'Verified' : backendProfile.badge === 'Public' ? 'Public' : undefined,
+        joinedDate: backendProfile.created_at,
+        followers: backendProfile.follower_count,
+        following: backendProfile.following_count,
+        bio: backendProfile.bio ?? '',
+        interests: backendProfile.interests ?? [],
       }
-    } else {
-      setCurrentProfileUser(baseProfileUser);
-    }
-  }, [username, isReserved, baseProfileUser]);
+    : null;
 
-  const profileUser = currentProfileUser || baseProfileUser;
 
-  // Initialize mock follows on mount
+  // Use custom hooks for data and handlers. On profile, load this user's posts (or null until profile loaded).
+  const { posts, setPosts, loading: postsLoading } = usePostsData({
+    userId: backendProfile ? backendProfile.id : null,
+  });
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
+  const [userReplies, setUserReplies] = useState<UserReplyItem[]>([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [userLikes, setUserLikes] = useState<Post[]>([]);
+  const [likesLoading, setLikesLoading] = useState(false);
+
+  // When profile changes (e.g. navigate to another user), clear tab caches so we fetch fresh for the new profile
   useEffect(() => {
-    initializeMockFollows();
-  }, []);
+    repliesFetchedForIdRef.current = null;
+    likesFetchedForIdRef.current = null;
+    setUserReplies([]);
+    setUserLikes([]);
+  }, [backendProfile?.id]);
 
-  // Load follower/following counts and follow status
-  useEffect(() => {
-    if (!username || isReserved) return;
-    
-    const followers = getFollowerCount(username);
-    const following = getFollowingCount(username);
-    const followingStatus = isFollowing(currentUser.handle, username);
-    
-    setFollowerCount(followers);
-    setFollowingCount(following);
-    setIsUserFollowing(followingStatus);
-  }, [username, currentUser.handle, isReserved]);
-
-
-  // Use custom hooks for data and handlers
-  const { posts, setPosts } = usePostsData();
-  const { watchlist, setWatchlist } = useWatchlist();
-  const { allComments, setAllComments } = useComments({ posts });
   const {
     handleLike,
     handleRepost,
@@ -181,338 +243,269 @@ export default function ProfilePage() {
     handleReportSubmitted,
   } = useReportModal();
 
-  // Handle comment likes
-  const handleCommentLike = (commentId: string) => {
-    // Update comment like status in localStorage
-    const userComments = allComments.filter((c) => c.author.handle === username);
-    const comment = userComments.find((c) => c.id === commentId);
-    if (!comment) return;
-
-    const postId = comment.postId;
-    const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
-    let comments: Comment[] = [];
-    
-    if (savedComments) {
-      try {
-        comments = JSON.parse(savedComments);
-      } catch {
-        comments = [];
-      }
-    }
-
-    const updatedComments = comments.map((c: Comment) => {
-      if (c.id === commentId) {
-        return {
-          ...c,
-          likes: c.userLiked ? c.likes - 1 : c.likes + 1,
-          userLiked: !c.userLiked,
-        };
-      }
-      return c;
-    });
-
-    localStorage.setItem(`pageshare_comments_${postId}`, JSON.stringify(updatedComments));
-    
-    // Update allComments state
-    setAllComments((prev) =>
-      prev.map((c) => {
-        if (c.id === commentId) {
-          return {
-            ...c,
-            likes: c.userLiked ? c.likes - 1 : c.likes + 1,
-            userLiked: !c.userLiked,
-          };
-        }
-        return c;
-      })
-    );
-  };
-
-  // Handle comment poll votes
-  const handleCommentPollVote = (commentId: string, optionIndex: number) => {
-    // Find the comment to get its postId
-    const comment = allComments.find((c) => c.id === commentId);
-    if (!comment || !comment.poll) return;
-
-    const postId = comment.postId;
-    const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
-    let comments: Comment[] = [];
-    
-    if (savedComments) {
-      try {
-        comments = JSON.parse(savedComments);
-      } catch {
-        comments = [];
-      }
-    }
-
-    // Update comment poll vote
-    const updatedComments = comments.map((c: Comment) => {
-      if (c.id === commentId && c.poll) {
-        const currentVotes = c.poll.votes || {};
-        const newVotes = { ...currentVotes };
-        const currentVote = c.poll.userVote;
-        
-        if (currentVote !== undefined && currentVote !== optionIndex) {
-          newVotes[currentVote] = Math.max(0, (newVotes[currentVote] || 0) - 1);
-        }
-        
-        newVotes[optionIndex] = (newVotes[optionIndex] || 0) + 1;
-        
-        return {
-          ...c,
-          poll: {
-            ...c.poll,
-            votes: newVotes,
-            userVote: optionIndex,
-          },
-        };
-      }
-      return c;
-    });
-
-    localStorage.setItem(`pageshare_comments_${postId}`, JSON.stringify(updatedComments));
-    
-    // Update allComments state
-    setAllComments((prev) =>
-      prev.map((c) => {
-        if (c.id === commentId && c.poll) {
-          const currentVotes = c.poll.votes || {};
-          const newVotes = { ...currentVotes };
-          const currentVote = c.poll.userVote;
-          
-          if (currentVote !== undefined && currentVote !== optionIndex) {
-            newVotes[currentVote] = Math.max(0, (newVotes[currentVote] || 0) - 1);
-          }
-          
-          newVotes[optionIndex] = (newVotes[optionIndex] || 0) + 1;
-          
-          return {
-            ...c,
-            poll: {
-              ...c.poll,
-              votes: newVotes,
-              userVote: optionIndex,
-            },
-          };
-        }
-        return c;
-      })
-    );
-  };
-
-  // Handle comment deletion
-  const handleCommentDelete = (commentId: string, postId: string) => {
-    // Remove comment from localStorage
-    const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
-    if (savedComments) {
-      try {
-        const comments: Comment[] = JSON.parse(savedComments);
-        const updatedComments = comments.filter((c) => c.id !== commentId);
-        
-        if (updatedComments.length > 0) {
-          localStorage.setItem(`pageshare_comments_${postId}`, JSON.stringify(updatedComments));
-        } else {
-          localStorage.removeItem(`pageshare_comments_${postId}`);
-        }
-      } catch {
-        // If parsing fails, just remove the entry
-        localStorage.removeItem(`pageshare_comments_${postId}`);
-      }
-    }
-    
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new Event('commentsUpdated'));
-    
-    // Update allComments state
-    setAllComments((prev) => prev.filter((c) => c.id !== commentId));
-    
-    // Update post comment count
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
+  // Handle comment likes (backend is source of truth)
+  const handleCommentLike = async (commentId: string) => {
+    if (!session?.access_token) return;
+    const reply = userReplies.find((r) => r.comment.id === commentId);
+    if (!reply) return;
+    const prevLiked = reply.comment.user_liked;
+    const prevLikes = reply.comment.likes;
+    setUserReplies((prev: UserReplyItem[]) =>
+      prev.map((r) =>
+        r.comment.id === commentId
           ? {
-              ...p,
-              stats: {
-                ...p.stats,
-                comments: Math.max(0, p.stats.comments - 1),
+              ...r,
+              comment: {
+                ...r.comment,
+                user_liked: !prevLiked,
+                likes: prevLiked ? prevLikes - 1 : prevLikes + 1,
               },
             }
-          : p
+          : r
       )
     );
-  };
-
-  // Get user's comments (replies) - from both mockComments and localStorage
-  // Filter comments: first by author, then by blocked/reported
-  let userComments = allComments.filter((comment) => comment.author.handle === username);
-  
-  // Filter out blocked and reported comments if current user is viewing
-  if (currentUser.handle) {
-    userComments = filterComments(userComments);
-    userComments = filterReportedComments(userComments, currentUser.handle);
-  }
-
-  // Filter posts based on active tab
-  const getFilteredPosts = () => {
-    if (activeTab === 'posts') {
-      // Show posts written by user OR quote reposts by user OR normal reposts by user
-      return posts.filter((post) => {
-        if (isTweet(post)) {
-          // Show all posts where the author is the profile user
-          // This includes: original posts, quote reposts, and normal reposts
-          return post.author.handle === username;
-        }
-        return false;
-      });
-    } else if (activeTab === 'replies') {
-      // For replies tab, we'll return empty array and handle rendering separately
-      // since we need to show original post + comment structure
-      return [];
-    } else if (activeTab === 'likes') {
-      // Show posts that this profile user has liked
-      // For own profile, check userInteractions.liked from the loaded posts
-      // For other users, we'd need to fetch from backend
-      return posts.filter((post) => {
-        if (isTweet(post)) {
-          if (isOwnProfile) {
-            // For own profile, check if user has liked the post
-            // Include all posts the user has liked (including their own posts and quote reposts)
-            // Exclude only normal reposts (they're just shares, not content)
-            // Quote reposts are treated as new tweets, so include them
-            return post.userInteractions.liked && post.repostType !== 'normal';
-          }
-          // For other users, we don't have their like data
-          // In production, fetch from backend: GET /api/users/{username}/likes
-          return false;
-        }
-        return false;
-      });
+    try {
+      const res = await toggleCommentReaction(commentId, session.access_token);
+      setUserReplies((prev: UserReplyItem[]) =>
+        prev.map((r) =>
+          r.comment.id === commentId
+            ? { ...r, comment: { ...r.comment, user_liked: res.reacted, likes: res.reaction_count } }
+            : r
+        )
+      );
+    } catch {
+      setUserReplies((prev: UserReplyItem[]) =>
+        prev.map((r) =>
+          r.comment.id === commentId
+            ? { ...r, comment: { ...r.comment, user_liked: prevLiked, likes: prevLikes } }
+            : r
+        )
+      );
     }
-    return [];
   };
 
-  // Filter posts to exclude blocked users' posts
+  // Handle comment poll votes (backend is source of truth)
+  const handleCommentPollVote = async (commentId: string, optionIndex: number) => {
+    if (!session?.access_token) return;
+    const reply = userReplies.find((r) => r.comment.id === commentId);
+    if (!reply?.comment.poll?.poll_id) return;
+    const pollId = reply.comment.poll.poll_id;
+    try {
+      const { data } = await votePoll(pollId, optionIndex, session.access_token);
+      setUserReplies((prev: UserReplyItem[]) =>
+        prev.map((r) => {
+          if (r.comment.id !== commentId || !r.comment.poll) return r;
+          return {
+            ...r,
+            comment: {
+              ...r.comment,
+              poll: {
+                ...r.comment.poll,
+                results: data.results ?? {},
+                user_vote: data.option_index,
+              },
+            },
+          };
+        })
+      );
+    } catch {
+      // Optionally show error
+    }
+  };
+
+  // Handle comment deletion (backend is source of truth)
+  const handleCommentDelete = async (commentId: string, postId: string) => {
+    if (!session?.access_token) return;
+    setUserReplies((prev: UserReplyItem[]) => prev.filter((r) => r.comment.id !== commentId));
+    try {
+      await deleteComment(commentId, session.access_token);
+      setPosts((prev: Post[]) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                stats: {
+                  ...p.stats,
+                  comments: Math.max(0, p.stats.comments - 1),
+                },
+              }
+            : p
+        )
+      );
+    } catch {
+      if (backendProfile?.id) {
+        listUserReplies(backendProfile.id, session.access_token, { page: 1, per_page: 50 })
+          .then((res) => setUserReplies(res.data))
+          .catch(() => {});
+      }
+    }
+  };
+
+  // Posts tab: backend already returns this user's posts only (originals + quote reposts + normal reposts)
+  const getFilteredPosts = () => {
+    if (activeTab !== 'posts') return [];
+    return posts; // No author filter – list was fetched by user_id
+  };
   const filteredPosts = filterPosts(getFilteredPosts());
+
+  // Map backend poll (post/comment) to frontend poll shape
+  const mapReplyPoll = (p: PollInReplyResponse | null | undefined) => {
+    if (!p || !p.options?.length) return undefined;
+    return {
+      pollId: p.poll_id,
+      options: p.options,
+      duration: 1,
+      createdAt: '',
+      votes: (p.results as Record<number, number>) ?? {},
+      userVote: p.user_vote ?? undefined,
+      isFinished: p.is_finished,
+      expiresAt: p.expires_at,
+    };
+  };
+
+  // Map API replies to Comment (with media, gif, poll) and full Post (with media, gif, poll, quotedPost) for ProfileReplies
+  const replyComments: Comment[] = userReplies.map((item) => ({
+    id: item.comment.id,
+    postId: item.comment.post_id,
+    author: {
+      id: item.comment.author.id,
+      displayName: item.comment.author.display_name,
+      handle: item.comment.author.username,
+      avatar: item.comment.author.profile_picture_url ?? '',
+      badge: item.comment.author.badge === 'Verified' ? 'Verified' : item.comment.author.badge === 'Public' ? 'Public' : undefined,
+    },
+    content: item.comment.content,
+    createdAt: formatRelativeTime(new Date(item.comment.created_at)),
+    likes: item.comment.likes,
+    userLiked: item.comment.user_liked,
+    media: item.comment.media_urls ?? undefined,
+    gifUrl: item.comment.gif_url ?? undefined,
+    poll: mapReplyPoll(item.comment.poll ?? null),
+  }));
+  const repliesPostsForContext: Post[] = userReplies.map((item) => {
+    const p = item.post;
+    const author: Post['author'] = {
+      id: p.author.id ?? '',
+      displayName: p.author.display_name,
+      handle: p.author.username,
+      avatar: p.author.profile_picture_url ?? '',
+      badge: p.author.badge === 'Verified' ? 'Verified' : p.author.badge === 'Public' ? 'Public' : undefined,
+    };
+    const post: Post = {
+      id: p.id,
+      author,
+      content: p.content ?? '',
+      createdAt: p.created_at ? formatRelativeTime(new Date(p.created_at)) : '',
+      media: p.media_urls && p.media_urls.length > 0 ? p.media_urls : undefined,
+      gifUrl: p.gif_url ?? undefined,
+      stats: { likes: 0, comments: 0, reposts: 0 },
+      userInteractions: { liked: false, reposted: false },
+    };
+    if (p.repost_type === 'quote' || p.repost_type === 'normal') {
+      post.repostType = p.repost_type as 'normal' | 'quote';
+    }
+    if (p.original_post_id) post.originalPostId = p.original_post_id;
+    if (p.original_post) {
+      const op = p.original_post;
+      post.quotedPost = {
+        id: op.id,
+        author: {
+          id: op.author.id,
+          displayName: op.author.display_name,
+          handle: op.author.username,
+          avatar: op.author.profile_picture_url ?? '',
+          badge: (op.author.badge === 'Verified' || op.author.badge === 'Public') ? op.author.badge : undefined,
+        },
+        content: op.content,
+        createdAt: op.created_at ? formatRelativeTime(new Date(op.created_at)) : '',
+        media: op.media_urls && op.media_urls.length > 0 ? op.media_urls : undefined,
+        gifUrl: op.gif_url ?? undefined,
+        stats: { likes: 0, comments: 0, reposts: 0 },
+        userInteractions: { liked: false, reposted: false },
+      } as Post;
+    }
+    if (p.poll) post.poll = mapReplyPoll(p.poll);
+    return post;
+  });
+
+  // Replies tab: only comments/replies by this user (no quote reposts — show only where user has replied)
+  type ReplyTabItem =
+    | { type: 'comment'; comment: Comment; post: Post; sortAt: string }
+    | { type: 'quote'; post: Post; sortAt: string };
+  const replyTabItems: ReplyTabItem[] = userReplies
+    .map((_, i) => ({
+      type: 'comment' as const,
+      comment: replyComments[i],
+      post: repliesPostsForContext[i],
+      sortAt: userReplies[i].comment.created_at,
+    }))
+    .sort((a, b) => new Date(b.sortAt).getTime() - new Date(a.sortAt).getTime());
 
   // Calculate stats
   const stats = username ? calculateUserStats(username, posts) : { posts: 0, replies: 0, likes: 0 };
 
-  // Handle follow/unfollow
-  const handleFollow = () => {
-    if (!username || isOwnProfile) return;
-    
-    if (isUserFollowing) {
-      unfollowUser(currentUser.handle, username);
-      setFollowerCount((prev) => Math.max(0, prev - 1));
-    } else {
-      followUser(currentUser.handle, username);
-      setFollowerCount((prev) => prev + 1);
-    }
-    
-    setIsUserFollowing(!isUserFollowing);
-  };
+  // Handle follow/unfollow via backend (optimistic update)
+  const handleFollow = async () => {
+    if (!backendProfile || isOwnProfile || !session?.access_token) return;
+    const prevFollowing = backendProfile.is_following;
+    const prevCount = backendProfile.follower_count;
 
-
-  // Handle profile save
-  const handleProfileSave = (updatedProfile: Partial<ProfileUser>) => {
-    if (!profileUser) return;
-    
-    const newProfile = {
-      ...profileUser,
-      ...updatedProfile,
-    };
-    
-    setCurrentProfileUser(newProfile);
-    
-    // Update posts to reflect new avatar/displayName
-    if (updatedProfile.avatar || updatedProfile.displayName) {
-      setPosts((prevPosts) =>
-        prevPosts.map((post) => {
-          if (post.author.handle === username) {
-            return {
-              ...post,
-              author: {
-                ...post.author,
-                avatar: updatedProfile.avatar || post.author.avatar,
-                displayName: updatedProfile.displayName || post.author.displayName,
-              },
-            };
+    // Optimistic update
+    setBackendProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            is_following: !prevFollowing,
+            follower_count: prevFollowing
+              ? Math.max(0, prevCount - 1)
+              : prevCount + 1,
           }
-          return post;
-        })
+        : null
+    );
+    setFollowLoading(true);
+    try {
+      if (prevFollowing) {
+        const res = await unfollowUserApi(backendProfile.id, session.access_token);
+        const count = res.data?.follower_count ?? Math.max(0, prevCount - 1);
+        setBackendProfile((prev) =>
+          prev ? { ...prev, is_following: false, follower_count: count } : null
+        );
+      } else {
+        const res = await followUserApi(backendProfile.id, session.access_token);
+        const count = res.data?.follower_count ?? prevCount + 1;
+        setBackendProfile((prev) =>
+          prev ? { ...prev, is_following: true, follower_count: count } : null
+        );
+      }
+    } catch {
+      // Revert on failure
+      setBackendProfile((prev) =>
+        prev ? { ...prev, is_following: prevFollowing, follower_count: prevCount } : null
       );
-
-      // Update all comments/replies to reflect new avatar/displayName
-      // Get all post IDs
-      const allPostIds = new Set<string>();
-      posts.forEach((post) => {
-        allPostIds.add(post.id);
-      });
-
-      // Update comments in localStorage for each post
-      allPostIds.forEach((postId) => {
-        const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
-        if (savedComments) {
-          try {
-            const comments: Comment[] = JSON.parse(savedComments);
-            const updatedComments = comments.map((comment) => {
-              if (comment.author.handle === username) {
-                return {
-                  ...comment,
-                  author: {
-                    ...comment.author,
-                    avatar: updatedProfile.avatar || comment.author.avatar,
-                    displayName: updatedProfile.displayName || comment.author.displayName,
-                  },
-                };
-              }
-              return comment;
-            });
-            localStorage.setItem(`pageshare_comments_${postId}`, JSON.stringify(updatedComments));
-          } catch {
-            // Skip invalid comments
-          }
-        }
-      });
-
-      // Update allComments state
-      setAllComments((prev) =>
-        prev.map((comment) => {
-          if (comment.author.handle === username) {
-            return {
-              ...comment,
-              author: {
-                ...comment.author,
-                avatar: updatedProfile.avatar || comment.author.avatar,
-                displayName: updatedProfile.displayName || comment.author.displayName,
-              },
-            };
-          }
-          return comment;
-        })
-      );
-
-      // Dispatch events to notify other components
-      window.dispatchEvent(new Event('commentsUpdated'));
-      window.dispatchEvent(new Event('profileUpdated'));
+    } finally {
+      setFollowLoading(false);
     }
   };
 
-  // Create profile user with updated counts
-  const profileUserWithCounts = profileUser ? {
-    ...profileUser,
-    followers: followerCount || profileUser.followers,
-    following: followingCount || profileUser.following,
-  } : null;
+
+  // After edit profile (saved by modal via API), refetch profile to update header
+  const handleProfileSave = async () => {
+    if (!username || isReserved) return;
+    const data = await getProfileByUsername(username, session?.access_token ?? null);
+    if (data) setBackendProfile(data);
+  };
 
   // If this is a reserved route, don't render profile page
   if (isReserved) {
     return null; // Will be handled by redirect in useEffect
   }
 
-  // If user not found or username not loaded yet, show error state
-  if (!username || !profileUser) {
+  const profileLoading = apiUrl && username && !isReserved && !backendProfile && !profileNotFound;
+
+  if (!username) return null;
+
+  // Only show full-page "User not found" when backend returned 404
+  if (profileNotFound) {
     return (
       <div className="min-h-screen bg-black">
         <div className="flex justify-center">
@@ -522,7 +515,7 @@ export default function ProfilePage() {
             <div className="flex-1 flex pb-16 md:pb-0">
               <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center">
                 <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
-                <p className="text-gray-400">The user @{username} doesn't exist.</p>
+                <p className="text-gray-400">The user @{username} doesn&apos;t exist.</p>
               </div>
             </div>
           </div>
@@ -530,6 +523,11 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  // Full layout: show header skeleton + feed skeletons while loading, or real content when ready
+  const showHeaderSkeleton = profileLoading;
+  const titleDisplay = profileLoading ? 'Loading...' : (headerProfile?.displayName ?? username);
+  const subtitleDisplay = profileLoading ? '' : (headerProfile ? `@${headerProfile.handle}` : '');
 
   return (
     <div className="min-h-screen bg-black">
@@ -539,102 +537,92 @@ export default function ProfilePage() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Mobile Header - Mobile Only */}
-          <MobileHeader title={profileUser.displayName} />
-          
-          {/* Top Bar - Desktop Only */}
+          <MobileHeader title={titleDisplay} />
           <div className="hidden md:block">
             <Topbar onUpgradeLabs={() => router.push('/plans')} />
           </div>
+          <DesktopHeader title={titleDisplay} subtitle={subtitleDisplay} />
 
-          {/* Desktop Header with Back Button - Desktop/iPad Only */}
-          <DesktopHeader title={profileUser.displayName} subtitle={`@${profileUser.handle}`} />
-
-          {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
             <div className="w-full border-l border-r border-white/10">
-              {/* Profile Header */}
-              {profileUserWithCounts && (
+              {/* Profile Header: skeleton while loading, real header when ready */}
+              {showHeaderSkeleton ? (
+                <ProfileHeaderSkeleton />
+              ) : headerProfile ? (
                 <ProfileHeader
-                  profileUser={profileUserWithCounts}
+                  profileUser={headerProfile}
                   isOwnProfile={isOwnProfile}
                   stats={stats}
-                  isFollowing={isUserFollowing}
                   onEditProfile={() => setIsEditProfileOpen(true)}
                   onFollow={handleFollow}
+                  isFollowing={backendProfile?.is_following ?? false}
+                  followLoading={followLoading}
                 />
-              )}
+              ) : null}
 
-              {/* Divider */}
-              <div className="border-b border-white/10"></div>
+              <div className="border-b border-white/10" />
 
-              {/* Tabs - Posts, Replies, Likes */}
               <ProfileTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-              {/* User Posts Feed */}
               <div className="px-2 py-6 lg:px-4">
-                {!isClient ? (
-                  // Post Skeletons while loading
-                  <div className="space-y-0">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={`post-skeleton-${index}`}>
-                        <div className="p-4 border-b border-white/10">
-                          <div className="flex gap-3">
-                            {/* Avatar skeleton */}
-                            <Skeleton variant="circular" width={48} height={48} className="flex-shrink-0" />
-                            <div className="flex-1 min-w-0 space-y-3">
-                              {/* Header skeleton (username + handle + time) */}
-                              <div className="flex items-center gap-2">
-                                <Skeleton variant="text" width={96} height={16} />
-                                <Skeleton variant="text" width={64} height={12} />
-                                <Skeleton variant="text" width={48} height={12} />
-                              </div>
-                              {/* Content skeleton */}
-                              <div className="space-y-2">
-                                <Skeleton variant="text" width="100%" height={16} />
-                                <Skeleton variant="text" width="83%" height={16} />
-                                <Skeleton variant="text" width="67%" height={16} />
-                              </div>
-                              {/* Actions skeleton */}
-                              <div className="flex items-center gap-6 pt-2">
-                                <Skeleton variant="text" width={48} height={20} />
-                                <Skeleton variant="text" width={48} height={20} />
-                                <Skeleton variant="text" width={48} height={20} />
-                                <Skeleton variant="text" width={48} height={20} />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {showHeaderSkeleton || !isClient ? (
+                  <LoadingState text="Loading..." />
+                ) : !headerProfile ? (
+                  <LoadingState text="Loading..." />
+                ) : activeTab === 'posts' ? (
+                  postsLoading ? (
+                    <LoadingState text="Loading posts..." />
+                  ) : (
+                    <Feed
+                      posts={filteredPosts}
+                      onNewIdeaClick={() => {}}
+                      onLike={handleLike}
+                      onRepost={handleRepost}
+                      onComment={handleComment}
+                      onVote={handleVote}
+                      onDelete={isOwnProfile ? handleDelete : undefined}
+                      hasUserReposted={hasUserReposted}
+                      currentUserHandle={currentUser.handle}
+                      allPosts={posts}
+                      showAllReposts={true}
+                      onReportClick={handleReportClick}
+                      postsLoading={postsLoading}
+                    />
+                  )
                 ) : activeTab === 'replies' ? (
-                  <ProfileReplies
-                    comments={userComments}
-                    posts={posts}
-                    onLike={handleLike}
-                    onRepost={handleRepost}
-                    onComment={handleComment}
-                    onVote={handleVote}
-                    hasUserReposted={hasUserReposted}
-                    currentUserHandle={currentUser.handle}
-                    onCommentLike={handleCommentLike}
-                    onCommentPollVote={handleCommentPollVote}
-                    onCommentDelete={handleCommentDelete}
-                  />
+                  repliesLoading ? (
+                    <LoadingState text="Loading replies..." />
+                  ) : (
+                    <ProfileReplies
+                      items={replyTabItems.map(({ sortAt, ...rest }) => rest)}
+                      allPosts={posts}
+                      onLike={handleLike}
+                      onRepost={handleRepost}
+                      onComment={handleComment}
+                      onVote={handleVote}
+                      hasUserReposted={hasUserReposted}
+                      currentUserHandle={currentUser.handle}
+                      onCommentLike={handleCommentLike}
+                      onCommentPollVote={handleCommentPollVote}
+                      onCommentDelete={handleCommentDelete}
+                      onReportClick={handleReportClick}
+                    />
+                  )
+                ) : likesLoading ? (
+                  <LoadingState text="Loading likes..." />
                 ) : (
                   <Feed
-                    posts={filteredPosts}
+                    posts={userLikes}
                     onNewIdeaClick={() => {}}
                     onLike={handleLike}
                     onRepost={handleRepost}
                     onComment={handleComment}
                     onVote={handleVote}
-                    onDelete={isOwnProfile ? handleDelete : undefined}
+                    onDelete={undefined}
                     hasUserReposted={hasUserReposted}
                     currentUserHandle={currentUser.handle}
-                    allPosts={posts}
-                    showAllReposts={activeTab === 'posts'}
+                    allPosts={userLikes}
+                    showAllReposts={false}
                     onReportClick={handleReportClick}
                   />
                 )}
@@ -647,26 +635,23 @@ export default function ProfilePage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
       {/* Modals */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
-      {profileUserWithCounts && isOwnProfile && (
+      {headerProfile && isOwnProfile && (
         <EditProfileModal
           isOpen={isEditProfileOpen}
           onClose={() => setIsEditProfileOpen(false)}
-          profileUser={profileUserWithCounts}
+          profileUser={headerProfile}
           onSave={handleProfileSave}
+          accessToken={session?.access_token ?? null}
+          refreshUser={refreshUser}
         />
       )}
       {isQuoteRepostOpen && quoteRepostPostId && (

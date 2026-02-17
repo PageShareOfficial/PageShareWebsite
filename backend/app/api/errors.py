@@ -17,6 +17,7 @@ from app.schemas.error import (
 )
 from app.services.auth_service import CurrentUser
 from app.services.error_service import create_error_log, list_error_logs, resolve_error_log
+from app.utils.responses import paginated_response
 
 router = APIRouter(prefix="/errors", tags=["errors"])
 
@@ -106,16 +107,7 @@ def list_errors_endpoint(
         )
         for r in rows
     ]
-    return {
-        "data": data,
-        "pagination": {
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-            "has_next": page * per_page < total,
-            "has_prev": page > 1,
-        },
-    }
+    return paginated_response(data, page, per_page, total)
 
 @router.patch("/{error_id}/resolve", response_model=dict)
 def resolve_error_endpoint(

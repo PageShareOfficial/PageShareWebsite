@@ -12,6 +12,8 @@ import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import FormInput from '@/components/app/common/FormInput';
 import FormErrorMessage from '@/components/app/common/FormErrorMessage';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
+import { updateProfile } from '@/lib/api/userApi';
+import { apiUploadProfilePicture } from '@/lib/api/client';
 
 // Form validation schema
 const editProfileSchema = z.object({
@@ -32,7 +34,9 @@ interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   profileUser: ProfileUser;
-  onSave: (updatedProfile: Partial<ProfileUser>) => void;
+  onSave: (updatedProfile?: Partial<ProfileUser>) => void;
+  accessToken?: string | null;
+  refreshUser?: () => Promise<void>;
 }
 
 export default function EditProfileModal({
@@ -40,10 +44,13 @@ export default function EditProfileModal({
   onClose,
   profileUser,
   onSave,
+  accessToken = null,
+  refreshUser,
 }: EditProfileModalProps) {
   const [avatarPreview, setAvatarPreview] = useState<string>(profileUser.avatar);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -66,7 +73,7 @@ export default function EditProfileModal({
   const selectedInterests = watch('interests') || [];
   const bioValue = watch('bio') || '';
 
-  // Reset form when modal opens/closes or profileUser changes
+  // Reset form and error when modal opens/closes or profileUser changes
   useEffect(() => {
     if (isOpen) {
       reset({
@@ -77,6 +84,7 @@ export default function EditProfileModal({
       });
       setAvatarPreview(profileUser.avatar);
       setAvatarFile(null);
+      setSaveError(null);
     }
   }, [isOpen, profileUser, reset]);
 
@@ -127,44 +135,30 @@ export default function EditProfileModal({
   };
 
   const onSubmit = async (data: EditProfileFormData) => {
+    setSaveError(null);
+    if (!accessToken) {
+      setSaveError('You need to sign in to update your profile.');
+      return;
+    }
     setIsUploading(true);
-
     try {
-      // Convert avatar file to data URL if a new file was selected
-      let avatarUrl = data.avatar || profileUser.avatar;
-      
+      await updateProfile(
+        {
+          display_name: data.displayName ?? profileUser.displayName,
+          bio: data.bio ?? profileUser.bio ?? '',
+          interests: data.interests ?? profileUser.interests ?? [],
+        },
+        accessToken
+      );
       if (avatarFile) {
-        avatarUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(avatarFile);
-        });
+        await apiUploadProfilePicture(avatarFile, accessToken);
       }
-
-      // Prepare updated profile
-      const updatedProfile: Partial<ProfileUser> = {
-        displayName: data.displayName || profileUser.displayName,
-        bio: data.bio || '',
-        interests: data.interests || [],
-        avatar: avatarUrl,
-      };
-
-      // Save to localStorage
-      const profileKey = `pageshare_profile_${profileUser.handle.toLowerCase()}`;
-      localStorage.setItem(profileKey, JSON.stringify(updatedProfile));
-
-      // Dispatch event to notify other components
-      window.dispatchEvent(new Event('profileUpdated'));
-
-      // Call onSave callback
-      onSave(updatedProfile);
-      
-      // Close modal
+      await refreshUser?.();
+      onSave();
       onClose();
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Failed to save profile. Please try again.');
+      setSaveError('Failed to save profile. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -180,6 +174,22 @@ export default function EditProfileModal({
       maxWidth="2xl"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-6">
+          {saveError && (
+            <div
+              role="alert"
+              className="flex items-center justify-between gap-3 rounded-xl bg-red-500/15 border border-red-500/30 px-4 py-3 text-red-200 text-sm"
+            >
+              <span>{saveError}</span>
+              <button
+                type="button"
+                onClick={() => setSaveError(null)}
+                className="flex-shrink-0 p-1 rounded-full hover:bg-red-500/20 transition-colors"
+                aria-label="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           {/* Profile Image Upload */}
           <div className="flex flex-col items-center">
             <div className="relative">

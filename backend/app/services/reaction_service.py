@@ -2,9 +2,12 @@
 Reaction (like) toggle on posts and comments. One reaction per user per target.
 """
 from __future__ import annotations
+from typing import List, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.reaction import Reaction
+from app.models.post import Post
+from app.models.user import User
 
 def toggle_post_reaction(
     db: Session, user_id: UUID, post_id: UUID
@@ -84,3 +87,69 @@ def toggle_comment_reaction(
         .count()
     )
     return True, count
+
+def list_posts_liked_by_user(
+    db: Session,
+    user_id: UUID,
+    page: int = 1,
+    per_page: int = 20,
+) -> Tuple[List[Tuple[Post, User]], int]:
+    """
+    List posts liked by a user (post reactions only), with post author.
+    Returns (list of (post, author), total_count). Ordered by reaction created_at desc.
+    """
+    per_page = min(max(1, per_page), 50)
+    offset = (page - 1) * per_page
+    subq = (
+        db.query(Reaction.post_id)
+        .filter(
+            Reaction.user_id == user_id,
+            Reaction.post_id.isnot(None),
+            Reaction.comment_id.is_(None),
+        )
+        .distinct()
+    )
+    # Get reactions with created_at for ordering
+    reactions = (
+        db.query(Reaction.post_id, Reaction.created_at)
+        .filter(
+            Reaction.user_id == user_id,
+            Reaction.post_id.isnot(None),
+            Reaction.comment_id.is_(None),
+        )
+        .order_by(Reaction.created_at.desc())
+        .offset(offset)
+        .limit(per_page)
+        .all()
+    )
+    if not reactions:
+        total = (
+            db.query(Reaction)
+            .filter(
+                Reaction.user_id == user_id,
+                Reaction.post_id.isnot(None),
+                Reaction.comment_id.is_(None),
+            )
+            .count()
+        )
+        return [], total
+    post_ids = [r[0] for r in reactions]
+    total = (
+        db.query(Reaction)
+        .filter(
+            Reaction.user_id == user_id,
+            Reaction.post_id.isnot(None),
+            Reaction.comment_id.is_(None),
+        )
+        .count()
+    )
+    rows = (
+        db.query(Post, User)
+        .join(User, Post.user_id == User.id)
+        .filter(Post.id.in_(post_ids), Post.deleted_at.is_(None))
+        .all()
+    )
+    # Preserve order from reactions
+    order_map = {pid: i for i, pid in enumerate(post_ids)}
+    rows_sorted = sorted(rows, key=lambda r: order_map.get(r[0].id, 0))
+    return rows_sorted, total

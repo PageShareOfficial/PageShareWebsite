@@ -8,6 +8,7 @@ import FormInput from '@/components/app/common/FormInput';
 import { PrimaryButton } from '@/components/app/common/Button';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -42,7 +43,7 @@ export default function ForgotPasswordForm({ onSuccess, onBack }: ForgotPassword
       setSuccessMessage('Check your email for the reset link.');
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send reset email');
+      setError(getErrorMessage(err, 'Failed to send reset email'));
     } finally {
       setIsLoading(false);
     }

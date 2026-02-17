@@ -16,41 +16,19 @@ interface TickerHeaderProps {
  * Displays ticker name, symbol, price, and change prominently
  */
 export default function TickerHeader({ data, type }: TickerHeaderProps) {
-  // Extract price and change based on type
-  const price = type === 'stock' 
-    ? (data as any).price 
-    : (data as any).currentPrice;
-  
-  const change = type === 'stock'
-    ? (data as any).changePercent
-    : (data as any).priceChangePercent24h;
-  
-  const changeAmount = type === 'stock'
-    ? (data as any).change
-    : (data as any).priceChange24h;
-  
-  const name = data.name;
-  const ticker = type === 'stock' 
-    ? (data as any).ticker 
-    : (data as any).symbol.toUpperCase();
-  
-  // Additional info based on type
-  const exchangeOrRank = type === 'stock'
-    ? (data as any).exchange
-    : `#${(data as any).marketCapRank}`;
-  
-  const sectorOrType = type === 'stock'
-    ? (data as any).industry
-    : 'Cryptocurrency';
-
+  const d = data as { currentPrice: number; priceChangePercent24h: number; priceChange24h: number; name: string; symbol: string; marketCapRank: number; image?: string };
+  const price = d.currentPrice;
+  const change = d.priceChangePercent24h;
+  const changeAmount = d.priceChange24h;
+  const name = d.name;
+  const ticker = d.symbol?.toUpperCase() ?? '';
+  const exchangeOrRank = d.marketCapRank != null ? `#${d.marketCapRank}` : '';
+  const sectorOrType = 'Cryptocurrency';
   const isPos = isPositive(change);
   const changeColor = getChangeColorClass(change);
   const ChangeIcon = isPos ? TrendingUp : TrendingDown;
-
-  // Get image from data
-  const image = type === 'stock'
-    ? (data as any)?.image
-    : (data as any)?.image || '';
+  const image = d.image ?? '';
+  void type;
 
   return (
     <div className="p-6 bg-white/5 border border-white/10 rounded-xl mb-6">

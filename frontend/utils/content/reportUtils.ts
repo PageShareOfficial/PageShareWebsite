@@ -1,4 +1,4 @@
-import { saveToStorage } from '@/utils/core/storageUtils';
+import { createReport, type BackendReportType } from '@/lib/api/reportApi';
 
 export type ReportReason =
   | 'spam'
@@ -20,7 +20,12 @@ export interface Report {
   timestamp: string;
 }
 
-const REPORTS_KEY = 'pageshare_reports';
+// In-memory cache of reports made in this session.
+// Backend remains the source of truth; this is only for client-side UX (auto-hide).
+const inMemoryReports: Report[] = [];
+
+// In-memory toggle for "auto-hide reported content" per user handle (default true).
+const autoHideReportedByUser = new Map<string, boolean>();
 
 /**
  * Get all report reason options with labels
@@ -39,22 +44,37 @@ export const getReportReasons = (): { value: ReportReason; label: string }[] => 
 /**
  * Report content (post or comment)
  */
-export const reportContent = (
-  report: Omit<Report, 'id' | 'timestamp'>
-): void => {
+export const reportContent = async (
+  report: Omit<Report, 'id' | 'timestamp'> & { reportedUserId?: string | null },
+  accessToken: string
+): Promise<void> => {
   if (typeof window === 'undefined') return;
 
+  // 1) Call backend /reports (backend is source of truth)
+  const body = {
+    reported_post_id: report.contentType === 'post' ? report.contentId : undefined,
+    reported_comment_id: report.contentType === 'comment' ? report.contentId : undefined,
+    reported_user_id: report.reportedUserId ?? undefined,
+    report_type: (report.reason as BackendReportType) ?? 'other',
+    reason: report.description,
+  };
+
+  await createReport(body, accessToken);
+
+  // 2) Maintain local auto-hide UX by recording report in localStorage
   const newReport: Report = {
-    ...report,
+    contentType: report.contentType,
+    contentId: report.contentId,
+    postId: report.postId,
+    reportedUserHandle: report.reportedUserHandle,
+    reporterHandle: report.reporterHandle,
+    reason: report.reason,
+    description: report.description,
     id: `report_${Date.now()}_${Math.random().toString(36).substring(7)}`,
     timestamp: new Date().toISOString(),
   };
 
-  const allReports = getReports();
-  allReports.push(newReport);
-  
-  saveToStorage(REPORTS_KEY, allReports);
-  
+  inMemoryReports.push(newReport);
   // Dispatch custom event for real-time updates
   window.dispatchEvent(new Event('reportsUpdated'));
 };
@@ -101,21 +121,7 @@ export const filterReportedPosts = (
  * Get all reports (for admin/settings view)
  */
 export const getReports = (): Report[] => {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const saved = localStorage.getItem(REPORTS_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-    }
-  } catch (error) {
-    console.error('Error loading reports from localStorage:', error);
-  }
-
-  return [];
+  return inMemoryReports;
 };
 
 /**
@@ -167,32 +173,23 @@ export const getReportedContentIds = (
  * Check if auto-hide reported content is enabled
  */
 export const isAutoHideReportedEnabled = (userHandle: string): boolean => {
-  if (typeof window === 'undefined') return false;
-  
-  try {
-    const saved = localStorage.getItem(`pageshare_auto_hide_reported_${userHandle}`);
-    if (saved === null) {
-      // Default to true if not set
-      return true;
-    }
-    return JSON.parse(saved) === true;
-  } catch {
-    return true; // Default to true on error
+  if (!userHandle) return false;
+  if (!autoHideReportedByUser.has(userHandle)) {
+    // Default to true if not set
+    autoHideReportedByUser.set(userHandle, true);
   }
+  return autoHideReportedByUser.get(userHandle) === true;
 };
 
 /**
  * Toggle auto-hide reported content setting
  */
 export const toggleAutoHideReported = (userHandle: string): void => {
-  if (typeof window === 'undefined') return;
-  
+  if (!userHandle) return;
+
   const current = isAutoHideReportedEnabled(userHandle);
-  localStorage.setItem(
-    `pageshare_auto_hide_reported_${userHandle}`,
-    JSON.stringify(!current)
-  );
-  
+  autoHideReportedByUser.set(userHandle, !current);
+
   // Dispatch event for real-time updates
   window.dispatchEvent(new Event('autoHideReportedUpdated'));
 };

@@ -1,18 +1,15 @@
 import { User } from './index';
 import { StockData } from '@/utils/api/stockApi';
 
-/**
- * Recent search entry stored in localStorage
- * Tracks what user searched for and the result they selected
- */
+/** Recent search: backend is source of truth when logged in. Types: account (users) and ticker. */
 export interface RecentSearch {
-  id: string; // Unique ID for the search entry
-  query: string; // Original search query
-  type: 'account' | 'stock' | 'crypto'; // Type of search
-  timestamp: string; // ISO timestamp when search was performed
-  resultId?: string; // Username (for accounts) or ticker (for stocks/crypto)
-  resultName?: string; // Display name (for accounts) or company name (for stocks/crypto)
-  image?: string; // Avatar URL (for accounts) or logo URL (for stocks/crypto)
+  id: string;
+  query: string;
+  type: 'account' | 'ticker';
+  timestamp: string; // ISO
+  resultId?: string; // username or ticker symbol
+  resultName?: string;
+  image?: string;
 }
 
 /**
@@ -49,16 +46,3 @@ export type NewsCategory =
   | 'business'
   | 'technology'
   | 'general';
-
-/**
- * Extended search suggestion that includes accounts
- * Extends the existing SearchSuggestion to include account results
- */
-export interface UnifiedSearchSuggestion {
-  type: 'account' | 'stock' | 'crypto';
-  // For accounts
-  user?: User;
-  // For stocks/crypto (reuses existing SearchSuggestion)
-  ticker?: string;
-  name?: string;
-}

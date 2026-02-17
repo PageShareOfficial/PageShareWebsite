@@ -2,7 +2,7 @@
 
 import { Repeat2 } from 'lucide-react';
 import { Post } from '@/types';
-import { isTweet } from '@/data/mockData';
+import { isTweet } from '@/utils/content/postUtils';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import UserBadge from '@/components/app/common/UserBadge';
 
@@ -14,6 +14,8 @@ interface PostHeaderProps {
   onDelete?: (postId: string) => void;
   onProfileClick?: (e: React.MouseEvent, handle: string) => void;
   onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
+  /** When true, hide the 3-dot menu (e.g. for unauthenticated viewers) */
+  readOnly?: boolean;
 }
 
 export default function PostHeader({
@@ -24,6 +26,7 @@ export default function PostHeader({
   onDelete,
   onProfileClick,
   onReportClick,
+  readOnly = false,
 }: PostHeaderProps) {
   return (
     <>
@@ -79,17 +82,20 @@ export default function PostHeader({
           <span className="text-sm text-gray-500">· {post.createdAt}</span>
         </div>
         
-        {/* 3-dot Menu Button */}
-        <ContentMenu
-          type="post"
-          authorHandle={post.author.handle}
-          authorDisplayName={post.author.displayName}
-          currentUserHandle={currentUserHandle}
-          linkUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/${post.author.handle}/posts/${post.id}`}
-          contentId={post.id}
-          onDelete={onDelete ? () => onDelete(post.id) : undefined}
-          onReportClick={onReportClick}
-        />
+        {/* 3-dot Menu Button - hidden when readOnly (e.g. unauthenticated view) */}
+        {!readOnly && (
+          <ContentMenu
+            type="post"
+            authorId={post.author.id}
+            authorHandle={post.author.handle}
+            authorDisplayName={post.author.displayName}
+            currentUserHandle={currentUserHandle}
+            linkUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/${post.author.handle}/posts/${post.id}`}
+            contentId={post.id}
+            onDelete={onDelete ? () => onDelete(post.id) : undefined}
+            onReportClick={onReportClick}
+          />
+        )}
       </div>
     </>
   );

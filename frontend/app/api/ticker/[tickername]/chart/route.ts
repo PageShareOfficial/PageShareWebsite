@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchTickerChart } from '@/utils/api/chartApi';
-import { detectTickerType } from '@/utils/api/tickerApi';
 
-/**
- * API route to fetch ticker chart/price history data
- * Supports both stocks and cryptocurrencies
- * 
- * GET /api/ticker/AAPL/chart?range=30d
- * GET /api/ticker/BTC/chart?range=5d&type=crypto
- */
+/** GET /api/ticker/[tickername]/chart – crypto only (CoinGecko). */
 export async function GET(
   request: NextRequest,
   { params }: { params: { tickername: string } }
@@ -17,7 +10,6 @@ export async function GET(
     const { tickername } = params;
     const searchParams = request.nextUrl.searchParams;
     const rangeParam = searchParams.get('range') || '30d';
-    const typeParam = searchParams.get('type') as 'stock' | 'crypto' | null;
     
     if (!tickername) {
       return NextResponse.json(
@@ -26,7 +18,6 @@ export async function GET(
       );
     }
     
-    // Validate time range
     const validRanges = ['1d', '5d', '30d', '90d', '180d', '1y', 'all'];
     const timeRange = validRanges.includes(rangeParam) 
       ? (rangeParam as '1d' | '5d' | '30d' | '90d' | '180d' | '1y' | 'all')
@@ -34,20 +25,13 @@ export async function GET(
     
     const ticker = tickername.toUpperCase();
     
-    // Detect ticker type if not provided
-    let tickerType: 'stock' | 'crypto' = typeParam || 'stock';
-    if (!typeParam) {
-      tickerType = await detectTickerType(ticker);
-    }
-    
-    // Fetch chart data with retry fallback
     let chartData;
     let retryCount = 0;
     const maxRetries = 2;
     
     while (retryCount <= maxRetries) {
       try {
-        chartData = await fetchTickerChart(ticker, tickerType, timeRange);
+        chartData = await fetchTickerChart(ticker, 'crypto', timeRange);
         
         if (chartData && chartData.length > 0) {
           break; // Success, exit retry loop

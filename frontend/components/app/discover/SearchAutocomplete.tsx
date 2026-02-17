@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Search, Clock, X, User as UserIcon, DollarSign, TrendingUp } from 'lucide-react';
+import { Search, Clock, X, User as UserIcon, TrendingUp } from 'lucide-react';
 import { User } from '@/types';
 import { SearchSuggestion } from '@/utils/api/stockApi';
 import { RecentSearch } from '@/types/discover';
@@ -106,13 +106,11 @@ export default function SearchAutocomplete({
     return then.toLocaleDateString();
   };
 
-  const getRecentSearchIcon = (type: 'account' | 'stock' | 'crypto') => {
+  const getRecentSearchIcon = (type: 'account' | 'ticker') => {
     switch (type) {
       case 'account':
         return <UserIcon className="w-4 h-4" />;
-      case 'stock':
-        return <DollarSign className="w-4 h-4" />;
-      case 'crypto':
+      case 'ticker':
         return <TrendingUp className="w-4 h-4" />;
     }
   };
@@ -197,11 +195,7 @@ export default function SearchAutocomplete({
                               alt={recent.resultName || recent.query}
                               className="w-full h-full"
                               fallback={
-                                <div className={`w-full h-full flex items-center justify-center p-1.5 rounded ${
-                                  recent.type === 'crypto'
-                                    ? 'bg-purple-500/20 text-purple-400'
-                                    : 'bg-green-500/20 text-green-400'
-                                }`}>
+                                <div className="w-full h-full flex items-center justify-center p-1.5 rounded bg-purple-500/20 text-purple-400">
                                   {getRecentSearchIcon(recent.type)}
                                 </div>
                               }

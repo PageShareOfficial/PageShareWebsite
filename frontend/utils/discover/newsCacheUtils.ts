@@ -1,7 +1,7 @@
 import { NewsArticle, NewsCategory } from '@/types/discover';
 
 const CACHE_PREFIX = 'pageshare_news_cache_';
-const CACHE_EXPIRY_MS = 45 * 60 * 1000; // 45 minutes (aligns with backend, trading peaks: 9am, 12-2pm, 4pm)
+const CACHE_EXPIRY_MS = 2 * 60 * 60 * 1000; // 2 hours – GNews free tier ~100 requests/day
 
 interface NewsCacheEntry {
   articles: NewsArticle[];
@@ -30,6 +30,34 @@ function isCacheValid(entry: NewsCacheEntry | null): boolean {
   const now = Date.now();
   const age = now - entry.timestamp;
   return age < CACHE_EXPIRY_MS;
+}
+
+/**
+ * Remove all expired news cache entries (call occasionally to free storage).
+ * Uses the same TTL as getCachedNews.
+ */
+export function removeExpiredNewsCacheEntries(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CACHE_PREFIX)) {
+        try {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const entry: NewsCacheEntry = JSON.parse(cached);
+            if (!isCacheValid(entry)) keysToRemove.push(key);
+          }
+        } catch {
+          keysToRemove.push(key);
+        }
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (error) {
+    console.error('Error removing expired news cache:', error);
+  }
 }
 
 /**

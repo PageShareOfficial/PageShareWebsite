@@ -148,26 +148,15 @@ export function useUnifiedSearch(
     setQuery('');
   }, [router, addSearch, onSearchResult, accountSearch, tickerSearch]);
 
-  // Handle ticker selection
+  // Handle ticker selection (backend recent search type: ticker only)
   const handleSelectTicker = useCallback(async (suggestion: SearchSuggestion) => {
-    const ticker = suggestion.ticker.toUpperCase();
-    
-    // Determine correct type: prioritize stock detection for common stock patterns
-    // Known crypto tickers should be crypto, everything else that looks like a stock should be stock
-    const knownCryptoTickers = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'AVAX', 'LTC', 'LINK', 'UNI', 'ATOM', 'ETC', 'XLM', 'ALGO', 'VET', 'ICP'];
-    const isKnownCrypto = knownCryptoTickers.includes(ticker);
-    const isLikelyStock = ticker.length <= 5 && /^[A-Z]+$/.test(ticker) && !isKnownCrypto;
-    
-    // Use correct type: if it's a known crypto, use crypto; if it's likely a stock, use stock; otherwise use suggestion type
-    const correctType = isKnownCrypto ? 'crypto' : (isLikelyStock ? 'stock' : (suggestion.type === 'crypto' ? 'crypto' : 'stock'));
-    
-    // Save to recent searches with correct type
+    // Save to recent searches as ticker
     addSearch({
       query: suggestion.ticker,
-      type: correctType,
+      type: 'ticker',
       resultId: suggestion.ticker,
       resultName: suggestion.name,
-      image: suggestion.image, // Include ticker logo/image
+      image: suggestion.image,
     });
 
     // Navigate directly to ticker detail page

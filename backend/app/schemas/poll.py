@@ -46,3 +46,14 @@ class PollResultsResponse(BaseModel):
     user_vote: Optional[int] = None
     is_finished: bool
     expires_at: datetime
+
+class PollInfo(BaseModel):
+    """Poll embedded in post/feed response."""
+
+    poll_id: str
+    options: List[str]
+    results: Dict[int, int]
+    total_votes: int
+    user_vote: Optional[int] = None
+    is_finished: bool
+    expires_at: datetime

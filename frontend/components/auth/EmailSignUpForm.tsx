@@ -8,6 +8,7 @@ import FormInput from '@/components/app/common/FormInput';
 import { PrimaryButton } from '@/components/app/common/Button';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 const signUpSchema = z
   .object({
@@ -47,7 +48,7 @@ export default function EmailSignUpForm({ onError }: EmailSignUpFormProps) {
       await signUpWithEmail(data.email, data.password);
       setSuccessMessage('Check your email to confirm your account.');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Sign up failed';
+      const msg = getErrorMessage(err, 'Sign up failed');
       onError?.(msg);
     } finally {
       setIsLoading(false);

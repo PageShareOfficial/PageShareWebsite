@@ -14,108 +14,19 @@ interface TickerMetricsGridProps {
  * Comprehensive metrics grid component
  * Displays financial/market metrics organized in sections
  */
-export default function TickerMetricsGrid({ data, type }: TickerMetricsGridProps) {
+export default function TickerMetricsGrid({ data }: TickerMetricsGridProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['valuation']));
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
-      if (next.has(section)) {
-        next.delete(section);
-      } else {
-        next.add(section);
-      }
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
       return next;
     });
   };
 
-  if (type === 'stock') {
-    const stockData = data as any;
-
-    const sections = [
-      {
-        id: 'valuation',
-        title: 'Valuation Metrics',
-        metrics: [
-          { label: 'Market Cap', value: formatLargeNumber(stockData.marketCap) },
-          { label: 'Price-to-Sales (P/S)', value: formatRatio(stockData.priceToSales) },
-          { label: 'Price-to-Book (P/B)', value: formatRatio(stockData.priceToBook) },
-          { label: 'PEG Ratio', value: formatRatio(stockData.pegRatio) },
-          { label: 'EV/Revenue', value: formatRatio(stockData.evToRevenue) },
-          { label: 'EV/EBITDA', value: formatRatio(stockData.evToEbitda) },
-        ],
-      },
-      {
-        id: 'profitability',
-        title: 'Profitability Metrics',
-        metrics: [
-          { label: 'Profit Margin', value: formatPercentage(stockData.profitMargin) },
-          { label: 'Operating Margin', value: formatPercentage(stockData.operatingMargin) },
-          { label: 'Return on Assets (ROA)', value: formatPercentage(stockData.roa) },
-          { label: 'Return on Equity (ROE)', value: formatPercentage(stockData.roe) },
-          { label: 'Earnings Per Share (EPS)', value: formatCurrency(stockData.eps) },
-        ],
-      },
-      {
-        id: 'growth',
-        title: 'Growth Metrics',
-        metrics: [
-          { label: 'Revenue Growth (YOY)', value: formatPercentage(stockData.revenueGrowth) },
-          { label: 'Earnings Growth (YOY)', value: formatPercentage(stockData.earningsGrowth) },
-          { label: 'Quarterly Revenue Growth', value: formatPercentage(stockData.quarterlyRevenueGrowth) },
-          { label: 'Quarterly Earnings Growth', value: formatPercentage(stockData.quarterlyEarningsGrowth) },
-        ],
-      },
-      {
-        id: 'other',
-        title: 'Other Metrics',
-        metrics: [
-          { label: 'Book Value', value: formatCurrency(stockData.bookValue) },
-          { label: 'Shares Outstanding', value: formatLargeNumber(stockData.sharesOutstanding) },
-          { label: 'Analyst Target Price', value: formatCurrency(stockData.analystTargetPrice) },
-          { label: '50-Day Moving Average', value: formatCurrency(stockData.day50MA) },
-          { label: '200-Day Moving Average', value: formatCurrency(stockData.day200MA) },
-        ],
-      },
-    ];
-
-    return (
-      <div className="space-y-4 mb-6">
-        {sections.map((section) => {
-          const isExpanded = expandedSections.has(section.id);
-          return (
-            <div key={section.id} className="p-6 bg-white/5 border border-white/10 rounded-xl">
-              <button
-                onClick={() => toggleSection(section.id)}
-                className="w-full flex items-center justify-between mb-4"
-              >
-                <h3 className="text-lg font-semibold text-white">{section.title}</h3>
-                {isExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-              
-              {isExpanded && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {section.metrics.map((metric, index) => (
-                    <div key={index} className="min-w-0 overflow-hidden">
-                      <div className="text-xs text-gray-400 mb-1 truncate">{metric.label}</div>
-                      <div className="text-sm md:text-base text-white font-medium break-words overflow-wrap-anywhere leading-tight">
-                        {metric.value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  } else {
-    const cryptoData = data as any;
+  const cryptoData = data as import('@/types/ticker').CryptoDetailData;
 
     const sections = [
       {
@@ -198,5 +109,4 @@ export default function TickerMetricsGrid({ data, type }: TickerMetricsGridProps
         })}
       </div>
     );
-  }
 }

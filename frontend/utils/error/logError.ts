@@ -1,7 +1,8 @@
 /**
  * Log frontend errors to the backend (POST /api/v1/errors/log).
- * Only sends when NEXT_PUBLIC_API_URL is set. No auth required.
+ * Only sends when backend base URL is configured. No auth required.
  */
+import { getBaseUrl } from '@/lib/api/client';
 
 export interface LogErrorPayload {
   error_type: 'frontend' | 'api';
@@ -20,10 +21,10 @@ export interface LogErrorPayload {
  */
 export function logErrorToBackend(payload: LogErrorPayload): void {
   if (typeof window === 'undefined') return;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!baseUrl?.trim()) return;
+  const baseUrl = getBaseUrl();
+  if (!baseUrl) return;
 
-  const url = `${baseUrl.replace(/\/$/, '')}/api/v1/errors/log`;
+  const url = `${baseUrl}/api/v1/errors/log`;
   const body: LogErrorPayload = {
     ...payload,
     severity: payload.severity ?? 'error',

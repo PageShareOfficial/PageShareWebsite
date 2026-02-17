@@ -21,7 +21,9 @@ from app.services.content_filter_service import (
     unblock_user,
     unmute_user,
 )
+from app.api.deps import get_user_or_404
 from app.services.user_service import get_user_by_id
+from app.utils.http import parse_uuid_or_404
 
 router = APIRouter(tags=["content-filters"])
 
@@ -32,12 +34,8 @@ def mute_user_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Mute a user. 409 if self or already muted."""
-    try:
-        target_id = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not get_user_by_id(db, user_id):
-        raise HTTPException(status_code=404, detail="User not found")
+    target_id = parse_uuid_or_404(user_id, "User not found")
+    get_user_or_404(db, user_id)
     try:
         mute_user(db, UUID(current_user.auth_user_id), target_id)
         return {"data": MuteResponse()}
@@ -55,13 +53,10 @@ def unmute_user_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Unmute a user."""
-    try:
-        target_id = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
+    target_id = parse_uuid_or_404(user_id, "User not found")
     ok = unmute_user(db, UUID(current_user.auth_user_id), target_id)
     if not ok:
-        raise HTTPException(status_code=404, detail="Mute not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Mute not found")
 
 @router.post("/users/{user_id}/block", response_model=dict, status_code=status.HTTP_201_CREATED)
 def block_user_endpoint(
@@ -70,12 +65,8 @@ def block_user_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Block a user. 409 if self or already blocked."""
-    try:
-        target_id = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not get_user_by_id(db, user_id):
-        raise HTTPException(status_code=404, detail="User not found")
+    target_id = parse_uuid_or_404(user_id, "User not found")
+    get_user_or_404(db, user_id)
     try:
         block_user(db, UUID(current_user.auth_user_id), target_id)
         return {"data": BlockResponse()}
@@ -93,13 +84,10 @@ def unblock_user_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Unblock a user."""
-    try:
-        target_id = UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="User not found")
+    target_id = parse_uuid_or_404(user_id, "User not found")
     ok = unblock_user(db, UUID(current_user.auth_user_id), target_id)
     if not ok:
-        raise HTTPException(status_code=404, detail="Block not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Block not found")
 
 @router.get("/content-filters", response_model=dict)
 def get_content_filters_endpoint(
@@ -114,6 +102,7 @@ def get_content_filters_endpoint(
             id=str(u.id),
             username=u.username,
             display_name=u.display_name,
+            profile_picture_url=u.profile_picture_url,
             muted_at=created_at,
             blocked_at=None,
         )
@@ -124,6 +113,7 @@ def get_content_filters_endpoint(
             id=str(u.id),
             username=u.username,
             display_name=u.display_name,
+            profile_picture_url=u.profile_picture_url,
             muted_at=None,
             blocked_at=created_at,
         )

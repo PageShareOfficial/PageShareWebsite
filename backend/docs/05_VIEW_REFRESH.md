@@ -1,9 +1,26 @@
-# View Refresh Commands
+# View Refresh & Cron Commands
 
 **Version:** 1.0.0  
 **Last Updated:** January 2026
 
-This doc lists SQL commands and schedules for refreshing materialized views. Regular views (`post_stats`) are computed on each query and do not need refreshing.
+This doc lists SQL commands, backend cron endpoints, and how to schedule them. Regular views (`post_stats`) are computed on each query and do not need refreshing.
+
+---
+
+## Overview: Backend cron endpoints
+
+The backend exposes **two cron endpoints**. Both require `CRON_SECRET` for auth.
+
+| Endpoint | What it does | Suggested schedule |
+|----------|--------------|--------------------|
+| `GET /api/v1/cron/daily` | DB health check + **refresh all materialized views** + stale session cleanup | Once per day (e.g. 05:00 UTC) |
+| `GET /api/v1/cron/sessions` | Stale session cleanup only | Every 30–60 min |
+
+**There is no separate route for view refresh** – it is built into `/cron/daily`. The views (`daily_metrics`, `engagement_metrics`, `trending_tickers`) are refreshed when you call the daily endpoint.
+
+**Flow:**
+- Call `/cron/daily` once per day → views get refreshed, stale sessions get closed.
+- If you want more accurate session end times, also call `/cron/sessions` every 30–60 min. This is optional; the daily cron already closes stale sessions once per day.
 
 ---
 
@@ -73,25 +90,26 @@ Replace `psql "$DATABASE_URL"` with your actual connection method (Supabase SQL,
 
 ---
 
-## Backend cron endpoint (recommended)
+## Daily cron: `/api/v1/cron/daily`
 
-The backend exposes a **single daily cron endpoint** that does everything in one call:
+Does everything in one call:
 
-1. **DB touch** – Runs a simple query so Supabase sees activity (avoids 7-day inactivity pause).
-2. **Refresh all materialized views** – `daily_metrics` (CONCURRENTLY), `engagement_metrics`, `trending_tickers`.
-
-**One Vercel Cron job is enough** – no need to schedule separate jobs per view.
+1. **DB health check** – Keeps Supabase prod active (avoids 7-day inactivity pause).
+2. **Stale session cleanup** – Marks sessions as ended if inactive 30+ min.
+3. **Refresh all materialized views** – `daily_metrics` (CONCURRENTLY), `engagement_metrics`, `trending_tickers`.
 
 **Endpoint:** `GET /api/v1/cron/daily`  
-**Auth:** Set `CRON_SECRET` in your env; send it with every request using one of:
+**Auth:** `CRON_SECRET` via one of:
 
 - Header: `Authorization: Bearer <CRON_SECRET>`
 - Header: `X-Cron-Secret: <CRON_SECRET>`
-- Query: `?secret=<CRON_SECRET>` (for schedulers that can’t set headers)
+- Query: `?secret=<CRON_SECRET>`
+
+**One cron job calling this endpoint is enough** for views + sessions. Run once per day.
 
 ---
 
-### Vercel Cron setup
+### Vercel Cron setup (for daily)
 
 1. Add **`CRON_SECRET`** to your Vercel project env (e.g. `openssl rand -hex 32`).
 2. Add a **serverless route** that runs on schedule and calls your backend with the secret (Vercel Cron does not add custom headers to the request it sends). For example, a route that runs on the cron schedule and does:
@@ -124,7 +142,35 @@ Or with query param (if the scheduler can’t set headers):
 GET https://your-api.vercel.app/api/v1/cron/daily?secret=YOUR_CRON_SECRET
 ```
 
-Run **once per day**. The endpoint runs `db_health_check()` then refreshes all three materialized views.
+---
+
+## Sessions cron: `/api/v1/cron/sessions` (optional)
+
+Closes user sessions inactive for 30+ minutes (e.g. user closed tab without logging out).
+
+**Endpoint:** `GET /api/v1/cron/sessions`  
+**Auth:** Same as daily – `CRON_SECRET` via `Authorization: Bearer`, `X-Cron-Secret`, or `?secret=`
+
+**When to use:** The daily cron already closes stale sessions once per day. Add this only if you want **more accurate session end times** (e.g. sessions closed within 30–60 min instead of once per day).
+
+**Schedule:** Every 30–60 minutes (e.g. half-hourly).
+
+**Example Vercel Cron** (add to `vercel.json` crons array):
+
+```json
+{
+  "path": "/api/cron-sessions",
+  "schedule": "*/30 * * * *"
+}
+```
+
+Create a serverless route `/api/cron-sessions` that calls `GET https://your-backend-url/api/v1/cron/sessions` with `X-Cron-Secret: process.env.CRON_SECRET`.
+
+**Example external cron:**
+
+```bash
+curl -H "X-Cron-Secret: $CRON_SECRET" "https://your-api.vercel.app/api/v1/cron/sessions"
+```
 
 ---
 

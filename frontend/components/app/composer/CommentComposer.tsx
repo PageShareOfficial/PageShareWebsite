@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
 import { Post, Comment, User } from '@/types';
-import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
+import { useMediaUpload, MEDIA_LIMITS_HINT } from '@/hooks/composer/useMediaUpload';
 import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
 import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
 import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
@@ -28,17 +28,19 @@ const getGiphyClient = () => {
 interface CommentComposerProps {
   postId: string;
   currentUser: User;
-  posts: Post[];
-  setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
-  setComments: React.Dispatch<React.SetStateAction<Comment[]>>;
+  onSubmit: (
+    text: string,
+    media?: File[],
+    gifUrl?: string,
+    poll?: { options: string[]; duration: number },
+    previewUrls?: string[]
+  ) => Promise<void> | void;
 }
 
 export default function CommentComposer({
   postId,
   currentUser,
-  posts,
-  setPosts,
-  setComments,
+  onSubmit,
 }: CommentComposerProps) {
   const router = useRouter();
   const [commentText, setCommentText] = useState('');
@@ -52,10 +54,12 @@ export default function CommentComposer({
     mediaFiles,
     mediaPreviews,
     selectedGif,
+    mediaError,
     handleImageUpload,
     handleRemoveMedia,
     handleGifSelect,
     clearMedia,
+    clearMediaError,
     setSelectedGif,
     setMediaFiles,
     setMediaPreviews,
@@ -111,98 +115,20 @@ export default function CommentComposer({
       return;
     }
     
-    if (!text.trim() && !media?.length && !gifUrl && !poll) {
+    const trimmed = text.trim();
+    if (!trimmed && !media?.length && !gifUrl && !poll) {
       return; // Don't submit empty comments
     }
 
-    // Convert media files to data URLs
-    let mediaUrls: string[] = [];
-    if (media && media.length > 0) {
-      const convertFileToDataUrl = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      };
-
-      try {
-        mediaUrls = await Promise.all(media.map(convertFileToDataUrl));
-      } catch (error) {
-        console.error('Error converting media files:', error);
-      }
+    try {
+      // Optimistically clear input and media immediately on submit
+      setCommentText('');
+      clearMedia();
+      resetPoll();
+      await onSubmit(trimmed, media, gifUrl, poll, mediaPreviews);
+    } catch (error) {
+      console.error('Failed to submit comment', error);
     }
-
-    // Create poll object if poll is provided
-    const pollData = poll && poll.options.filter(opt => opt.trim()).length >= 2
-      ? {
-          options: poll.options.filter(opt => opt.trim()),
-          duration: poll.duration,
-          createdAt: new Date().toISOString(),
-          votes: {},
-          isFinished: false,
-        }
-      : undefined;
-
-    // Create new comment
-    const newComment: Comment = {
-      id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      postId: postId,
-      author: {
-        id: currentUser.id,
-        displayName: currentUser.displayName,
-        handle: currentUser.handle,
-        avatar: currentUser.avatar,
-        badge: currentUser.badge,
-      },
-      content: text.trim() || '',
-      createdAt: 'now',
-      likes: 0,
-      userLiked: false,
-      media: mediaUrls.length > 0 ? mediaUrls : undefined,
-      gifUrl: gifUrl || undefined,
-      poll: pollData,
-    };
-
-    // Save comment to localStorage
-    const savedComments = localStorage.getItem(`pageshare_comments_${postId}`);
-    let comments: Comment[] = [];
-    if (savedComments) {
-      try {
-        comments = JSON.parse(savedComments);
-      } catch {
-        comments = [];
-      }
-    }
-    comments.unshift(newComment);
-    localStorage.setItem(`pageshare_comments_${postId}`, JSON.stringify(comments));
-
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new Event('commentsUpdated'));
-
-    // Add comment to comments list
-    setComments((prev) => [newComment, ...prev]);
-
-    // Update post comment count
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? {
-              ...p,
-              stats: {
-                ...p.stats,
-                comments: p.stats.comments + 1,
-              },
-            }
-          : p
-      )
-    );
-
-    // Reset composer
-    setCommentText('');
-    clearMedia();
-    resetPoll();
   };
 
   return (
@@ -470,13 +396,14 @@ export default function CommentComposer({
                 type="file"
                 ref={fileInputRef}
                 onChange={handleImageUpload}
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 multiple
                 className="hidden"
               />
               <button
                 type="button"
                 onClick={() => {
+                  clearMediaError();
                   fileInputRef.current?.click();
                   setShowGifPicker(false);
                   setShowPoll(false);
@@ -485,6 +412,7 @@ export default function CommentComposer({
                 className="p-1.5 text-cyan-400 hover:bg-cyan-400/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={showPoll || !!selectedGif}
                 aria-label="Upload image"
+                title={MEDIA_LIMITS_HINT}
               >
                 <HiOutlinePhotograph className="w-5 h-5" />
               </button>
@@ -603,6 +531,11 @@ export default function CommentComposer({
               </button>
             </div>
           </div>
+          {mediaError && (
+            <p className="mt-2 text-xs text-amber-400" title={mediaError}>
+              {mediaError}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 """
-Cron endpoint: daily DB touch + materialized view refresh.
+Cron endpoint: daily DB touch + materialized view refresh + stale session cleanup.
 Protects Supabase prod DB from inactivity (7-day pause) and keeps metrics views fresh.
 Call from Vercel Cron or external cron with CRON_SECRET.
 """
@@ -7,13 +7,21 @@ from fastapi import APIRouter, Header, HTTPException, Request, status
 from sqlalchemy import text
 from app.config import get_settings
 from app.database import db_health_check, db_session
+from app.services.session_service import close_stale_sessions
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
 settings = get_settings()
 
-def _verify_cron_secret(authorization: str | None, x_cron_secret: str | None) -> bool:
-    """Accept Authorization: Bearer <CRON_SECRET> or X-Cron-Secret: <CRON_SECRET>."""
+def _verify_cron_request(
+    authorization: str | None,
+    x_cron_secret: str | None,
+) -> bool:
+    """
+    Verify cron secret via headers only.
+    Accept Authorization: Bearer <CRON_SECRET> or X-Cron-Secret: <CRON_SECRET>.
+    Query params are not accepted to avoid secret leakage in logs/referrers.
+    """
     if not settings.cron_secret:
         return False
     secret = settings.cron_secret.strip()
@@ -24,40 +32,32 @@ def _verify_cron_secret(authorization: str | None, x_cron_secret: str | None) ->
         return token == secret
     return False
 
-def _verify_cron_request(
-    authorization: str | None,
-    x_cron_secret: str | None,
-    secret_query: str | None,
-) -> bool:
-    if _verify_cron_secret(authorization, x_cron_secret):
-        return True
-    if settings.cron_secret and secret_query and secret_query.strip() == settings.cron_secret.strip():
-        return True
-    return False
-
 @router.get("/daily")
 async def cron_daily(
     request: Request,
     authorization: str | None = Header(default=None),
     x_cron_secret: str | None = Header(default=None, alias="X-Cron-Secret"),
-    secret: str | None = None,
 ):
     """
     Daily cron: touch DB (keeps Supabase prod active) and refresh materialized views.
-    Call once per day (e.g. 05:00 UTC). Requires CRON_SECRET via:
-    - Header Authorization: Bearer <CRON_SECRET>
-    - Header X-Cron-Secret: <CRON_SECRET>
-    - Query param ?secret=<CRON_SECRET> (for simple cron services)
+    Call once per day (e.g. 05:00 UTC). Requires CRON_SECRET via headers only:
+    - Authorization: Bearer <CRON_SECRET>
+    - X-Cron-Secret: <CRON_SECRET>
     """
-    if not _verify_cron_request(authorization, x_cron_secret, secret):
+    if not _verify_cron_request(authorization, x_cron_secret):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing cron secret")
 
-    results = {"db_health": False, "daily_metrics": None, "engagement_metrics": None, "trending_tickers": None}
+    results = {"db_health": False, "stale_sessions": None, "daily_metrics": None, "engagement_metrics": None, "trending_tickers": None}
 
     results["db_health"] = db_health_check()
 
     try:
         with db_session() as db:
+            try:
+                closed = close_stale_sessions(db)
+                results["stale_sessions"] = closed
+            except Exception as e:
+                results["stale_sessions"] = str(e)
             try:
                 db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY daily_metrics"))
                 db.commit()
@@ -80,3 +80,22 @@ async def cron_daily(
         results["error"] = str(e)
 
     return {"ok": results["db_health"], "results": results}
+
+@router.get("/sessions")
+async def cron_stale_sessions(
+    authorization: str | None = Header(default=None),
+    x_cron_secret: str | None = Header(default=None, alias="X-Cron-Secret"),
+):
+    """
+    Stale session cleanup: mark sessions as ended where no activity for 30+ min.
+    Call every 30-60 min. Requires CRON_SECRET via Authorization or X-Cron-Secret header.
+    """
+    if not _verify_cron_request(authorization, x_cron_secret):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing cron secret")
+
+    try:
+        with db_session() as db:
+            closed = close_stale_sessions(db)
+        return {"ok": True, "closed": closed}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}

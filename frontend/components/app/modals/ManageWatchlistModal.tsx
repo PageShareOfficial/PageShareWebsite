@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Loader2, Search } from 'lucide-react';
 import { WatchlistItem } from '@/types';
-import { fetchStockData, fetchCryptoData, SearchSuggestion, StockData } from '@/utils/api/stockApi';
+import { fetchCryptoData, SearchSuggestion, StockData } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import ImageWithFallback from '@/components/app/common/ImageWithFallback';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -14,24 +14,30 @@ import TickerTypeBadge from '@/components/app/common/TickerTypeBadge';
 import EmptyState from '@/components/app/common/EmptyState';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 
 interface ManageWatchlistModalProps {
   isOpen: boolean;
   onClose: () => void;
   watchlist: WatchlistItem[];
   onUpdateWatchlist: (watchlist: WatchlistItem[]) => void;
+  onAddTicker?: (item: WatchlistItem) => Promise<void> | void;
+  onRemoveTicker?: (ticker: string) => Promise<void> | void;
 }
 
 export default function ManageWatchlistModal({ 
   isOpen, 
   onClose, 
   watchlist,
-  onUpdateWatchlist 
+  onUpdateWatchlist,
+  onAddTicker,
+  onRemoveTicker,
 }: ManageWatchlistModalProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const isOnline = useOnlineStatus();
 
   // Use the ticker search hook
   const tickerSearch = useTickerSearch({
@@ -66,10 +72,11 @@ export default function ManageWatchlistModal({
     tickerSearch.setQuery(suggestion.ticker);
     tickerSearch.setShowSuggestions(false);
     tickerSearch.clearSuggestions();
-    await handleAddTicker(suggestion.ticker, suggestion.type);
+    await handleAddTicker(suggestion.ticker);
   };
 
-  const handleAddTicker = async (ticker?: string, suggestedType?: 'stock' | 'crypto') => {
+  const handleAddTicker = async (ticker?: string) => {
+    if (!isOnline) return;
     const tickerToAdd = ticker || tickerSearch.query.trim().toUpperCase();
     
     if (!tickerToAdd) {
@@ -77,7 +84,6 @@ export default function ManageWatchlistModal({
       return;
     }
 
-    // Check if ticker already exists
     if (watchlist.some(item => item.ticker === tickerToAdd)) {
       setError('This ticker is already in your watchlist');
       return;
@@ -88,44 +94,16 @@ export default function ManageWatchlistModal({
     tickerSearch.setShowSuggestions(false);
 
     try {
-      // Determine correct type: prioritize stock detection for common stock patterns
-      // Known crypto tickers should be crypto, everything else that looks like a stock should be stock
-      // This matches the logic from useUnifiedSearch in the discover tab
-      const knownCryptoTickers = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'AVAX', 'LTC', 'LINK', 'UNI', 'ATOM', 'ETC', 'XLM', 'ALGO', 'VET', 'ICP'];
-      const isKnownCrypto = knownCryptoTickers.includes(tickerToAdd);
-      const isLikelyStock = tickerToAdd.length <= 5 && /^[A-Z]+$/.test(tickerToAdd) && !isKnownCrypto;
-      
-      // Use correct type: if it's a known crypto, use crypto; if it's likely a stock, use stock; otherwise use suggestion type
-      const correctType = isKnownCrypto ? 'crypto' : (isLikelyStock ? 'stock' : (suggestedType === 'crypto' ? 'crypto' : 'stock'));
-
-      // Fetch real-time data from API based on determined type
-      // For stocks, try stock first to avoid false crypto matches
-      // For crypto, try crypto first
-      let tickerData: StockData | null = null;
-      
-      if (correctType === 'stock') {
-        // Try stock first for likely stocks to avoid false crypto matches
-        tickerData = await fetchStockData(tickerToAdd);
-        // Only try crypto if stock failed AND it's a known crypto (fallback)
-        if (!tickerData && isKnownCrypto) {
-          tickerData = await fetchCryptoData(tickerToAdd);
-        }
-      } else {
-        // For crypto, try crypto first
-        tickerData = await fetchCryptoData(tickerToAdd);
-        // If crypto fails and it's a likely stock, try stock as fallback
-        if (!tickerData && isLikelyStock) {
-          tickerData = await fetchStockData(tickerToAdd);
-        }
-      }
+      const tickerData: StockData | null = await fetchCryptoData(tickerToAdd);
       
       if (!tickerData) {
-        setError(`Ticker "${tickerToAdd}" not found. Please enter a valid US stock or cryptocurrency ticker (e.g., AAPL, BTC, ETH).`);
-        setIsLoading(false);
+        setError(
+          `Ticker "${tickerToAdd}" not found. Please enter a valid cryptocurrency ticker (e.g., BTC, ETH, SOL).`
+        );
         return;
       }
 
-      // Add to watchlist
+      // Build watchlist item
       const newWatchlistItem: WatchlistItem = {
         ticker: tickerData.ticker,
         name: tickerData.name,
@@ -134,7 +112,11 @@ export default function ManageWatchlistModal({
         image: tickerData.image,
       };
 
-      onUpdateWatchlist([...watchlist, newWatchlistItem]);
+      if (onAddTicker) {
+        await onAddTicker(newWatchlistItem);
+      } else {
+        onUpdateWatchlist([...watchlist, newWatchlistItem]);
+      }
       tickerSearch.setQuery('');
       setError('');
       tickerSearch.clearSuggestions();
@@ -146,8 +128,13 @@ export default function ManageWatchlistModal({
     }
   };
 
-  const handleRemoveTicker = (tickerToRemove: string) => {
-    onUpdateWatchlist(watchlist.filter(item => item.ticker !== tickerToRemove));
+  const handleRemoveTicker = async (tickerToRemove: string) => {
+    if (!isOnline) return;
+    if (onRemoveTicker) {
+      await onRemoveTicker(tickerToRemove);
+    } else {
+      onUpdateWatchlist(watchlist.filter(item => item.ticker !== tickerToRemove));
+    }
   };
 
   // Enhanced keyboard handler that handles Enter without selection (adds ticker directly)
@@ -178,8 +165,11 @@ export default function ManageWatchlistModal({
 
         {/* Add Ticker Section */}
         <div className="mb-6 relative">
+          {!isOnline && (
+            <p className="text-sm text-amber-400 mb-2">Connect to the internet to add or remove tickers.</p>
+          )}
           <label htmlFor="ticker-input" className="block text-sm font-medium text-gray-300 mb-2">
-            Add Ticker (US Stocks & Crypto)
+            Add Ticker (Crypto)
           </label>
           <div className="relative flex gap-2">
             <div className="flex-1 relative">
@@ -200,7 +190,8 @@ export default function ManageWatchlistModal({
                   }
                 }}
                 placeholder="Search by ticker (AAPL) or name (Apple)..."
-                disabled={isLoading}
+                disabled={isLoading || !isOnline}
+                title={!isOnline ? 'Connect to the internet to continue' : undefined}
                 className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               />
               
@@ -242,7 +233,8 @@ export default function ManageWatchlistModal({
                         key={`${suggestion.ticker}-${index}`}
                         type="button"
                         onClick={() => handleSelectSuggestion(suggestion)}
-                        className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors ${
+                        disabled={!isOnline}
+                        className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors disabled:opacity-50 disabled:pointer-events-none ${
                           index === tickerSearch.selectedIndex ? 'bg-white/10' : ''
                         } ${index > 0 ? 'border-t border-white/5' : ''}`}
                       >
@@ -278,8 +270,10 @@ export default function ManageWatchlistModal({
               )}
             </div>
             <button
+              type="button"
               onClick={() => handleAddTicker()}
-              disabled={isLoading || !tickerSearch.query.trim()}
+              disabled={isLoading || !tickerSearch.query.trim() || !isOnline}
+              title={!isOnline ? 'Connect to the internet to continue' : undefined}
               className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
@@ -294,7 +288,7 @@ export default function ManageWatchlistModal({
             <p className="mt-2 text-sm text-red-400">{error}</p>
           )}
           <p className="mt-2 text-xs text-gray-500">
-            Search by ticker symbol (AAPL, BTC) or company name (Apple, Bitcoin).
+            Search by ticker symbol (BTC, ETH) or name (Bitcoin, Ethereum).
           </p>
         </div>
 
@@ -307,7 +301,7 @@ export default function ManageWatchlistModal({
             <EmptyState
               icon="inbox"
               title="Your watchlist is empty"
-              description="Add tickers above to track stocks"
+              description="Add tickers above to track cryptocurrencies"
             />
           ) : (
             <div className="space-y-3">
@@ -339,8 +333,11 @@ export default function ManageWatchlistModal({
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleRemoveTicker(item.ticker)}
-                      className="ml-3 p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 z-10"
+                      disabled={!isOnline}
+                      title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                      className="ml-3 p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 z-10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                       aria-label={`Remove ${item.ticker}`}
                     >
                       <Trash2 className="w-4 h-4" />

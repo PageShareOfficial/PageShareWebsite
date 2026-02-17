@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ErrorBoundaryWrapper from "@/components/ErrorBoundaryWrapper";
+import OfflineBanner from "@/components/OfflineBanner";
+import OfflineOverlay from "@/components/OfflineOverlay";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OfflineOverlayProvider } from "@/contexts/OfflineOverlayContext";
+import { BookmarkProvider } from "@/contexts/BookmarkContext";
+import { ContentFiltersProvider } from "@/contexts/ContentFiltersContext";
+import { WatchlistProvider } from "@/contexts/WatchlistContext";
 import { siteConfig } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = {
@@ -58,9 +65,20 @@ export default function RootLayout({
     <html lang="en" className="bg-black">
       <body className="bg-black">
         <ErrorBoundaryWrapper>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <ServiceWorkerRegistration />
+          <OfflineBanner />
+          <OfflineOverlayProvider>
+            <OfflineOverlay />
+            <AuthProvider>
+              <BookmarkProvider>
+                <ContentFiltersProvider>
+                  <WatchlistProvider>
+                    {children}
+                  </WatchlistProvider>
+                </ContentFiltersProvider>
+              </BookmarkProvider>
+            </AuthProvider>
+          </OfflineOverlayProvider>
         </ErrorBoundaryWrapper>
       </body>
     </html>

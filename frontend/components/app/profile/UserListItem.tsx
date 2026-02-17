@@ -6,6 +6,7 @@ import { User } from '@/types';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
 import UserBadge from '@/components/app/common/UserBadge';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 
 interface UserListItemProps {
   user: User;
@@ -23,6 +24,7 @@ export default function UserListItem({
   showFollowButton = true,
 }: UserListItemProps) {
   const router = useRouter();
+  const isOnline = useOnlineStatus();
   const isOwnProfile = currentUserHandle.toLowerCase() === user.handle.toLowerCase();
 
   const handleProfileClick = () => {
@@ -65,8 +67,11 @@ export default function UserListItem({
       {/* Follow Button */}
       {showFollowButton && !isOwnProfile && (
         <button
+          type="button"
           onClick={handleFollowClick}
-          className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors flex items-center gap-1.5 flex-shrink-0 ${
+          disabled={!isOnline}
+          title={!isOnline ? 'Connect to the internet to continue' : undefined}
+          className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${
             isFollowing
               ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
               : 'bg-white text-black hover:bg-gray-100'

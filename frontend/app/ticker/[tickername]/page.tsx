@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
@@ -9,13 +10,12 @@ import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import TickerHeader from '@/components/app/ticker/TickerHeader';
 import TickerKeyMetrics from '@/components/app/ticker/TickerKeyMetrics';
-import TickerPriceChart from '@/components/app/ticker/TickerPriceChart';
 import TickerOverview from '@/components/app/ticker/TickerOverview';
 import TickerMetricsGrid from '@/components/app/ticker/TickerMetricsGrid';
 import TickerPriceStats from '@/components/app/ticker/TickerPriceStats';
 import TickerActions from '@/components/app/ticker/TickerActions';
 import TickerSkeleton from '@/components/app/ticker/TickerSkeleton';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
+const TickerPriceChart = dynamic(() => import('@/components/app/ticker/TickerPriceChart'), { ssr: false });
 import ErrorState from '@/components/app/common/ErrorState';
 import { useTickerDetail } from '@/hooks/ticker/useTickerDetail';
 import { useTickerChart } from '@/hooks/ticker/useTickerChart';
@@ -23,17 +23,15 @@ import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { WatchlistItem } from '@/types';
 
 /**
- * Ticker detail page
- * Displays comprehensive information about a stock or cryptocurrency
+ * Ticker detail page – crypto only (CoinGecko).
  */
 export default function TickerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const tickername = params.tickername as string;
   
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
   const [chartTimeRange, setChartTimeRange] = useState<'1d' | '5d' | '30d' | '90d' | '180d' | '1y' | 'all'>('30d');
-  const { watchlist, setWatchlist } = useWatchlist();
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   
   const { data, type, isLoading, error, refetch } = useTickerDetail({
     ticker: tickername,
@@ -46,29 +44,14 @@ export default function TickerDetailPage() {
     enabled: !!type && !!data,
   });
 
-  // Get ticker name for header
   const tickerName = data?.name || tickername.toUpperCase();
-  const tickerSymbol = type === 'stock' 
-    ? (data as any)?.ticker 
-    : (data as any)?.symbol?.toUpperCase() || tickername.toUpperCase();
-
-  // Check if ticker is in watchlist
+  const tickerSymbol = (data as { symbol?: string })?.symbol?.toUpperCase() || tickername.toUpperCase();
   const isInWatchlist = watchlist.some((item) => item.ticker === tickername.toUpperCase());
+  const price = (data as { currentPrice?: number })?.currentPrice || 0;
+  const change = (data as { priceChangePercent24h?: number })?.priceChangePercent24h || 0;
 
-  // Get price and change for actions
-  const price = type === 'stock' 
-    ? (data as any)?.price 
-    : (data as any)?.currentPrice || 0;
-  const change = type === 'stock'
-    ? (data as any)?.changePercent
-    : (data as any)?.priceChangePercent24h || 0;
-
-  // Handle add to watchlist
   const handleAddToWatchlist = () => {
-    // Get image from data
-    const image = type === 'stock'
-      ? (data as any)?.image
-      : (data as any)?.image || '';
+    const image = (data as { image?: string })?.image || '';
     
     const watchlistItem: WatchlistItem = {
       ticker: tickername.toUpperCase(),
@@ -101,9 +84,10 @@ export default function TickerDetailPage() {
           </div>
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
@@ -134,9 +118,10 @@ export default function TickerDetailPage() {
           </div>
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
@@ -210,20 +195,14 @@ export default function TickerDetailPage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageWatchlistOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
-      {/* Manage Watchlist Modal */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
     </div>
   );
 }

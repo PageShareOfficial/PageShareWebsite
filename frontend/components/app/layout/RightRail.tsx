@@ -8,6 +8,8 @@ import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import Skeleton from '@/components/app/common/Skeleton';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
+import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
 
 interface RightRailProps {
   watchlist: WatchlistItem[];
@@ -25,6 +27,18 @@ export default function RightRail({
   isLoading = false,
 }: RightRailProps) {
   const router = useRouter();
+  const isOnline = useOnlineStatus();
+  const { setShowOfflineOverlay } = useOfflineOverlay();
+
+  const handleUpgradeClick = () => {
+    if (isOnline) onUpgradeLabs();
+    else setShowOfflineOverlay(true);
+  };
+
+  const handleWatchlistRowClick = (ticker: string) => {
+    if (!isOnline) setShowOfflineOverlay(true);
+    else navigateToTicker(ticker, router);
+  };
 
   return (
     <aside className="hidden lg:flex flex-col w-[350px] sticky top-0 h-screen pt-6 overflow-y-auto">
@@ -40,10 +54,12 @@ export default function RightRail({
               Watchlist
             </Link>
             <button
+              type="button"
               onClick={onManageWatchlist}
-              className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors"
+              disabled={!isOnline}
+              className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
               aria-label="Manage watchlist"
-              title="Manage watchlist"
+              title={!isOnline ? 'Connect to the internet to continue' : 'Manage watchlist'}
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -73,8 +89,11 @@ export default function RightRail({
             <div className="text-center py-8 text-gray-400">
               <p className="text-sm mb-2">Your watchlist is empty</p>
               <button
+                type="button"
                 onClick={onManageWatchlist}
-                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                disabled={!isOnline}
+                title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
               >
                 Add tickers to track
               </button>
@@ -84,8 +103,12 @@ export default function RightRail({
               {watchlist.map((item) => (
                 <div
                   key={item.ticker}
-                  onClick={() => navigateToTicker(item.ticker, router)}
-                  className="flex items-center gap-3 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleWatchlistRowClick(item.ticker)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleWatchlistRowClick(item.ticker)}
+                  className={`flex items-center gap-3 rounded-lg p-2 transition-colors ${isOnline ? 'cursor-pointer hover:bg-white/5' : 'cursor-not-allowed opacity-70'}`}
+                  title={!isOnline ? 'Connect to the internet to view ticker' : undefined}
                 >
                   {/* Ticker Image */}
                   <TickerImage
@@ -120,8 +143,11 @@ export default function RightRail({
             Premium AI tools, deeper filters, and credibility analytics.
           </p>
           <button
-            onClick={onUpgradeLabs}
-            className="w-full px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            type="button"
+            onClick={handleUpgradeClick}
+            disabled={!isOnline}
+            title={!isOnline ? 'Connect to the internet to continue' : undefined}
+            className="w-full px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
           >
             Upgrade
           </button>
