@@ -1,0 +1,4 @@
+{
+    "framework": "fastapi",
+    "rewrites": [{ "source": "/(.*)", "destination": "/index" }]
+}
