@@ -7,6 +7,7 @@ import { SearchResult } from '@/types/discover';
 import { useRouter } from 'next/navigation';
 import { navigateToProfile, navigateToTicker } from '@/utils/core/navigationUtils';
 import { RecentSearch } from '@/types/discover';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 
 interface DiscoverSearchBarProps {
   onSearchResult?: (result: SearchResult) => void;
@@ -25,6 +26,7 @@ export default function DiscoverSearchBar({
   className = '',
 }: DiscoverSearchBarProps) {
   const router = useRouter();
+  const isOnline = useOnlineStatus();
   const { recentSearches, removeSearch, isClient } = useRecentSearches();
   
   const unifiedSearch = useUnifiedSearch({
@@ -40,8 +42,7 @@ export default function DiscoverSearchBar({
   const handleSelectRecentSearch = (search: RecentSearch) => {
     if (search.type === 'account' && search.resultId) {
       navigateToProfile(search.resultId, router);
-    } else if ((search.type === 'stock' || search.type === 'crypto') && search.resultId) {
-      // For tickers, navigate directly to ticker detail page
+    } else if (search.type === 'ticker' && search.resultId) {
       navigateToTicker(search.resultId, router);
     }
   };
@@ -85,13 +86,13 @@ export default function DiscoverSearchBar({
   };
 
   return (
-    <div className={className}>
+    <div className={className} title={!isOnline ? 'Connect to the internet to search' : undefined}>
       <SearchAutocomplete
         query={unifiedSearch.query}
         onQueryChange={unifiedSearch.setQuery}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        disabled={!unifiedSearch.isClient || !isClient}
+        disabled={!unifiedSearch.isClient || !isClient || !isOnline}
         accountSuggestions={unifiedSearch.accountSuggestions}
         tickerSuggestions={unifiedSearch.tickerSuggestions}
         recentSearches={isClient ? recentSearches : []}

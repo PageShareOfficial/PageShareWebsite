@@ -13,7 +13,7 @@ import PollComponent from '@/components/app/post/PollComponent';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import UserBadge from '@/components/app/common/UserBadge';
-import { isTweet } from '@/data/mockData';
+import { isTweet } from '@/utils/content/postUtils';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface ReplyCardProps {
@@ -75,12 +75,7 @@ export default function ReplyCard({
   const quotedPost = getOriginalPost();
 
   return (
-    <div className="border-b border-white/10 px-4 relative">
-      {/* Connecting line - spans from original avatar to reply avatar */}
-      <div 
-        className="absolute left-[30px] top-[52px] bottom-[120px] w-0.5 bg-white/20 z-0"
-      ></div>
-      
+    <div className="border-b border-white/10 px-4">
       {/* Original Post - separate article */}
       <article
         onClick={handleClick}
@@ -282,7 +277,7 @@ export default function ReplyCard({
         </div>
       </article>
 
-      {/* Reply/Comment - separate article */}
+      {/* Reply/Comment */}
       <article
         onClick={(e) => {
           e.stopPropagation();
@@ -308,6 +303,18 @@ export default function ReplyCard({
           
           {/* Reply content */}
           <div className="flex-1 min-w-0">
+            <p className="text-gray-500 text-sm mb-1">
+              Replying to{' '}
+              <span
+                className="text-[#1d9bf0] hover:underline cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateToProfile(originalPost.author.handle, router);
+                }}
+              >
+                @{originalPost.author.handle}
+              </span>
+            </p>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-white text-sm">
@@ -324,6 +331,7 @@ export default function ReplyCard({
               {/* 3-dot Menu Button for Reply */}
               <ContentMenu
                 type="comment"
+                authorId={reply.author.id}
                 authorHandle={reply.author.handle}
                 authorDisplayName={reply.author.displayName}
                 currentUserHandle={currentUserHandle}

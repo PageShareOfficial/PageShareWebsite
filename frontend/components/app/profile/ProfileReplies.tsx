@@ -2,10 +2,15 @@
 
 import { Post, Comment } from '@/types';
 import ReplyCard from './ReplyCard';
+import Feed from '@/components/app/feed/Feed';
+
+export type ReplyTabItem =
+  | { type: 'comment'; comment: Comment; post: Post }
+  | { type: 'quote'; post: Post };
 
 interface ProfileRepliesProps {
-  comments: Comment[];
-  posts: Post[];
+  items: ReplyTabItem[];
+  allPosts: Post[];
   onLike: (postId: string) => void;
   onRepost: (postId: string, type?: 'normal' | 'quote') => void;
   onComment: (postId: string) => void;
@@ -19,8 +24,8 @@ interface ProfileRepliesProps {
 }
 
 export default function ProfileReplies({
-  comments,
-  posts,
+  items,
+  allPosts,
   onLike,
   onRepost,
   onComment,
@@ -32,7 +37,7 @@ export default function ProfileReplies({
   currentUserHandle,
   onReportClick,
 }: ProfileRepliesProps) {
-  if (comments.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-400">No replies yet</p>
@@ -42,20 +47,17 @@ export default function ProfileReplies({
 
   return (
     <div className="space-y-0">
-      {comments.map((comment) => {
-        const originalPost = posts.find((p) => p.id === comment.postId);
-        if (!originalPost) return null;
-
-        return (
+      {items.map((item) =>
+        item.type === 'comment' ? (
           <ReplyCard
-            key={comment.id}
-            originalPost={originalPost}
-            reply={comment}
+            key={`comment-${item.comment.id}`}
+            originalPost={item.post}
+            reply={item.comment}
             onCommentLike={onCommentLike}
             onCommentPollVote={onCommentPollVote}
             onCommentDelete={onCommentDelete}
             currentUserHandle={currentUserHandle}
-            allPosts={posts}
+            allPosts={allPosts}
             onLike={onLike}
             onRepost={onRepost}
             onComment={onComment}
@@ -63,8 +65,23 @@ export default function ProfileReplies({
             hasUserReposted={hasUserReposted}
             onReportClick={onReportClick}
           />
-        );
-      })}
+        ) : (
+          <Feed
+            key={`quote-${item.post.id}`}
+            posts={[item.post]}
+            onNewIdeaClick={() => {}}
+            onLike={onLike}
+            onRepost={onRepost}
+            onComment={onComment}
+            onVote={onVote ?? (() => {})}
+            hasUserReposted={hasUserReposted}
+            currentUserHandle={currentUserHandle}
+            allPosts={allPosts}
+            showAllReposts={true}
+            onReportClick={onReportClick}
+          />
+        )
+      )}
     </div>
   );
 }

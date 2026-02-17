@@ -27,6 +27,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
     stats: UserStats = UserStats()
+    interests: List[str] = []
 
     class Config:
         from_attributes = True
@@ -42,14 +43,24 @@ class PublicUserResponse(BaseModel):
     following_count: int = 0
     post_count: int = 0
     is_following: Optional[bool] = None
+    interests: List[str] = []
     created_at: datetime
 
 class UpdateUserRequest(BaseModel):
     display_name: Optional[constr(min_length=1, max_length=100)] = None  # type: ignore[call-arg]
     bio: Optional[str] = None
+    interests: Optional[List[constr(min_length=1, max_length=50)]] = None  # type: ignore[call-arg]
     timezone: Optional[str] = None
     country: Optional[str] = None
     date_of_birth: Optional[date] = None
+
+    @validator("interests", pre=True)
+    def strip_interests(cls, v):
+        if v is None:
+            return None
+        if not v:
+            return []
+        return [item.strip() for item in v if isinstance(item, str) and item.strip()]
 
 class OnboardingRequest(BaseModel):
     username: UsernameStr

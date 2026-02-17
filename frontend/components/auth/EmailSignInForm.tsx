@@ -9,6 +9,7 @@ import FormInput from '@/components/app/common/FormInput';
 import { PrimaryButton } from '@/components/app/common/Button';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 const signInSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -44,7 +45,7 @@ export default function EmailSignInForm({ onError, onForgotPassword }: EmailSign
       // Home (and middleware) will handle redirect to onboarding if needed.
       router.push('/home');
     } catch (err) {
-      let msg = err instanceof Error ? err.message : 'Sign in failed';
+      let msg = getErrorMessage(err, 'Sign in failed');
       // Map Supabase auth errors to user-friendly messages
       const lower = msg.toLowerCase();
       if (lower.includes('email not confirmed') || lower.includes('token_not_found') || lower.includes('refresh token')) {

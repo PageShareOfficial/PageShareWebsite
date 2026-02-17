@@ -9,6 +9,7 @@ interface PollOption {
   votes?: { [optionIndex: number]: number };
   userVote?: number;
   isFinished: boolean;
+  expiresAt?: string;
 }
 
 interface PollComponentProps {
@@ -110,7 +111,15 @@ export default function PollComponent({ poll, postId, onVote }: PollComponentPro
           );
         })}
         <p className="text-xs text-gray-400 mt-2">
-          {poll.duration} day{poll.duration > 1 ? 's' : ''} left
+          {poll.expiresAt
+            ? (() => {
+                const end = new Date(poll.expiresAt).getTime();
+                const now = Date.now();
+                if (now >= end) return 'Poll ended';
+                const daysLeft = Math.ceil((end - now) / 86400000);
+                return `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`;
+              })()
+            : `${poll.duration} day${poll.duration > 1 ? 's' : ''} left`}
         </p>
       </div>
     </div>

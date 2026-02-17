@@ -15,6 +15,7 @@ class BookmarkedPostAuthor(BaseModel):
 
     username: str
     display_name: str
+    profile_picture_url: str | None = None
 
 class BookmarkedPostItem(BaseModel):
     """One bookmarked post in GET /bookmarks list."""
@@ -22,4 +23,5 @@ class BookmarkedPostItem(BaseModel):
     id: str
     author: BookmarkedPostAuthor
     content: str
+    created_at: datetime
     bookmarked_at: datetime

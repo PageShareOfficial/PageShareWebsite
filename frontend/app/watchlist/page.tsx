@@ -1,49 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import { WatchlistItem } from '@/types';
 import { Plus } from 'lucide-react';
 import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import Skeleton from '@/components/app/common/Skeleton';
+import { useWatchlist } from '@/hooks/features/useWatchlist';
 
 export default function WatchlistPage() {
   const router = useRouter();
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const { watchlist, loading: watchlistLoading, setWatchlist, openManageModal } = useWatchlist();
+  const isClient = true;
 
-  useEffect(() => {
-    setIsClient(true);
-    // Load watchlist from localStorage
-    const savedWatchlist = localStorage.getItem('pageshare_watchlist');
-    if (savedWatchlist) {
-      try {
-        const parsedWatchlist = JSON.parse(savedWatchlist);
-        if (Array.isArray(parsedWatchlist)) {
-          setWatchlist(parsedWatchlist);
-        }
-      } catch {
-        // If parsing fails, keep empty watchlist
-      }
-    }
-  }, []);
-
-  // Save watchlist to localStorage whenever it changes
-  useEffect(() => {
-    if (isClient && typeof window !== 'undefined') {
-      localStorage.setItem('pageshare_watchlist', JSON.stringify(watchlist));
-    }
-  }, [watchlist, isClient]);
-
-
-  if (!isClient) {
+  if (watchlistLoading) {
     return (
       <div className="min-h-screen bg-black">
         <div className="flex justify-center">
@@ -104,7 +77,7 @@ export default function WatchlistPage() {
           <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
             <RightRail
               watchlist={[]}
-              onManageWatchlist={() => {}}
+              onManageWatchlist={openManageModal}
               onUpgradeLabs={() => router.push('/plans')}
               onUpdateWatchlist={() => {}}
               isLoading={true}
@@ -135,7 +108,7 @@ export default function WatchlistPage() {
                 <div className="flex items-center gap-2">
                   {/* Manage button - Desktop (lg and above) with Plus icon and Manage text */}
                   <button
-                    onClick={() => setIsManageModalOpen(true)}
+                    onClick={openManageModal}
                     className="hidden lg:flex p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors items-center gap-2"
                     aria-label="Manage watchlist"
                   >
@@ -144,7 +117,7 @@ export default function WatchlistPage() {
                   </button>
                   {/* Manage button - Tablet (md to lg) with Plus icon and Manage text */}
                   <button
-                    onClick={() => setIsManageModalOpen(true)}
+                    onClick={openManageModal}
                     className="hidden md:flex lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors items-center gap-2"
                     aria-label="Manage watchlist"
                   >
@@ -159,7 +132,7 @@ export default function WatchlistPage() {
                 <h1 className="text-xl font-bold text-white">Watchlist</h1>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsManageModalOpen(true)}
+                    onClick={openManageModal}
                     className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2"
                     aria-label="Manage watchlist"
                   >
@@ -182,7 +155,7 @@ export default function WatchlistPage() {
                     Add tickers to track your favorite stocks
                   </p>
                   <button
-                    onClick={() => setIsManageModalOpen(true)}
+                    onClick={openManageModal}
                     className="px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2 mx-auto"
                   >
                     <Plus className="w-5 h-5" />
@@ -241,20 +214,14 @@ export default function WatchlistPage() {
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
           <RightRail
             watchlist={watchlist}
-            onManageWatchlist={() => setIsManageModalOpen(true)}
+            onManageWatchlist={openManageModal}
             onUpgradeLabs={() => router.push('/plans')}
             onUpdateWatchlist={setWatchlist}
+            isLoading={watchlistLoading}
           />
         </div>
       </div>
 
-      {/* Manage Watchlist Modal */}
-      <ManageWatchlistModal
-        isOpen={isManageModalOpen}
-        onClose={() => setIsManageModalOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
     </div>
   );
 }

@@ -1,19 +1,25 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, UserPlus, Pencil, List, Bookmark, Settings } from 'lucide-react';
+import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, Pencil, List, Bookmark, Settings, Trash2 } from 'lucide-react';
 import { MdOutlineWorkspacePremium } from 'react-icons/md';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import TweetComposer from '../composer/TweetComposer';
-import { getCurrentUser } from '@/utils/user/profileUtils';
+import { useCurrentUser } from '@/hooks/user/useCurrentUser';
+import { useAuth } from '@/contexts/AuthContext';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import Skeleton from '@/components/app/common/Skeleton';
+
+const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { currentUser } = useCurrentUser();
+  const { signOut, loading: authLoading } = useAuth();
   const [activeNav, setActiveNav] = useState('Home');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
@@ -21,33 +27,6 @@ export default function Sidebar() {
   const desktopMenuRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
-
-  // Update current user when profile changes
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-    
-    // Listen for profile updates
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('pageshare_profile_')) {
-        setCurrentUser(getCurrentUser());
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom event (same-tab updates)
-    const handleProfileUpdate = () => {
-      setCurrentUser(getCurrentUser());
-    };
-    
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, []);
 
   // Close menus when clicking outside
   useClickOutside({
@@ -81,13 +60,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = () => {
-    // TODO: Clear session/tokens
-    router.push('/');
-  };
-
-  const handleAddAccount = () => {
-    // TODO: Handle add account logic
-    router.push('/');
+    signOut();
   };
 
   const handleTweetSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
@@ -97,6 +70,7 @@ export default function Sidebar() {
 
   // All nav items including watchlist for mobile and tablet
   // Profile uses prefetch={false} to avoid compiling /[username] before login (prevents 401s)
+  const profileHref = currentUser?.handle ? `/${currentUser.handle}` : '/home';
   const allNavItems = [
     { name: 'Home', icon: Home, href: '/home', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
@@ -104,7 +78,7 @@ export default function Sidebar() {
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
     { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks', prefetch: true },
     { name: 'Settings', icon: Settings, href: '/settings', prefetch: true },
-    { name: 'Profile', icon: User, href: `/${currentUser.handle}`, prefetch: false },
+    { name: 'Profile', icon: User, href: profileHref, prefetch: false },
     { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans', prefetch: true },
   ];
 
@@ -118,7 +92,7 @@ export default function Sidebar() {
     { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
     { name: 'More', icon: MoreHorizontal, href: '#', isMore: true, prefetch: true },
-    { name: 'Profile', icon: User, href: `/${currentUser.handle}`, prefetch: false },
+    { name: 'Profile', icon: User, href: profileHref, prefetch: false },
   ];
   
   // Tablet nav items (without watchlist since it's a floating button, but with Premium and Settings)
@@ -154,11 +128,14 @@ export default function Sidebar() {
             {tabletNavItems.map((item: typeof allNavItems[0]) => {
               const Icon = item.icon;
               const isActive = getActiveNav(item.href);
+              const isProfile = item.name === 'Profile';
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   prefetch={item.prefetch !== false}
+                  onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+                  onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
                   onClick={() => setActiveNav(item.name)}
                   className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
                     isActive
@@ -178,11 +155,14 @@ export default function Sidebar() {
             {desktopNavItems.map((item: typeof allNavItems[0]) => {
               const Icon = item.icon;
               const isActive = getActiveNav(item.href);
+              const isProfile = item.name === 'Profile';
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   prefetch={item.prefetch !== false}
+                  onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+                  onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
                   onClick={() => setActiveNav(item.name)}
                   className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
                     isActive
@@ -213,42 +193,56 @@ export default function Sidebar() {
         {/* User Profile Section */}
         <div className="px-1 lg:px-4 py-4 border-t border-white/10 relative" ref={desktopMenuRef}>
           <button
+            type="button"
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             className="w-full flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl hover:bg-white/5 transition-colors group"
           >
-            <AvatarWithFallback
-              src={currentUser.avatar}
-              alt={currentUser.displayName}
-              size={40}
-              className="flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0 text-left hidden lg:block">
-              <div className="font-semibold text-white text-sm truncate">
-                {currentUser.displayName}
-              </div>
-              <div className="text-gray-400 text-xs truncate">
-                @{currentUser.handle}
-              </div>
-            </div>
-            <MoreHorizontal className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
+            {authLoading ? (
+              <>
+                <Skeleton variant="circular" width={40} height={40} />
+                <div className="flex-1 min-w-0 hidden lg:block space-y-2">
+                  <Skeleton variant="text" width={120} height={14} className="rounded" />
+                  <Skeleton variant="text" width={80} height={12} className="rounded" />
+                </div>
+              </>
+            ) : (
+              <>
+                <AvatarWithFallback
+                  src={currentUser.avatar}
+                  alt={currentUser.displayName}
+                  size={40}
+                  className="flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0 text-left hidden lg:block">
+                  <div className="font-semibold text-white text-sm truncate">
+                    {currentUser.displayName}
+                  </div>
+                  <div className="text-gray-400 text-xs truncate">
+                    @{currentUser.handle}
+                  </div>
+                </div>
+                <MoreHorizontal className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
+              </>
+            )}
           </button>
 
           {/* Dropdown Menu */}
           {isProfileMenuOpen && (
             <div className="absolute bottom-full left-0 lg:left-4 lg:right-4 right-0 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[200px] lg:min-w-0">
+              <Link
+                href="/settings?action=delete"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm">Delete account</span>
+              </Link>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-t border-white/10"
               >
                 <LogOut className="w-4 h-4 text-gray-300" />
                 <span className="text-white text-sm">Logout</span>
-              </button>
-              <button
-                onClick={handleAddAccount}
-                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-t border-white/10"
-              >
-                <UserPlus className="w-4 h-4 text-gray-300" />
-                <span className="text-white text-sm">Add another account</span>
               </button>
             </div>
           )}
@@ -325,11 +319,14 @@ export default function Sidebar() {
               );
             }
             
+            const isProfileNav = item.name === 'Profile';
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 prefetch={(item as { prefetch?: boolean }).prefetch !== false}
+                onMouseEnter={isProfileNav && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+                onFocus={isProfileNav && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
                 onClick={() => setActiveNav(item.name)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors min-w-0 ${
                   isActive

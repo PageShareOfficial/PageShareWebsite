@@ -20,6 +20,7 @@ export const RESERVED_ROUTES = new Set<string>([
   'settings',
   'terms',
   'watchlist',
+  'offline',
 
   // Future routes (reserve them now to prevent username conflicts)
   'discover',

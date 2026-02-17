@@ -5,6 +5,9 @@ import { useState } from 'react';
 import Modal from '@/components/app/common/Modal';
 import { reportContent, getReportReasons, ReportReason } from '@/utils/content/reportUtils';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -14,6 +17,7 @@ interface ReportModalProps {
   postId?: string; // For comments, the ID of the post the comment belongs to
   reportedUserHandle: string;
   reportedUserDisplayName: string;
+  reportedUserId?: string | null;
   currentUserHandle: string;
   onReport: () => void; // Callback after successful report
 }
@@ -26,6 +30,7 @@ export default function ReportModal({
   postId,
   reportedUserHandle,
   reportedUserDisplayName,
+  reportedUserId,
   currentUserHandle,
   onReport,
 }: ReportModalProps) {
@@ -33,36 +38,43 @@ export default function ReportModal({
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const isOnline = useOnlineStatus();
+  const { session } = useAuth();
+  const accessToken = session?.access_token ?? null;
   const reportReasons = getReportReasons();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedReason) return;
+    if (!selectedReason || !accessToken) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      reportContent({
-        contentType,
-        contentId,
-        postId: contentType === 'comment' ? postId : undefined,
-        reportedUserHandle,
-        reporterHandle: currentUserHandle,
-        reason: selectedReason as ReportReason,
-        description: selectedReason === 'other' ? description : undefined,
-      });
+      await reportContent(
+        {
+          contentType,
+          contentId,
+          postId: contentType === 'comment' ? postId : undefined,
+          reportedUserHandle,
+          reporterHandle: currentUserHandle,
+          reason: selectedReason as ReportReason,
+          description: selectedReason === 'other' ? description : undefined,
+          reportedUserId: reportedUserId ?? null,
+        },
+        accessToken
+      );
 
       setShowConfirmation(true);
-      
       // Close modal after 2 seconds
       setTimeout(() => {
         onReport();
         handleClose();
       }, 2000);
     } catch (error) {
-      console.error('Error reporting content:', error);
+      setSubmitError(getErrorMessage(error, 'Failed to submit report. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -72,6 +84,7 @@ export default function ReportModal({
     if (!isSubmitting) {
       setSelectedReason('');
       setDescription('');
+      setSubmitError(null);
       setShowConfirmation(false);
       onClose();
     }
@@ -158,6 +171,12 @@ export default function ReportModal({
                   </div>
                 )}
 
+                {submitError && (
+                  <p className="mb-4 text-sm text-red-400" role="alert">
+                    {submitError}
+                  </p>
+                )}
+
                 {/* Actions */}
                 <div className="flex space-x-3">
                   <SecondaryButton
@@ -168,13 +187,14 @@ export default function ReportModal({
                   >
                     Cancel
                   </SecondaryButton>
-                  <PrimaryButton
+                  <button
                     type="submit"
-                    disabled={!selectedReason || isSubmitting}
-                    className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!selectedReason || isSubmitting || !isOnline}
+                    className="flex-1 rounded-xl !bg-red-500 hover:!bg-red-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2"
+                    title={!isOnline ? 'You are offline' : undefined}
                   >
-                    {isSubmitting ? 'Submitting...' : 'Report'}
-                  </PrimaryButton>
+                    {isSubmitting ? 'Submitting...' : !isOnline ? 'Offline' : 'Report'}
+                  </button>
                 </div>
               </form>
             </>

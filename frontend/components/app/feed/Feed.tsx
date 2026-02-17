@@ -5,9 +5,10 @@ import { Pencil, RefreshCw } from 'lucide-react';
 import PostCard from '../post/PostCard';
 import TweetComposer from '../composer/TweetComposer';
 import { Post } from '@/types';
-import { isTweet } from '@/data/mockData';
+import { isTweet } from '@/utils/content/postUtils';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
-
+import LoadingState from '../common/LoadingState';
+import ErrorState from '../common/ErrorState';
 interface FeedProps {
   posts: Post[];
   onNewIdeaClick: () => void;
@@ -24,6 +25,11 @@ interface FeedProps {
   onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
   error?: boolean; // If true, show error state
   onRefresh?: () => void; // Callback to refresh/retry loading posts
+  postsLoading?: boolean; // If true, show loading state for posts
+  postsError?: string | null; // Error message when fetching posts
+  isPosting?: boolean; // If true, disable composer while posting
+  postError?: string | null; // Error message when posting failed
+  onClearPostError?: () => void; // Clear post error (e.g. when user dismisses)
 }
 
 export default function Feed({
@@ -42,6 +48,11 @@ export default function Feed({
   onReportClick,
   error = false,
   onRefresh,
+  postsLoading = false,
+  postsError,
+  isPosting = false,
+  postError,
+  onClearPostError,
 }: FeedProps) {
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
   const { currentUser } = useCurrentUser();
@@ -59,9 +70,16 @@ export default function Feed({
       {/* Tweet Composer - Desktop & Tablet Only - Only show if onNewTweet is provided */}
       {onNewTweet && (
         <div className="hidden md:block">
+          {postError && onClearPostError && (
+            <div className="mb-3 flex items-center justify-between rounded-lg bg-red-500/10 px-4 py-2 text-red-400 text-sm">
+              <span>{postError}</span>
+              <button onClick={onClearPostError} className="text-red-400 hover:text-red-300" aria-label="Dismiss">×</button>
+            </div>
+          )}
           <TweetComposer
             currentUser={currentUser}
             onSubmit={handleTweetSubmit}
+            isPosting={isPosting}
           />
         </div>
       )}
@@ -84,28 +102,26 @@ export default function Feed({
           onSubmit={handleTweetSubmit}
           onClose={() => setIsComposerModalOpen(false)}
           isModal={true}
+          isPosting={isPosting}
         />
       )}
 
-      {/* Error State */}
-      {error && (
+      {/* Loading State */}
+      {postsLoading && (
         <div className="text-center py-12 px-4">
-          <p className="text-red-400 text-lg mb-4">Something went wrong</p>
-          <p className="text-gray-400 text-sm mb-6">Please try again</p>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
-            >
-              <RefreshCw className="w-5 h-5" />
-              Refresh
-            </button>
-          )}
+          <LoadingState text="Loading posts..." />
+        </div>
+      )}
+
+      {/* Error State */}
+      {(error || postsError) && !postsLoading && (
+        <div className="text-center py-12 px-4">
+          <ErrorState title="Something went wrong" message={postsError || 'Please try again'} onRetry={onRefresh} />
         </div>
       )}
 
       {/* Posts */}
-      {!error && (
+      {!error && !postsError && !postsLoading && (
         <div role="feed" aria-label="Post feed">
           {posts.filter((post) => {
             // If showAllReposts is true (for profile pages), show all posts without filtering

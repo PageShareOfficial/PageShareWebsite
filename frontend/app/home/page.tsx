@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
@@ -7,16 +8,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import Topbar from '@/components/app/layout/Topbar';
 import Feed from '@/components/app/feed/Feed';
 import RightRail from '@/components/app/layout/RightRail';
-import ManageWatchlistModal from '@/components/app/modals/ManageWatchlistModal';
-import TweetComposer from '@/components/app/composer/TweetComposer';
-import ReportModal from '@/components/app/modals/ReportModal';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
+const TweetComposer = dynamic(() => import('@/components/app/composer/TweetComposer'), { ssr: false });
+const ReportModal = dynamic(() => import('@/components/app/modals/ReportModal'), { ssr: false });
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
-import { usePostSync } from '@/hooks/post/usePostSync';
+import { useReportedContent } from '@/hooks/features/useReportedContent';
 import Loading from '@/components/app/common/Loading';
 
 function needsOnboarding(username: string): boolean {
@@ -27,16 +27,16 @@ export default function HomePage() {
   const router = useRouter();
   const { backendUser, loading } = useAuth();
   const [isNewIdeaOpen, setIsNewIdeaOpen] = useState(false);
-  const [isManageWatchlistOpen, setIsManageWatchlistOpen] = useState(false);
 
   // All hooks must run unconditionally (before any early return) to satisfy Rules of Hooks
   const { currentUser, isClient } = useCurrentUser();
-  const { posts, setPosts } = usePostsData({ validateReposts: true });
-  const { watchlist, setWatchlist } = useWatchlist();
+  const { posts, setPosts, loading: postsLoading, error: postsError, refetch: refetchPosts } = usePostsData();
+  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const { filterPosts } = useContentFilters({
     currentUserHandle: currentUser.handle,
     isClient,
   });
+  const { filterReportedPosts } = useReportedContent();
   const {
     handleLike,
     handleRepost,
@@ -50,6 +50,9 @@ export default function HomePage() {
     setIsQuoteRepostOpen,
     quoteRepostPostId,
     setQuoteRepostPostId,
+    isPosting,
+    postError,
+    clearPostError,
   } = usePostHandlers({ posts, setPosts, currentUser });
   const {
     reportModalOpen,
@@ -61,9 +64,8 @@ export default function HomePage() {
     handleReportClick,
     handleReportSubmitted,
   } = useReportModal();
-  usePostSync({ posts, setPosts, currentUserHandle: currentUser.handle, isClient });
 
-  const filteredPosts = filterPosts(posts);
+  const filteredPosts = filterReportedPosts(filterPosts(posts), currentUser.handle);
 
   // Redirect to onboarding if user hasn't completed it
   useEffect(() => {
@@ -110,6 +112,12 @@ export default function HomePage() {
                 currentUserHandle={currentUser.handle}
                 onNewTweet={handleNewTweet}
                 onReportClick={handleReportClick}
+                postsLoading={postsLoading}
+                postsError={postsError}
+                onRefresh={refetchPosts}
+                isPosting={isPosting}
+                postError={postError}
+                onClearPostError={clearPostError}
               />
             </div>
           </div>
@@ -118,21 +126,16 @@ export default function HomePage() {
             {/* Right Sidebar */}
         <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
               <RightRail
-            watchlist={watchlist}
-                onManageWatchlist={() => setIsManageWatchlistOpen(true)}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
+                watchlist={watchlist}
+                onManageWatchlist={openManageModal}
+                onUpgradeLabs={() => router.push('/plans')}
+                onUpdateWatchlist={setWatchlist}
+                isLoading={watchlistLoading}
               />
         </div>
       </div>
 
       {/* Modals */}
-      <ManageWatchlistModal
-        isOpen={isManageWatchlistOpen}
-        onClose={() => setIsManageWatchlistOpen(false)}
-        watchlist={watchlist}
-        onUpdateWatchlist={setWatchlist}
-      />
       {isQuoteRepostOpen && quoteRepostPostId && (
         <TweetComposer
           currentUser={currentUser}
@@ -156,6 +159,7 @@ export default function HomePage() {
         postId={reportPostId}
         reportedUserHandle={reportUserHandle}
         reportedUserDisplayName={reportUserDisplayName}
+        reportedUserId={undefined}
         currentUserHandle={currentUser.handle}
         onReport={handleReportSubmitted}
       />

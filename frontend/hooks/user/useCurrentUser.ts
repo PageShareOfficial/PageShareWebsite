@@ -27,51 +27,26 @@ function backendUserToUser(backendUser: {
   };
 }
 
+/** Guest user when not authenticated. Backend is the only source of truth for the real user. */
+const GUEST_USER: User = getCurrentUser();
+
 /**
  * Hook to manage current user state.
- * When authenticated via Supabase, uses backend user. Otherwise falls back to localStorage/mock.
+ * Backend is the source of truth: when authenticated, user comes from the API.
+ * When not authenticated, returns a fixed guest user (no localStorage fallback).
  */
 export function useCurrentUser(): UseCurrentUserResult {
   const { backendUser, loading, refreshBackendUser } = useAuth();
-  const [localUser, setLocalUser] = useState<User>(getCurrentUser());
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // When backend user exists, use it. Otherwise use localStorage fallback
-  const currentUser = backendUser
-    ? backendUserToUser(backendUser)
-    : isClient
-      ? localUser
-      : getCurrentUser();
+  const currentUser = backendUser ? backendUserToUser(backendUser) : GUEST_USER;
 
-  // Update local user when profile changes (only when not using auth)
-  useEffect(() => {
-    if (!isClient || backendUser) return;
-    setLocalUser(getCurrentUser());
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.startsWith('pageshare_profile_')) {
-        setLocalUser(getCurrentUser());
-      }
-    };
-    const handleProfileUpdate = () => setLocalUser(getCurrentUser());
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, [isClient, backendUser]);
-
-  const setCurrentUser: React.Dispatch<React.SetStateAction<User>> = (arg) => {
-    if (backendUser) {
-      // When using auth, local updates are ignored; call refreshBackendUser after API updates
-      return;
-    }
-    setLocalUser(typeof arg === 'function' ? arg(localUser) : arg);
-  };
+  // No-op: profile updates go through the API, then refreshUser() to refetch from backend
+  const setCurrentUser: React.Dispatch<React.SetStateAction<User>> = () => {};
 
   return {
     currentUser,

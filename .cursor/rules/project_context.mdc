@@ -1,0 +1,85 @@
+---
+title: PageShare Project Context
+description: Codebase structure, conventions, and patterns. Use with quality_code for consistent, high-quality code.
+globs: ["**/*.py", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: true
+---
+
+# PageShare project context
+
+Use this together with **quality_code** when generating or editing code. This file describes the stack, where things live, and which helpers/patterns to use so code stays consistent.
+
+---
+
+## Stack
+
+- **Frontend:** Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS. Forms: React Hook Form + Zod. Icons: Lucide React. Tests: Vitest.
+- **Backend:** FastAPI, SQLAlchemy 2, PostgreSQL (Supabase), Pydantic v2. Auth: Supabase JWT. Tests: pytest.
+- **Monorepo:** `frontend/` and `backend/` at repo root. Frontend calls backend at `NEXT_PUBLIC_API_URL` when set; otherwise uses Next.js API routes (e.g. `/api/news`).
+
+---
+
+## Frontend conventions (use these; do not reinvent)
+
+- **API base URL:** Use `getBaseUrl()` from `@/lib/api/client`. Do not read `process.env.NEXT_PUBLIC_API_URL` directly for building API URLs.
+- **Error message from catch:** Use `getErrorMessage(err, fallback)` from `@/utils/error/getErrorMessage`. Do not repeat `err instanceof Error ? err.message : '...'`.
+- **Online status:** Use `useOnlineStatus()` from `@/hooks/common/useOnlineStatus` for offline-aware UI (e.g. disabling submit when offline).
+- **Dates:** Use `@/utils/core/dateUtils`: `formatRelativeTime`, `formatTimeAgo`, `formatDate`, `formatDateTime`, `formatJoinedDate`. No ad-hoc date formatting in components.
+- **API calls:** Use `apiGet`, `apiPost`, `apiPatch`, `apiDelete`, `apiFetch` from `@/lib/api/client` for backend; pass `accessToken` when auth is required. Feature-specific APIs live in `lib/api/*.ts` (e.g. `postApi`, `userApi`, `commentApi`).
+
+---
+
+## Backend conventions (use these; do not reinvent)
+
+- **Path/query UUIDs:** Use `parse_uuid_or_404(value, detail)` from `app.utils.http`. Do not repeat `try/except ValueError` + `raise HTTPException(404)`.
+- **404 status:** Use `status.HTTP_404_NOT_FOUND` (and other `status.HTTP_*` constants), not raw `404`.
+- **Paginated list responses:** Use `paginated_response(data, page, per_page, total, has_next=None)` from `app.utils.responses`. Single shape for all list endpoints.
+- **Post existence:** When an endpoint needs a post by id, use `get_post_or_404(db, post_id: UUID)` from `app.api.deps` after parsing the id with `parse_uuid_or_404`.
+- **Auth:** Use `Depends(get_current_user)` or `Depends(get_optional_user)` from `app.middleware.auth` for protected endpoints. Do not parse Bearer tokens manually in routes.
+
+---
+
+## Where things live (frontend)
+
+- **Auth:** `contexts/AuthContext.tsx`; session, sign-in, sign-out. Use `useAuth()`.
+- **API client:** `lib/api/client.ts` (getBaseUrl, apiGet, apiPost, apiPatch, apiDelete, apiFetch). Feature APIs: `lib/api/postApi.ts`, `userApi.ts`, `commentApi.ts`, `bookmarkApi.ts`, etc.
+- **Hooks:** `hooks/` by feature: `hooks/post/`, `hooks/user/`, `hooks/discover/`, `hooks/features/`, `hooks/common/`.
+- **Contexts:** `contexts/` (AuthContext, BookmarkContext, ContentFiltersContext, WatchlistContext, etc.).
+- **Components:** `components/app/` (common, layout, composer, discover, feed, modals, post, profile, ticker); `components/auth/`.
+- **Utils:** `utils/error/` (getErrorMessage, logError); `utils/core/` (dateUtils, routeUtils, etc.); `utils/content/`, `utils/api/`, `utils/discover/`.
+- **Pages:** `app/` (App Router): `app/[username]/`, `app/home/`, `app/discover/`, `app/ticker/[tickername]/`, `app/api/` for Next.js API routes.
+
+---
+
+## Where things live (backend)
+
+- **Routes:** `app/api/*.py` (posts, comments, users, feed, bookmarks, reactions, reposts, follows, content_filters, reports, watchlist, media, news, session, cron, errors, etc.). Mounted under `/api/v1`.
+- **Services:** `app/services/` (post_service, comment_service, user_service, feed_service, auth_service, etc.). Business logic and DB access.
+- **Schemas:** `app/schemas/` (Pydantic request/response models).
+- **Models:** `app/models/` (SQLAlchemy).
+- **Middleware:** `app/middleware/` (auth, error_handler, activity).
+- **Utils:** `app/utils/http.py` (parse_uuid_or_404), `app/utils/responses.py` (paginated_response). API-layer helpers: `app/api/deps.py` (e.g. get_post_or_404).
+- **Config:** `app/config.py`; env via `os.getenv` / Pydantic Settings.
+
+---
+
+## Priorities
+
+- **Incremental changes:** Prefer small, focused edits. One concern per change when possible (e.g. one helper, one router, one screen).
+- **Follow quality_code:** Readability, DRY, validation, explicit errors, tests for new or refactored logic. Functions &lt;20–30 lines, one responsibility.
+- **When in doubt:** Readability and consistency over cleverness. Use existing helpers and patterns rather than introducing new styles.
+- **No silent failures:** Surface errors to the user or log meaningfully; do not swallow exceptions without a reason.
+- **Security:** No hard-coded secrets; validate and sanitize inputs; use existing auth (get_current_user, session) for protected actions.
+
+---
+
+## Requesting new work (for the human)
+
+When asking for code, it helps to specify:
+
+- **Goal:** What should be true when done (one clear sentence).
+- **Scope:** What to touch; what not to change.
+- **Context:** Any specific file, pattern, or constraint (e.g. "use ReportModal as reference", "must work offline").
+- **Quality:** "Follow quality_code and project_context."
+
+This keeps intent and boundaries clear so generated code stays aligned with the project.

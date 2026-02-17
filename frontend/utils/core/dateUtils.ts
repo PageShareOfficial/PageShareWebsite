@@ -65,20 +65,45 @@ export function formatDateTime(dateString: string | null | undefined): string {
 }
 
 /**
- * Format relative time (time ago)
- * Examples: "2h ago", "5m ago", "3d ago", "Just now"
+ * Format relative time (e.g. "5m", "2h", "3d" or short date for older).
+ * Accepts Date or ISO string. Use addAgoSuffix for "5m ago" style.
  */
-export function formatTimeAgo(timestamp: string): string {
+export function formatRelativeTime(
+  dateOrTimestamp: Date | string,
+  options?: { addAgoSuffix?: boolean }
+): string {
+  const date = typeof dateOrTimestamp === 'string' ? new Date(dateOrTimestamp) : dateOrTimestamp;
   const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now.getTime() - then.getTime();
+  const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return then.toLocaleDateString();
+  const suffix = options?.addAgoSuffix ? ' ago' : '';
+  if (diffMins < 1) return options?.addAgoSuffix ? 'Just now' : 'now';
+  if (diffMins < 60) return `${diffMins}m${suffix}`;
+  if (diffHours < 24) return `${diffHours}h${suffix}`;
+  if (diffDays < 7) return `${diffDays}d${suffix}`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Format relative time with "ago" suffix (e.g. "2h ago", "Just now").
+ */
+export function formatTimeAgo(timestamp: string): string {
+  return formatRelativeTime(timestamp, { addAgoSuffix: true });
+}
+
+/**
+ * Format "Joined Month Year" for profile (e.g. "Joined Jan 2024").
+ */
+export function formatJoinedDate(dateString: string | null | undefined): string {
+  if (!dateString) return 'Joined recently';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Joined recently';
+    return `Joined ${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+  } catch {
+    return 'Joined recently';
+  }
 }

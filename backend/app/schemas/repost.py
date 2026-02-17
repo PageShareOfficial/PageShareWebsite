@@ -4,6 +4,7 @@ Repost request/response schemas.
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from app.schemas.post import PostInFeedResponse
 
 class CreateRepostRequest(BaseModel):
     """Request body for creating a repost."""
@@ -34,3 +35,4 @@ class RepostResponse(BaseModel):
     original_post: OriginalPostSummary
     quote_content: Optional[str] = None
     created_at: datetime
+    quote_post: Optional[PostInFeedResponse] = None

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import type { CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { AUTH_PROTECTED_ROUTES } from '@/utils/core/routeConstants';
+import { AUTH_PROTECTED_ROUTES, RESERVED_ROUTES } from '@/utils/core/routeConstants';
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
@@ -43,6 +43,19 @@ export async function updateSession(request: NextRequest) {
   const isProtected = AUTH_PROTECTED_ROUTES.has(firstSegment);
 
   if (!user && isProtected) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    const redirectRes = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((c) =>
+      redirectRes.cookies.set(c.name, c.value)
+    );
+    return redirectRes;
+  }
+
+  // Unauthenticated users may only view a shared post link: /:username/posts/:postId
+  const isUsernameRoute = segments.length >= 1 && !RESERVED_ROUTES.has(firstSegment);
+  const isPostDetailRoute = segments.length === 3 && segments[1]?.toLowerCase() === 'posts';
+  if (!user && isUsernameRoute && !isPostDetailRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     const redirectRes = NextResponse.redirect(url);

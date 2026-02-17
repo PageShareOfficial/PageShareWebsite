@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import {
-  getValidUsernamesForMiddleware,
-  isReservedRouteInMiddleware,
-  isValidUsernameInMiddleware,
-} from '@/lib/middleware/routeConfig';
+import { isReservedRoute } from '@/utils/core/routeUtils';
 import { updateSession } from '@/lib/supabase/middleware';
-
-// Get valid usernames from mock data (cached at module load)
-// In production: replace with database lookup or remove (let [username] page handle validation)
-const VALID_USERNAMES = getValidUsernamesForMiddleware();
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -38,17 +30,12 @@ export async function middleware(request: NextRequest) {
 
   const firstSegment = segments[0].toLowerCase();
 
-  // Fast check: If it's a reserved route, exit immediately (O(1) lookup)
-  if (isReservedRouteInMiddleware(firstSegment)) {
+  // If it's a reserved route (home, settings, etc.), continue; otherwise could be username
+  if (isReservedRoute(firstSegment)) {
     return NextResponse.next();
   }
 
-  // At this point, the route could be a username
-  if (isValidUsernameInMiddleware(firstSegment, VALID_USERNAMES)) {
-    return NextResponse.next();
-  }
-
-  // Let it through and let the [username] page handle the 404
+  // Let it through; [username] page validates via API and returns 404 if not found
   return NextResponse.next();
 }
 

@@ -8,9 +8,9 @@ import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
 import { Post } from '@/types';
-import { isTweet } from '@/data/mockData';
+import { isTweet } from '@/utils/content/postUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
+import { useMediaUpload, MEDIA_LIMITS_HINT } from '@/hooks/composer/useMediaUpload';
 import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
 import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
 import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
@@ -32,6 +32,7 @@ interface TweetComposerProps {
   isModal?: boolean;
   originalPostId?: string;
   allPosts?: Post[]; // All posts array to look up original post by ID
+  isPosting?: boolean; // If true, disable submit and show loading state
 }
 
 // Initialize Giphy - will be created with API key from environment
@@ -50,6 +51,7 @@ export default function TweetComposer({
   isModal = false,
   originalPostId,
   allPosts = [],
+  isPosting = false,
 }: TweetComposerProps) {
   const router = useRouter();
   // Look up original post by ID
@@ -104,10 +106,12 @@ export default function TweetComposer({
     mediaFiles,
     mediaPreviews,
     selectedGif,
+    mediaError,
     handleImageUpload,
     handleRemoveMedia,
     handleGifSelect,
     clearMedia,
+    clearMediaError,
     setSelectedGif,
   } = useMediaUpload(savedState?.selectedGif || null);
 
@@ -201,15 +205,21 @@ export default function TweetComposer({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (tweetText.trim().length === 0) return;
-    if (tweetText.length > maxLength) {
-      // Redirect to plans page
+    if (isPosting) return;
+
+    const hasText = tweetText.trim().length > 0;
+    const hasMedia = mediaFiles.length > 0;
+    const hasGif = !!selectedGif;
+    const poll = getPollData();
+    const hasPoll = poll && poll.options.filter((o) => o.trim()).length >= 2;
+
+    if (!hasText && !hasMedia && !hasGif && !hasPoll) return;
+
+    if (hasText && tweetText.length > maxLength) {
       router.push('/plans');
       return;
     }
-    
-    const poll = getPollData();
-    
+
     onSubmit(
       tweetText,
       mediaFiles.length > 0 ? mediaFiles : undefined,
@@ -612,18 +622,18 @@ export default function TweetComposer({
               {/* Image Upload */}
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => { clearMediaError(); fileInputRef.current?.click(); }}
                 className="p-1.5 sm:p-2 text-cyan-400 hover:bg-cyan-400/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Upload image"
                 disabled={mediaFiles.length >= 4 || selectedGif !== null}
-                title="Add photos"
+                title={MEDIA_LIMITS_HINT}
               >
                 <HiOutlinePhotograph className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 multiple
                 onChange={handleImageUpload}
                 className="hidden"
@@ -737,12 +747,25 @@ export default function TweetComposer({
               
               <button
                 type="submit"
-                disabled={tweetText.trim().length === 0 || isOverLimit}
+                disabled={
+                  isPosting ||
+                  (tweetText.trim().length === 0 && mediaFiles.length === 0 && !selectedGif && !(showPoll && pollOptions.filter((o) => o.trim()).length >= 2)) ||
+                  (tweetText.length > 0 && isOverLimit)
+                }
                 className="px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
-                Post
+                {isPosting ? 'Posting...' : 'Post'}
               </button>
             </div>
+          </div>
+
+          {/* Media limits hint and validation error */}
+          <div className="mt-2 flex flex-col gap-0.5">
+            {mediaError && (
+              <p className="text-xs text-amber-400" title={mediaError}>
+                {mediaError}
+              </p>
+            )}
           </div>
         </div>
       </div>

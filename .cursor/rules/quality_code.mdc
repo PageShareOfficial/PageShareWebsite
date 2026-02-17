@@ -1,0 +1,52 @@
+---
+title: Quality Code Principles
+description: Strict rules for clean, readable, maintainable, robust code. Enforce DRY, SOLID, testing, and best practices.
+globs: ["**/*.py","**/*.js","**/*.ts","**/*.tsx","**/*.jsx","**/*.java","**/*.go"]  # Adjust for your stack
+alwaysApply: true
+---
+
+# Follow these rules ALWAYS for all code generation and edits.
+
+## Core Readability (Prioritize clarity)
+- Use descriptive, intention-revealing names: `calculateTotalPrice` not `calc`. Avoid abbreviations except standards (e.g., `i` for indices).
+- Functions/classes <20-30 lines max. One responsibility only (SRP from SOLID).
+- Consistent formatting: Use Prettier (JS/TS), Black (Python), etc. Line length <100 chars. Proper indentation.
+- Self-documenting code first; comments explain WHY, not WHAT. Use docstrings for public APIs.
+
+## Avoid Redundancy & Errors (DRY, Robustness)
+- DRY: Extract repeated logic to functions/utils/constants. No copy-paste code.
+- Validate all inputs: Check nulls, empties, types, ranges. Use guards early.
+- Explicit error handling: Catch exceptions, log meaningfully, fail gracefully (no silent fails).
+- Pure functions where possible: No side effects for testability.
+
+## Design Principles (SOLID)
+- **S**ingle Responsibility: One job per function/class.
+- **O**pen-Closed: Extend without modifying (interfaces/abstracts).
+- **L**iskov Substitution: Subtypes replace base without breaking.
+- **I**nterface Segregation: Small, specific interfaces.
+- **D**ependency Inversion: Depend on abstractions, inject deps.
+
+## Testing & Reliability
+- Write tests alongside: Unit/integration for functions; cover edges, mocks.
+- High coverage goal: 80%+; include happy/sad paths.
+- Make testable: Avoid globals; prefer dependency injection.
+
+## Performance & Refinement
+- Readability > micro-optimizations. Profile first.
+- Refactor smells: Duplication, long methods, large classes.
+- Standard libs/patterns: No reinventing wheels; use ecosystem tools.
+- Security: Sanitize inputs, no hard-coded secrets, validate/sanitize outputs.
+
+## Examples (Follow exactly)
+**Bad:**
+```python
+def c(x,y): return x+y # unclear
+```
+**Good:**
+```python
+def add_numbers(first: int, second: int) -> int:
+    """Add two integers safely."""
+    if not isinstance(first, int) or not isinstance(second, int):
+        raise ValueError("Inputs must be integers")
+    return first + second
+```

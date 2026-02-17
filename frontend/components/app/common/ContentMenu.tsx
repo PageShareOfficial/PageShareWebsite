@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { MoreHorizontal, Share2, Trash2, Bookmark } from 'lucide-react';
-import { toggleBookmark, isBookmarked } from '@/utils/content/bookmarkUtils';
-import { muteUser, unmuteUser, isMuted } from '@/utils/user/muteUtils';
-import { blockUser, unblockUser, isBlocked } from '@/utils/user/blockUtils';
+import { MoreHorizontal, Trash2, Bookmark, Link2 } from 'lucide-react';
+import { useBookmarks } from '@/contexts/BookmarkContext';
+import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
+import { copyToClipboard } from '@/utils/core/clipboardUtils';
 
 interface ContentMenuProps {
   type: 'post' | 'comment';
+  authorId: string;
   authorHandle: string;
   authorDisplayName?: string;
   currentUserHandle?: string;
@@ -22,6 +24,7 @@ interface ContentMenuProps {
 
 export default function ContentMenu({
   type,
+  authorId,
   authorHandle,
   authorDisplayName,
   currentUserHandle,
@@ -32,28 +35,22 @@ export default function ContentMenu({
   onReportClick,
   className = '',
 }: ContentMenuProps) {
+  const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
+  const {
+    isMutedById,
+    isBlockedById,
+    mute,
+    unmute,
+    block,
+    unblock,
+  } = useContentFiltersContext();
+  const isOnline = useOnlineStatus();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Check state using utilities
-  const checkIsBookmarked = () => {
-    if (!currentUserHandle || type !== 'post') return false;
-    return isBookmarked(contentId, currentUserHandle);
-  };
-
-  const checkIsMuted = () => {
-    if (!currentUserHandle) return false;
-    return isMuted(currentUserHandle, authorHandle);
-  };
-
-  const checkIsBlocked = () => {
-    if (!currentUserHandle) return false;
-    return isBlocked(currentUserHandle, authorHandle);
-  };
-
-  const isBookmarkedValue = checkIsBookmarked();
-  const isMutedValue = checkIsMuted();
-  const isBlockedValue = checkIsBlocked();
+  const isBookmarkedValue = type === 'post' && currentUserHandle ? isBookmarked(contentId) : false;
+  const isMutedValue = isMutedById(authorId);
+  const isBlockedValue = isBlockedById(authorId);
 
   // Close menu when clicking outside
   useClickOutside({
@@ -62,49 +59,63 @@ export default function ContentMenu({
     enabled: isOpen,
   });
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(linkUrl);
+  const handleCopyLink = async () => {
+    await copyToClipboard(linkUrl);
     setIsOpen(false);
   };
 
   const handleDelete = () => {
+    if (!isOnline) return;
     if (onDelete) {
       onDelete();
     }
     setIsOpen(false);
   };
 
-  const handleBookmark = () => {
-    if (!currentUserHandle || type !== 'post') return;
-    toggleBookmark(contentId, currentUserHandle);
+  const handleBookmark = async () => {
+    if (!currentUserHandle || type !== 'post' || !isOnline) return;
+    setIsOpen(false);
+    if (isBookmarkedValue) {
+      await removeBookmark(contentId);
+    } else {
+      await addBookmark(contentId);
+    }
+  };
+
+  const handleMute = async () => {
+    if (!currentUserHandle || !isOnline) return;
+    await mute({
+      id: authorId,
+      username: authorHandle,
+      displayName: authorDisplayName ?? authorHandle,
+    });
     setIsOpen(false);
   };
 
-  const handleMute = () => {
-    if (!currentUserHandle) return;
-    muteUser(currentUserHandle, authorHandle);
+  const handleUnmute = async () => {
+    if (!currentUserHandle || !isOnline) return;
+    await unmute(authorId);
     setIsOpen(false);
   };
 
-  const handleUnmute = () => {
-    if (!currentUserHandle) return;
-    unmuteUser(currentUserHandle, authorHandle);
+  const handleBlock = async () => {
+    if (!currentUserHandle || !isOnline) return;
+    await block({
+      id: authorId,
+      username: authorHandle,
+      displayName: authorDisplayName ?? authorHandle,
+    });
     setIsOpen(false);
   };
 
-  const handleBlock = () => {
-    if (!currentUserHandle) return;
-    blockUser(currentUserHandle, authorHandle);
-    setIsOpen(false);
-  };
-
-  const handleUnblock = () => {
-    if (!currentUserHandle) return;
-    unblockUser(currentUserHandle, authorHandle);
+  const handleUnblock = async () => {
+    if (!currentUserHandle || !isOnline) return;
+    await unblock(authorId);
     setIsOpen(false);
   };
 
   const handleReport = () => {
+    if (!isOnline) return;
     if (onReportClick && authorDisplayName) {
       onReportClick(type, contentId, authorHandle, authorDisplayName, postId);
     }
@@ -129,26 +140,30 @@ export default function ContentMenu({
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[200px]">
-          {/* Copy Link - Always shown */}
+          {/* Copy Link - Always shown (works offline) */}
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleCopyLink();
             }}
             className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm"
           >
-            <Share2 className="w-4 h-4" />
+            <Link2 className="w-4 h-4" />
             <span>Copy link</span>
           </button>
 
           {/* Bookmark - Only for posts */}
           {type === 'post' && currentUserHandle && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleBookmark();
               }}
-              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10"
+              disabled={!isOnline}
+              title={!isOnline ? 'Connect to the internet to continue' : undefined}
+              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
             >
               <Bookmark className={`w-4 h-4 ${isBookmarkedValue ? 'fill-current' : ''}`} />
               <span>{isBookmarkedValue ? 'Remove bookmark' : 'Bookmark'}</span>
@@ -158,11 +173,14 @@ export default function ContentMenu({
           {/* Delete - Only for owner */}
           {isOwner && onDelete && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleDelete();
               }}
-              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 text-sm border-t border-white/10"
+              disabled={!isOnline}
+              title={!isOnline ? 'Connect to the internet to continue' : undefined}
+              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
             >
               <Trash2 className="w-4 h-4" />
               <span>Delete</span>
@@ -174,53 +192,68 @@ export default function ContentMenu({
             <>
               {isMutedValue ? (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleUnmute();
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10"
+                  disabled={!isOnline}
+                  title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                 >
                   <span>Unmute @{authorHandle}</span>
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleMute();
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10"
+                  disabled={!isOnline}
+                  title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                 >
                   <span>Mute @{authorHandle}</span>
                 </button>
               )}
               {isBlockedValue ? (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleUnblock();
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10"
+                  disabled={!isOnline}
+                  title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                 >
                   <span>Unblock @{authorHandle}</span>
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleBlock();
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10"
+                  disabled={!isOnline}
+                  title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-white text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                 >
                   <span>Block @{authorHandle}</span>
                 </button>
               )}
               {onReportClick && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleReport();
                   }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 text-sm border-t border-white/10"
+                  disabled={!isOnline}
+                  title={!isOnline ? 'Connect to the internet to continue' : undefined}
+                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                 >
                   <span>Report {type}</span>
                 </button>

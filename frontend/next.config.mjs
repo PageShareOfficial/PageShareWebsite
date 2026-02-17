@@ -1,6 +1,9 @@
 import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     // Custom loader to handle SSL certificate issues
@@ -14,19 +17,6 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'api.dicebear.com',
-      },
-      // Ticker logos
-      {
-        protocol: 'https',
-        hostname: 'financialmodelingprep.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.financialmodelingprep.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'assets.polygon.io',
       },
       {
         protocol: 'https',

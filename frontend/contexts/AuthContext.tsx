@@ -4,7 +4,8 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useRouter, usePathname } from 'next/navigation';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { apiGet } from '@/lib/api/client';
+import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
+import { clearFeedCache } from '@/lib/feedCache';
 
 export interface BackendUser {
   id: string;
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const fetchBackendUser = useCallback(async (token: string) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBaseUrl();
     if (!apiUrl) return null;
 
     try {
@@ -75,6 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Prevents 401s from firing before login when /[username] or other routes prefetch
   const shouldFetchBackend = pathname && pathname !== '/';
 
+  // Skip fetch when we already have backendUser for the same session (reduces API calls on nav)
+  const needsFetch = useCallback(
+    (session: Session | null) => {
+      if (!session?.access_token || !shouldFetchBackend) return false;
+      return !backendUser || backendUser.id !== session.user.id;
+    },
+    [shouldFetchBackend, backendUser]
+  );
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -82,37 +92,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
 
-      if (session?.access_token && shouldFetchBackend) {
+      if (!session?.access_token || !shouldFetchBackend) {
+        setBackendUser(null);
+      } else if (needsFetch(session)) {
         const data = await fetchBackendUser(session.access_token);
         setBackendUser(data ?? null);
-      } else {
-        setBackendUser(null);
       }
 
       setLoading(false);
     });
 
-    // Get initial session
+    // Get initial session – keep loading true until backend user fetch completes (if needed)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.access_token && shouldFetchBackend) {
-        fetchBackendUser(session.access_token).then((data) => setBackendUser(data ?? null));
-      } else {
+      if (!session?.access_token || !shouldFetchBackend) {
         setBackendUser(null);
+        setLoading(false);
+      } else if (needsFetch(session)) {
+        fetchBackendUser(session.access_token)
+          .then((data) => setBackendUser(data ?? null))
+          .finally(() => setLoading(false));
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth, fetchBackendUser, shouldFetchBackend]);
+  }, [supabase.auth, fetchBackendUser, shouldFetchBackend, needsFetch]);
 
-  // When navigating from / to a protected route, fetch backend user
+  // When navigating from / to a protected route, fetch backend user (only if we don't have it)
   useEffect(() => {
-    if (shouldFetchBackend && session?.access_token && !backendUser) {
+    if (shouldFetchBackend && session?.access_token && needsFetch(session)) {
       fetchBackendUser(session.access_token).then((data) => setBackendUser(data ?? null));
     }
-  }, [shouldFetchBackend, session?.access_token, backendUser, fetchBackendUser]);
+  }, [shouldFetchBackend, session, needsFetch, fetchBackendUser]);
+
+  // Session start: idempotent - creates session if none active (e.g. returning user, new visit)
+  useEffect(() => {
+    if (session?.access_token && getBaseUrl()) {
+      apiPost('/session/start', {}, session.access_token).catch(() => {});
+    }
+  }, [session?.access_token]);
 
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -165,12 +186,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    clearFeedCache();
+    if (session?.access_token) {
+      try {
+        await apiPost('/session/end', {}, session.access_token);
+      } catch {
+        // Non-blocking: session end best-effort
+      }
+    }
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setBackendUser(null);
     router.push('/');
-  }, [supabase.auth, router]);
+  }, [supabase.auth, router, session?.access_token]);
 
   const value: AuthContextValue = {
     user,

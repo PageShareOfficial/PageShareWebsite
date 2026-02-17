@@ -2,17 +2,25 @@
  * API client for backend. Adds Authorization header when session exists.
  */
 
-const getBaseUrl = () => {
+/**
+ * Backend API base URL (no trailing slash). Empty string when not configured.
+ * Use this instead of reading process.env.NEXT_PUBLIC_API_URL directly.
+ */
+export function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
   if (!url) return '';
   return url.replace(/\/$/, '');
-};
+}
 
 /** Extract user-facing message from backend error response. */
 function parseErrorDetail(text: string, fallback: string): string {
   try {
     const json = JSON.parse(text);
-    return json.error?.message ?? json.detail ?? json.message ?? fallback;
+    const d = json.error?.message ?? json.detail ?? json.message;
+    if (Array.isArray(d) && d.length > 0 && d[0]?.msg) {
+      return d[0].msg;
+    }
+    return typeof d === 'string' ? d : fallback;
   } catch {
     return text || fallback;
   }
@@ -104,6 +112,35 @@ export async function apiPatch<T = unknown>(
     throw new Error(parseErrorDetail(text, `Request failed: ${res.status}`));
   }
   return res.json() as Promise<T>;
+}
+
+/**
+ * Upload media files for posts. Sends multipart/form-data.
+ * Returns array of { url, filename, content_type, size_bytes }.
+ */
+export async function apiUploadMedia(
+  files: File[],
+  accessToken: string
+): Promise<{ uploads: { url: string; filename: string; content_type: string; size_bytes: number }[] }> {
+  const base = getBaseUrl();
+  const url = `${base}/api/v1/media/upload`;
+
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(parseErrorDetail(text, `Upload failed: ${res.status}`));
+  }
+  return res.json();
 }
 
 /**
