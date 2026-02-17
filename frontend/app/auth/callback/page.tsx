@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { Suspense,useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
@@ -11,7 +11,7 @@ function needsOnboarding(username: string): boolean {
   return username.startsWith('user_');
 }
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -112,5 +112,19 @@ export default function AuthCallbackPage() {
     <div className="min-h-screen flex items-center justify-center bg-black">
       <Loading text="Completing sign in..." />
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-black">
+          <Loading text="Completing sign in..." />
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

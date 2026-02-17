@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchCryptoDetail } from '@/utils/api/tickerApi';
 import type { CryptoDetailData } from '@/types/ticker';
 
+export const dynamic = 'force-dynamic';
+
 /** GET /api/ticker/batch?symbols=BTC,ETH,SOL – returns array of ticker details for watchlist enrichment. */
 export async function GET(request: NextRequest) {
   try {

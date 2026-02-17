@@ -54,6 +54,7 @@ backend/app/schemas/__pycache__/
 backend/app/utils/__pycache__/
 backend/app/tests/__pycache__/
 backend/.pytest_cache/
+backend/tests/__pycache__/
 # typescript
 *.tsbuildinfo
 
