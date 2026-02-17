@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const categoryParam = searchParams.get('category') || 'all';
     const pageParam = searchParams.get('page');
 
-    const category: NewsCategory =
+    const category: NewsCategory = 
       ['all', 'finance', 'crypto', 'politics', 'business', 'technology'].includes(categoryParam)
         ? (categoryParam as NewsCategory)
         : 'all';

@@ -102,12 +102,12 @@ export function useNewsFeed(options: UseNewsFeedOptions = {}): UseNewsFeedResult
         setIsLoading(false);
         return;
       }
-
+      
       const apiUrl = `${NEWS_ENDPOINT}?category=${cat}&page=${pageNum}`;
-
       const requestPromise = (async (): Promise<{ articles: NewsArticle[]; totalArticles: number }> => {
         try {
           const response = await fetch(apiUrl);
+          
           if (!response.ok) {
             throw new Error(`Failed to fetch news: ${response.statusText}`);
           }
