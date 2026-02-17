@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import RightRail from '@/components/app/layout/RightRail';
@@ -18,7 +18,7 @@ import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import { apiDelete } from '@/lib/api/client';
 
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentUser: authCurrentUser } = useCurrentUser();
@@ -529,6 +529,20 @@ export default function SettingsPage() {
         onConfirm={handleDeleteAccount}
       />
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <Loading />
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }
 

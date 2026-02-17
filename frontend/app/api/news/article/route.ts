@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API route to proxy article content
  * Fetches full article HTML and returns it for display in modal
- * 
+ *
  * GET /api/news/article?url=<encoded_url>
  */
 export async function GET(request: NextRequest) {

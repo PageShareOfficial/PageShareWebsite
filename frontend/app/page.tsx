@@ -1,11 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import AuthTabs from '@/components/auth/AuthTabs';
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get('error');
 
@@ -121,5 +122,21 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function HomeFallback() {
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="animate-pulse text-gray-400">Loading...</div>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<HomeFallback />}>
+      <HomeContent />
+    </Suspense>
   );
 }
