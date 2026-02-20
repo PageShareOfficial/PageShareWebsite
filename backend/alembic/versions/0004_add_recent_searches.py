@@ -9,6 +9,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import inspect
 
 revision: str = "0004_recent_searches"
 down_revision: Union[str, None] = "0003_admin_badge"
@@ -17,6 +18,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    conn = op.get_bind()
+    insp = inspect(conn)
+    if "recent_searches" in insp.get_table_names():
+        return  # Table already exists (e.g. created manually or previous run)
     op.create_table(
         "recent_searches",
         sa.Column("id", UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), nullable=False),
@@ -34,5 +39,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    conn = op.get_bind()
+    insp = inspect(conn)
+    if "recent_searches" not in insp.get_table_names():
+        return
     op.drop_index("ix_recent_searches_user_id", table_name="recent_searches")
     op.drop_table("recent_searches")
