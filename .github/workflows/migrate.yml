@@ -1,0 +1,38 @@
+# Run Alembic migrations against the production database.
+# Triggers: (1) manual run from Actions, (2) on push to main when migrations/models change.
+# Requires repo secret: PROD_DATABASE_URL (production Postgres connection string).
+
+name: Run migrations
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/alembic/**'
+      - 'backend/app/models/**'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          APP_ENV: prod
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: alembic upgrade head
