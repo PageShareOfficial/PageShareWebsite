@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 from pathlib import Path
 import sys
@@ -10,7 +11,6 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from app.config import get_settings
 # Import the whole models package so every table is registered on Base.metadata
 import app.models  # noqa: F401
 from app.models import Base
@@ -28,9 +28,12 @@ target_metadata = Base.metadata
 
 
 def get_url() -> str:
-    """Use DATABASE_URL (transaction pooler) for both app and migrations."""
-    settings = get_settings()
-    return settings.database_url
+    """Use DATABASE_URL for migrations. Prefer env var so CI only needs DATABASE_URL (no SUPABASE_JWT_SECRET)."""
+    url = os.getenv("DATABASE_URL", "").strip()
+    if url:
+        return url
+    from app.config import get_settings
+    return get_settings().database_url
 
 
 def run_migrations_offline() -> None:
