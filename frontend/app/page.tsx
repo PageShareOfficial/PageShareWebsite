@@ -90,7 +90,7 @@ function HomeContent() {
       <footer className="relative z-10 border-t border-white/10 bg-black mt-auto">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4 sm:py-6">
           <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 md:gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500">
-            <Link href="/coming-soon?page=About" className="hover:text-white transition-colors px-1">About</Link>
+            <Link href="/about" className="hover:text-white transition-colors px-1">About</Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link href="/coming-soon?page=Help-Center" className="hover:text-white transition-colors px-1">Help Center</Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
