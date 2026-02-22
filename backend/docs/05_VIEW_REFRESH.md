@@ -11,16 +11,16 @@ This doc lists SQL commands, backend cron endpoints, and how to schedule them. R
 
 The backend exposes **two cron endpoints**. Both require `CRON_SECRET` for auth.
 
-| Endpoint | What it does | Suggested schedule |
-|----------|--------------|--------------------|
-| `GET /api/v1/cron/daily` | DB health check + **refresh all materialized views** + stale session cleanup | Once per day (e.g. 05:00 UTC) |
-| `GET /api/v1/cron/sessions` | Stale session cleanup only | Every 30–60 min |
-
-**There is no separate route for view refresh** – it is built into `/cron/daily`. The views (`daily_metrics`, `engagement_metrics`, `trending_tickers`) are refreshed when you call the daily endpoint.
+| Endpoint | What it does | How it’s run |
+|----------|--------------|--------------|
+| `GET /api/v1/cron/daily` | DB health check + refresh **daily_metrics** + **engagement_metrics** + stale session cleanup | Vercel Cron (frontend proxy), once per day (05:00 UTC) |
+| `GET /api/v1/cron/sessions` | Stale session cleanup only (for accurate session end times & analytics) | GitHub Actions, every 30 min |
 
 **Flow:**
-- Call `/cron/daily` once per day → views get refreshed, stale sessions get closed.
-- If you want more accurate session end times, also call `/cron/sessions` every 30–60 min. This is optional; the daily cron already closes stale sessions once per day.
+- **Daily** (Vercel): Frontend proxy `/api/cron-daily` runs once per day → backend `/cron/daily` does DB touch, views, sessions.
+- **Sessions** (GitHub Actions): Workflow runs every 30 min and calls backend `/cron/sessions` directly with `X-Cron-Secret`. Keeps session analytics accurate without needing Vercel Pro.
+
+**trending_tickers** is not refreshed by cron currently; add an hourly job later if the frontend uses it.
 
 ---
 
@@ -109,26 +109,22 @@ Does everything in one call:
 
 ---
 
-### Vercel Cron setup (for daily)
+### Vercel Cron setup (Option A – frontend proxy, implemented)
 
-1. Add **`CRON_SECRET`** to your Vercel project env (e.g. `openssl rand -hex 32`).
-2. Add a **serverless route** that runs on schedule and calls your backend with the secret (Vercel Cron does not add custom headers to the request it sends). For example, a route that runs on the cron schedule and does:
-   - `fetch(yourBackendUrl + '/api/v1/cron/daily', { headers: { 'X-Cron-Secret': process.env.CRON_SECRET } })`
-3. In **`vercel.json`** (in the repo that deploys the backend), add:
+**Daily cron (Vercel, Hobby‑friendly):**
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron-daily",
-      "schedule": "0 5 * * *"
-    }
-  ]
-}
-```
+1. **Frontend env (Vercel):** Add **`CRON_SECRET`** (same value as backend) and **`NEXT_PUBLIC_API_URL`** pointing to the backend.
+2. **Frontend** has one cron proxy: **`/api/cron-daily`** → backend `GET /api/v1/cron/daily`. **`frontend/vercel.json`** runs it once per day (`0 5 * * *`) so it works on the Hobby plan.
+3. Only requests with the `x-vercel-cron` header are accepted by the proxy.
 
-- **`schedule`:** `0 5 * * *` = 05:00 UTC daily.
-- **`path`:** Must be the serverless route that **you** implement (e.g. `/api/cron-daily`) and that calls `GET /api/v1/cron/daily` with the `X-Cron-Secret` header from env. If your backend is a single serverless function that already serves `/api/v1/cron/daily`, use that path and ensure the handler sends the secret (e.g. from env) when Vercel invokes it (e.g. by checking a Vercel cron header and then adding the secret to an internal call, or by reading the secret from env and forwarding).
+**Sessions cron (GitHub Actions):**
+
+Sessions run every 30 min via **GitHub Actions** (no Vercel Pro required). See **`.github/workflows/cron-sessions.yml`**. Add repo secrets:
+
+- **`CRON_SECRET`** – same value as backend.
+- **`CRON_BACKEND_URL`** – backend base URL, no trailing slash (e.g. `https://your-backend.vercel.app`).
+
+GitHub free tier: 2,000 min/month (private) or unlimited (public). This workflow uses ~0.25 min/run × 48/day × 30 ≈ **360 min/month**, so it stays under the limit.
 
 **Alternative – external cron (e.g. cron-job.org):** Call the endpoint yourself and send the secret:
 
@@ -146,31 +142,12 @@ GET https://your-api.vercel.app/api/v1/cron/daily?secret=YOUR_CRON_SECRET
 
 ## Sessions cron: `/api/v1/cron/sessions` (optional)
 
-Closes user sessions inactive for 30+ minutes (e.g. user closed tab without logging out).
+Closes user sessions inactive for 30+ minutes (e.g. user closed tab without logging out). Improves session end times and analytics.
 
 **Endpoint:** `GET /api/v1/cron/sessions`  
-**Auth:** Same as daily – `CRON_SECRET` via `Authorization: Bearer`, `X-Cron-Secret`, or `?secret=`
+**Auth:** `CRON_SECRET` via `Authorization: Bearer` or `X-Cron-Secret` header.
 
-**When to use:** The daily cron already closes stale sessions once per day. Add this only if you want **more accurate session end times** (e.g. sessions closed within 30–60 min instead of once per day).
-
-**Schedule:** Every 30–60 minutes (e.g. half-hourly).
-
-**Example Vercel Cron** (add to `vercel.json` crons array):
-
-```json
-{
-  "path": "/api/cron-sessions",
-  "schedule": "*/30 * * * *"
-}
-```
-
-Create a serverless route `/api/cron-sessions` that calls `GET https://your-backend-url/api/v1/cron/sessions` with `X-Cron-Secret: process.env.CRON_SECRET`.
-
-**Example external cron:**
-
-```bash
-curl -H "X-Cron-Secret: $CRON_SECRET" "https://your-api.vercel.app/api/v1/cron/sessions"
-```
+**How it’s run:** GitHub Actions workflow **`.github/workflows/cron-sessions.yml`** runs every 30 min and calls this endpoint. Add repo secrets `CRON_SECRET` and `CRON_BACKEND_URL`. See that file and the “Sessions cron (GitHub Actions)” section above.
 
 ---
 

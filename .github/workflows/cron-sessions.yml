@@ -1,0 +1,44 @@
+# Call backend GET /api/v1/cron/sessions every 30 min for stale session cleanup.
+# Scheduled runs use the "production" environment (prod backend only).
+# Manual runs can target production, dev, or preview by choosing the environment.
+#
+# Setup (GitHub repo → Settings → Environments):
+#   - Create environment "production" → add secrets: CRON_SECRET, CRON_BACKEND_URL (prod backend URL).
+#   - Optionally create "dev" and "preview" → add same secret names with dev/preview backend URLs.
+# Scheduled runs always use "production". Manual run: Actions → "Cron – sessions cleanup" → Run workflow → pick environment.
+#
+# GitHub limits: Free tier 2,000 min/month (private) or unlimited (public). ~360 min/month for prod only.
+
+name: Cron – sessions cleanup
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (scheduled runs always use production)'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - dev
+          - preview
+
+jobs:
+  sessions:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Call sessions cron
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.CRON_BACKEND_URL }}/api/v1/cron/sessions")
+          if [ "$code" != "200" ]; then
+            echo "Sessions cron returned HTTP $code"
+            exit 1
+          fi
+          echo "Sessions cron OK (HTTP $code)"
+          echo "Environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}"
