@@ -9,18 +9,18 @@ This doc lists SQL commands, backend cron endpoints, and how to schedule them. R
 
 ## Overview: Backend cron endpoints
 
-The backend exposes **two cron endpoints**. Both require `CRON_SECRET` for auth.
+The backend exposes **three cron endpoints**. All require `CRON_SECRET` for auth.
 
 | Endpoint | What it does | Suggested schedule |
 |----------|--------------|--------------------|
-| `GET /api/v1/cron/daily` | DB health check + **refresh all materialized views** + stale session cleanup | Once per day (e.g. 05:00 UTC) |
+| `GET /api/v1/cron/daily` | DB health check + refresh **daily_metrics** + **engagement_metrics** + stale session cleanup | Once per day (e.g. 05:00 UTC) |
+| `GET /api/v1/cron/trending` | Refresh **trending_tickers** only | Every hour (e.g. `0 * * * *`) |
 | `GET /api/v1/cron/sessions` | Stale session cleanup only | Every 30–60 min |
 
-**There is no separate route for view refresh** – it is built into `/cron/daily`. The views (`daily_metrics`, `engagement_metrics`, `trending_tickers`) are refreshed when you call the daily endpoint.
-
 **Flow:**
-- Call `/cron/daily` once per day → views get refreshed, stale sessions get closed.
-- If you want more accurate session end times, also call `/cron/sessions` every 30–60 min. This is optional; the daily cron already closes stale sessions once per day.
+- Call `/cron/daily` once per day → DB touch, daily_metrics, engagement_metrics, stale sessions.
+- Call `/cron/trending` every hour → trending_tickers stays fresh.
+- Call `/cron/sessions` every 30 min (optional) for more accurate session end times; daily already closes stale sessions once.
 
 ---
 
@@ -109,26 +109,18 @@ Does everything in one call:
 
 ---
 
-### Vercel Cron setup (for daily)
+### Vercel Cron setup (Option A – frontend proxy, implemented)
 
-1. Add **`CRON_SECRET`** to your Vercel project env (e.g. `openssl rand -hex 32`).
-2. Add a **serverless route** that runs on schedule and calls your backend with the secret (Vercel Cron does not add custom headers to the request it sends). For example, a route that runs on the cron schedule and does:
-   - `fetch(yourBackendUrl + '/api/v1/cron/daily', { headers: { 'X-Cron-Secret': process.env.CRON_SECRET } })`
-3. In **`vercel.json`** (in the repo that deploys the backend), add:
+Cron is configured in the **frontend** project so Vercel Cron hits Next.js API routes that proxy to the backend with `CRON_SECRET`.
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron-daily",
-      "schedule": "0 5 * * *"
-    }
-  ]
-}
-```
+1. **Frontend env (Vercel):** Add **`CRON_SECRET`** (same value as backend) and ensure **`NEXT_PUBLIC_API_URL`** points to the backend. Both are required for the proxy routes.
+2. **Frontend** has three proxy routes:
+   - **`/api/cron-daily`** – proxies to `GET /api/v1/cron/daily` (schedule: daily 05:00 UTC).
+   - **`/api/cron-trending`** – proxies to `GET /api/v1/cron/trending` (schedule: every hour, `0 * * * *`).
+   - **`/api/cron-sessions`** – proxies to `GET /api/v1/cron/sessions` (schedule: every 30 min).
+3. **`frontend/vercel.json`** defines the crons; only requests with the `x-vercel-cron` header are accepted by the proxy (so direct GETs return 403).
 
-- **`schedule`:** `0 5 * * *` = 05:00 UTC daily.
-- **`path`:** Must be the serverless route that **you** implement (e.g. `/api/cron-daily`) and that calls `GET /api/v1/cron/daily` with the `X-Cron-Secret` header from env. If your backend is a single serverless function that already serves `/api/v1/cron/daily`, use that path and ensure the handler sends the secret (e.g. from env) when Vercel invokes it (e.g. by checking a Vercel cron header and then adding the secret to an internal call, or by reading the secret from env and forwarding).
+No `vercel.json` crons are needed in the backend project; the backend only needs **`CRON_SECRET`** in its env for validating the proxy’s `X-Cron-Secret` header.
 
 **Alternative – external cron (e.g. cron-job.org):** Call the endpoint yourself and send the secret:
 

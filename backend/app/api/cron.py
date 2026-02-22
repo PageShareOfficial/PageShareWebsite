@@ -39,15 +39,14 @@ async def cron_daily(
     x_cron_secret: str | None = Header(default=None, alias="X-Cron-Secret"),
 ):
     """
-    Daily cron: touch DB (keeps Supabase prod active) and refresh materialized views.
-    Call once per day (e.g. 05:00 UTC). Requires CRON_SECRET via headers only:
-    - Authorization: Bearer <CRON_SECRET>
-    - X-Cron-Secret: <CRON_SECRET>
+    Daily cron: DB health check, refresh daily_metrics + engagement_metrics, stale session cleanup.
+    trending_tickers is refreshed hourly via /cron/trending. Call once per day (e.g. 05:00 UTC).
+    Requires CRON_SECRET via Authorization or X-Cron-Secret header.
     """
     if not _verify_cron_request(authorization, x_cron_secret):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing cron secret")
 
-    results = {"db_health": False, "stale_sessions": None, "daily_metrics": None, "engagement_metrics": None, "trending_tickers": None}
+    results = {"db_health": False, "stale_sessions": None, "daily_metrics": None, "engagement_metrics": None}
 
     results["db_health"] = db_health_check()
 
@@ -70,16 +69,31 @@ async def cron_daily(
                 results["engagement_metrics"] = "ok"
             except Exception as e:
                 results["engagement_metrics"] = str(e)
-            try:
-                db.execute(text("REFRESH MATERIALIZED VIEW trending_tickers"))
-                db.commit()
-                results["trending_tickers"] = "ok"
-            except Exception as e:
-                results["trending_tickers"] = str(e)
     except Exception as e:
         results["error"] = str(e)
 
     return {"ok": results["db_health"], "results": results}
+
+
+@router.get("/trending")
+async def cron_trending(
+    authorization: str | None = Header(default=None),
+    x_cron_secret: str | None = Header(default=None, alias="X-Cron-Secret"),
+):
+    """
+    Hourly cron: refresh trending_tickers only (mention counts, 24h + total).
+    Call every hour (e.g. 0 * * * *). Requires CRON_SECRET via headers.
+    """
+    if not _verify_cron_request(authorization, x_cron_secret):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing cron secret")
+
+    try:
+        with db_session() as db:
+            db.execute(text("REFRESH MATERIALIZED VIEW trending_tickers"))
+            db.commit()
+        return {"ok": True, "trending_tickers": "ok"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 @router.get("/sessions")
 async def cron_stale_sessions(
