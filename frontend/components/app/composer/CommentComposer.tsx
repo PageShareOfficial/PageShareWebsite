@@ -82,7 +82,6 @@ export default function CommentComposer({
     showEmojiPicker,
     emojiPickerRef,
     setShowEmojiPicker,
-    handleEmojiClick,
   } = useEmojiPicker();
 
   const { gifSearchQuery, debouncedGifSearch, setGifSearchQuery } = useGiphySearch();
@@ -98,14 +97,26 @@ export default function CommentComposer({
     setShowGifPicker(false);
   };
 
-  // Handle emoji click with proper format
+  // Handle emoji click: update React state at cursor (same pattern as TweetComposer).
+  // We don't use handleEmojiClick from the hook because it mutates DOM and doesn't work with controlled inputs.
   const handleEmojiClickWrapper = (emojiData: any) => {
-    if (textareaRef.current) {
-      handleEmojiClick(emojiData.emoji, textareaRef);
-    } else {
-      setCommentText((prev) => prev + emojiData.emoji);
+    const emoji = emojiData.emoji ?? '';
+    if (!emoji) {
+      setShowEmojiPicker(false);
+      return;
     }
+    const textarea = textareaRef.current;
+    const start = textarea ? textarea.selectionStart : commentText.length;
+    const end = textarea ? textarea.selectionEnd : commentText.length;
+    setCommentText((prev) => prev.substring(0, start) + emoji + prev.substring(end));
     setShowEmojiPicker(false);
+    if (textarea) {
+      const newPos = start + emoji.length;
+      requestAnimationFrame(() => {
+        textareaRef.current?.setSelectionRange(newPos, newPos);
+        textareaRef.current?.focus();
+      });
+    }
   };
 
   const handleCommentSubmit = async (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
@@ -145,6 +156,7 @@ export default function CommentComposer({
             <textarea
               ref={(textarea) => {
                 if (textarea) {
+                  (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = textarea;
                   // Auto-resize on mount and when value changes
                   textarea.style.height = 'auto';
                   const scrollHeight = textarea.scrollHeight;
