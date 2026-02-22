@@ -136,7 +136,6 @@ export default function TweetComposer({
     showEmojiPicker,
     emojiPickerRef,
     setShowEmojiPicker,
-    handleEmojiClick,
   } = useEmojiPicker();
 
   const { gifSearchQuery, debouncedGifSearch, setGifSearchQuery } = useGiphySearch();
@@ -152,14 +151,26 @@ export default function TweetComposer({
     setShowGifPicker(false);
   };
 
-  // Handle emoji click with proper format
+  // Handle emoji click: insert at cursor and update controlled state (textarea is value={tweetText})
   const handleEmojiClickWrapper = (emojiData: any) => {
-    if (textareaRef.current) {
-      handleEmojiClick(emojiData.emoji, textareaRef);
-    } else {
-      setTweetText((prev: string) => prev + emojiData.emoji);
+    const emoji = emojiData.emoji ?? '';
+    if (!emoji) {
+      setShowEmojiPicker(false);
+      return;
     }
+    const textarea = textareaRef.current;
+    const start = textarea ? textarea.selectionStart : tweetText.length;
+    const end = textarea ? textarea.selectionEnd : tweetText.length;
+    setTweetText((prev: string) => prev.substring(0, start) + emoji + prev.substring(end));
     setShowEmojiPicker(false);
+    // Restore cursor after the inserted emoji once React has re-rendered
+    if (textarea) {
+      const newPos = start + emoji.length;
+      requestAnimationFrame(() => {
+        textareaRef.current?.setSelectionRange(newPos, newPos);
+        textareaRef.current?.focus();
+      });
+    }
   };
 
   // Sync overlay padding with textarea
