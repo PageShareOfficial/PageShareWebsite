@@ -53,23 +53,23 @@ function HomeContent() {
               {/* Premium Headline with Creative Typography */}
               <div className="space-y-4 sm:space-y-6">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] tracking-tight">
-                  <span className="block">Share market thoughts &</span>
+                  <span className="block">Share Crypto Insights &</span>
                   <span className="block bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
-                    Discover more
+                    Discover Alpha
                   </span>
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 leading-relaxed">
-                  A social feed for stocks, ETFs, and crypto. Discover discussions through tickers and news. Explore AI experiments in Labs.
+                A social platform built exclusively for crypto traders and investors. Track tokens, follow narratives, uncover early signals, and explore AI-powered crypto tools.
                 </p>
               </div>
 
               {/* Professional Feature Pills - Twitter Style */}
               <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
                 <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  Opinions from experts
+                  Crypto Alpha
                 </button>
                 <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  Stocks • ETFs • Crypto
+                  DeFi • NFTs • Web3
                 </button>
                 <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
                   Labs: AI Experiments
