@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
+import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import RightSidebar from '@/components/app/layout/RightSidebar';
 import UserListItem from '@/components/app/profile/UserListItem';
 import Loading from '@/components/app/common/Loading';
@@ -208,21 +208,13 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
           <div className="flex-1 flex pb-16 md:pb-0">
             <div className="w-full border-l border-r border-white/10">
               <div className="hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10">
-                <div className="px-4 py-4">
-                  <div className="flex items-center gap-4 mb-4">
-                    <button
-                      onClick={() => navigateToProfile(username, router)}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                      aria-label="Go back"
-                    >
-                      <ArrowLeft className="w-5 h-5 text-white" />
-                    </button>
-                    <div>
-                      <h1 className="text-xl font-bold text-white">{displayName}</h1>
-                      <p className="text-gray-400 text-sm">@{handle}</p>
-                    </div>
-                  </div>
-
+                <DesktopHeader
+                  title={displayName}
+                  subtitle={`@${handle}`}
+                  onBack={() => navigateToProfile(username, router)}
+                  withSideBorders={false}
+                />
+                <div className="px-4">
                   <div className="flex border-b border-white/10">
                     <button
                       onClick={() => handleTabChange('followers')}
