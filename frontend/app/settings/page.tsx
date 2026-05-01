@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import DeleteAccountModal from '@/components/app/modals/DeleteAccountModal';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
@@ -11,7 +11,6 @@ import { getCurrentUser } from '@/utils/user/profileUtils';
 import { Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/content/reportUtils';
 import { listMyReports, type ReportHistoryItemResponse } from '@/lib/api/reportApi';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
@@ -30,7 +29,6 @@ function SettingsContent() {
     unmute,
     unblock,
   } = useContentFiltersContext();
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const [isClient, setIsClient] = useState(false);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -510,15 +508,7 @@ function SettingsContent() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
       {/* Delete Account Modal */}

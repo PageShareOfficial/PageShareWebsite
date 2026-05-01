@@ -227,10 +227,6 @@ export default function PostDetailPage() {
       reportUserDisplayName={reportUserDisplayName}
       handleReportClick={handleReportClick}
       handleReportSubmitted={handleReportSubmitted}
-      watchlist={watchlist}
-      openManageModal={openManageModal}
-      setWatchlist={setWatchlist}
-      watchlistLoading={watchlistLoading}
       selectedImageIndex={selectedImageIndex}
       setSelectedImageIndex={setSelectedImageIndex}
       selectedImageUrls={selectedImageUrls}

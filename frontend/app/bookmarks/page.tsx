@@ -1,21 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import Feed from '@/components/app/feed/Feed';
 import Loading from '@/components/app/common/Loading';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useBookmarks } from '@/contexts/BookmarkContext';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 
 export default function BookmarksPage() {
   const { currentUser, isClient } = useCurrentUser();
   const { bookmarkedPosts, loading: bookmarksLoading, error: bookmarksError, refetch } = useBookmarks();
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const { filterPosts } = useContentFilters({ currentUserHandle: currentUser.handle, isClient });
 
   const { handleLike, handleRepost, handleComment, handleVote, handleDelete, hasUserReposted } =
@@ -111,15 +108,7 @@ export default function BookmarksPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => window.location.assign('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
     </div>

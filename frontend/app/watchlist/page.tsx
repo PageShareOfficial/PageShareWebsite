@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import { Plus } from 'lucide-react';
 import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
@@ -74,15 +74,7 @@ export default function WatchlistPage() {
               </div>
             </div>
           </div>
-          <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-            <RightRail
-              watchlist={[]}
-              onManageWatchlist={openManageModal}
-              onUpgradeLabs={() => router.push('/plans')}
-              onUpdateWatchlist={() => {}}
-              isLoading={true}
-            />
-          </div>
+          <RightSidebar />
         </div>
       </div>
     );
@@ -210,16 +202,7 @@ export default function WatchlistPage() {
           </div>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
     </div>

@@ -8,7 +8,7 @@ import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import ProfileHeader, { ProfileHeaderSkeleton } from '@/components/app/profile/ProfileHeader';
 import Loading from '@/components/app/common/Loading';
 import ProfileTabs from '@/components/app/profile/ProfileTabs';
@@ -24,7 +24,6 @@ const ReportModal = dynamic(() => import('@/components/app/modals/ReportModal'),
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { isReservedRoute } from '@/utils/core/routeUtils';
 import { getBaseUrl } from '@/lib/api/client';
 import {
@@ -204,7 +203,6 @@ export default function ProfilePage() {
   const { posts, setPosts, loading: postsLoading } = usePostsData({
     userId: backendProfile ? backendProfile.id : null,
   });
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const [userReplies, setUserReplies] = useState<UserReplyItem[]>([]);
   const [repliesLoading, setRepliesLoading] = useState(false);
   const [userLikes, setUserLikes] = useState<Post[]>([]);
@@ -632,15 +630,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
       {/* Modals */}

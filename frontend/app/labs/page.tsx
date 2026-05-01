@@ -4,12 +4,10 @@ import { useRouter } from 'next/navigation';
 import { GiBinoculars } from 'react-icons/gi';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 
 export default function LabsPage() {
   const router = useRouter();
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
 
   return (
     <div className="min-h-screen bg-black">
@@ -51,15 +49,7 @@ export default function LabsPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
     </div>

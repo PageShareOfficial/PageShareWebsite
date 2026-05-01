@@ -3,12 +3,10 @@
 import { MdOutlineWorkspacePremium } from 'react-icons/md';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import { useRouter } from 'next/navigation';
 
 export default function PlansPage() {
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const router = useRouter();
 
   return (
@@ -51,15 +49,7 @@ export default function PlansPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
     </div>

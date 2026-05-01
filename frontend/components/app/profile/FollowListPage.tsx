@@ -6,12 +6,11 @@ import { ArrowLeft } from 'lucide-react';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import UserListItem from '@/components/app/profile/UserListItem';
 import Loading from '@/components/app/common/Loading';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
 import { User } from '@/types';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -56,7 +55,6 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
   const apiUrl = getBaseUrl();
   const { currentUser } = useCurrentUser();
   const { session } = useAuth();
-  const { watchlist, setWatchlist, openManageModal } = useWatchlist();
   const token = session?.access_token ?? null;
 
   const tabSwitchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -188,14 +186,7 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
               <Loading />
             </div>
           </div>
-          <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-            <RightRail
-              watchlist={watchlist}
-              onManageWatchlist={openManageModal}
-              onUpgradeLabs={() => router.push('/plans')}
-              onUpdateWatchlist={setWatchlist}
-            />
-          </div>
+          <RightSidebar />
         </div>
       </div>
     );
@@ -324,14 +315,7 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
           </div>
         </div>
 
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-          />
-        </div>
+        <RightSidebar />
       </div>
     </div>
   );

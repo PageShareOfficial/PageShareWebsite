@@ -2,11 +2,10 @@
 
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import DiscoverSearchBar from '@/components/app/discover/DiscoverSearchBar';
 import NewsSection from '@/components/app/discover/NewsSection';
 import { useRouter } from 'next/navigation';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 
 /**
  * Discover page - Main page for searching accounts, stocks, and crypto
@@ -18,7 +17,6 @@ import { useWatchlist } from '@/hooks/features/useWatchlist';
  */
 export default function DiscoverPage() {
   const router = useRouter();
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
 
   return (
     <div className="min-h-screen bg-black">
@@ -51,15 +49,7 @@ export default function DiscoverPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
     </div>

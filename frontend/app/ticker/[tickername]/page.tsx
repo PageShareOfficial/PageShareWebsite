@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import TickerHeader from '@/components/app/ticker/TickerHeader';
@@ -82,13 +82,7 @@ export default function TickerDetailPage() {
               </div>
             </div>
           </div>
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
+          <RightSidebar />
         </div>
       </div>
     );
@@ -116,13 +110,7 @@ export default function TickerDetailPage() {
               </div>
             </div>
           </div>
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
+          <RightSidebar />
         </div>
       </div>
     );
@@ -191,16 +179,8 @@ export default function TickerDetailPage() {
           </div>
         </div>
 
-        {/* Right Rail - Desktop Only */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        {/* Right Sidebar - Desktop Only */}
+        <RightSidebar />
       </div>
 
     </div>

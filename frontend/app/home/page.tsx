@@ -7,14 +7,13 @@ import Sidebar from '@/components/app/layout/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import Topbar from '@/components/app/layout/Topbar';
 import Feed from '@/components/app/feed/Feed';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
 const TweetComposer = dynamic(() => import('@/components/app/composer/TweetComposer'), { ssr: false });
 const ReportModal = dynamic(() => import('@/components/app/modals/ReportModal'), { ssr: false });
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { useReportedContent } from '@/hooks/features/useReportedContent';
 import Loading from '@/components/app/common/Loading';
@@ -31,7 +30,6 @@ export default function HomePage() {
   // All hooks must run unconditionally (before any early return) to satisfy Rules of Hooks
   const { currentUser, isClient } = useCurrentUser();
   const { posts, setPosts, loading: postsLoading, error: postsError, refetch: refetchPosts } = usePostsData();
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const { filterPosts } = useContentFilters({
     currentUserHandle: currentUser.handle,
     isClient,
@@ -123,16 +121,8 @@ export default function HomePage() {
           </div>
             </div>
 
-            {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-              <RightRail
-                watchlist={watchlist}
-                onManageWatchlist={openManageModal}
-                onUpgradeLabs={() => router.push('/plans')}
-                onUpdateWatchlist={setWatchlist}
-                isLoading={watchlistLoading}
-              />
-        </div>
+        {/* Right Sidebar */}
+        <RightSidebar />
       </div>
 
       {/* Modals */}

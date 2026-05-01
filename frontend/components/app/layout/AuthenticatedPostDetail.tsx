@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart } from 'lucide-react';
 import Sidebar from '@/components/app/layout/Sidebar';
-import RightRail from '@/components/app/layout/RightRail';
+import RightSidebar from '@/components/app/layout/RightSidebar';
 
 const ReportModal = dynamic(
   () => import('@/components/app/modals/ReportModal'),
@@ -23,7 +23,7 @@ import LoadingState from '@/components/app/common/LoadingState';
 import ErrorState from '@/components/app/common/ErrorState';
 import { formatDateTime } from '@/utils/core/dateUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import type { Comment, Post, User, WatchlistItem } from '@/types';
+import type { Comment, Post, User} from '@/types';
 
 export type AuthenticatedPostDetailProps = {
   post: Post;
@@ -72,10 +72,6 @@ export type AuthenticatedPostDetailProps = {
     commentPostId?: string
   ) => void;
   handleReportSubmitted: () => void;
-  watchlist: WatchlistItem[];
-  openManageModal: () => void;
-  setWatchlist: React.Dispatch<React.SetStateAction<WatchlistItem[]>>;
-  watchlistLoading: boolean;
   selectedImageIndex: number | null;
   setSelectedImageIndex: React.Dispatch<React.SetStateAction<number | null>>;
   selectedImageUrls: string[];
@@ -123,10 +119,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
     reportUserDisplayName,
     handleReportClick,
     handleReportSubmitted,
-    watchlist,
-    openManageModal,
-    setWatchlist,
-    watchlistLoading,
     selectedImageIndex,
     setSelectedImageIndex,
     selectedImageUrls,
@@ -366,15 +358,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
           </div>
         </div>
 
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
+        <RightSidebar />
       </div>
 
       {isQuoteRepostOpen && quoteRepostPostId && (
