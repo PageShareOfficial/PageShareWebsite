@@ -35,6 +35,7 @@ export default function ManageWatchlistModal({
 }: ManageWatchlistModalProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasKeyboardSelection, setHasKeyboardSelection] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const isOnline = useOnlineStatus();
@@ -72,6 +73,7 @@ export default function ManageWatchlistModal({
     tickerSearch.setQuery(suggestion.ticker);
     tickerSearch.setShowSuggestions(false);
     tickerSearch.clearSuggestions();
+    setHasKeyboardSelection(false);
     await handleAddTicker(suggestion.ticker);
   };
 
@@ -141,13 +143,25 @@ export default function ManageWatchlistModal({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (tickerSearch.selectedIndex >= 0 && tickerSearch.suggestions[tickerSearch.selectedIndex]) {
-        // Suggestion selected, add it to watchlist
-        handleSelectSuggestion(tickerSearch.suggestions[tickerSearch.selectedIndex]);
+      const selectedSuggestion =
+        tickerSearch.selectedIndex >= 0 ? tickerSearch.suggestions[tickerSearch.selectedIndex] : undefined;
+
+      // Only use highlighted suggestion if user intentionally navigated with keyboard.
+      // Otherwise Enter should add exactly what user typed.
+      if (
+        hasKeyboardSelection &&
+        tickerSearch.showSuggestions &&
+        !tickerSearch.isSearching &&
+        selectedSuggestion
+      ) {
+        handleSelectSuggestion(selectedSuggestion);
       } else {
-        // No suggestion selected, add ticker directly
-        handleAddTicker();
+        handleAddTicker(tickerSearch.query);
       }
+      setHasKeyboardSelection(false);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      setHasKeyboardSelection(true);
+      tickerSearch.handleKeyDown(e);
     } else {
       // Delegate other keys to hook's handler (ArrowUp/Down, Escape)
       tickerSearch.handleKeyDown(e);
@@ -181,6 +195,8 @@ export default function ManageWatchlistModal({
                 value={tickerSearch.query}
                 onChange={(e) => {
                   tickerSearch.setQuery(e.target.value);
+                  tickerSearch.setSelectedIndex(-1);
+                  setHasKeyboardSelection(false);
                   setError('');
                 }}
                 onKeyDown={handleKeyPress}
