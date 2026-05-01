@@ -539,7 +539,7 @@ export default function ProfilePage() {
           <div className="hidden md:block">
             <Topbar onUpgradeLabs={() => router.push('/plans')} />
           </div>
-          <DesktopHeader title={titleDisplay} subtitle={subtitleDisplay} withSideBorders={false} />
+          <DesktopHeader title={titleDisplay} subtitle={subtitleDisplay} withSideBorders={true} />
 
           <div className="flex-1 flex pb-16 md:pb-0">
             <div className="w-full border-l border-r border-white/10">

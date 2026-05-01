@@ -46,26 +46,19 @@ export default function WatchlistPage() {
                   {Array.from({ length: 5 }).map((_, index) => (
                     <div
                       key={`skeleton-${index}`}
-                      className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-xl"
+                      className="p-4 bg-white/5 border border-white/10 rounded-xl"
                     >
-                      {/* Image Skeleton */}
-                      <Skeleton variant="rectangular" width={48} height={48} rounded="rounded-lg" />
-                      
-                      <div className="flex-1 min-w-0">
-                        {/* Ticker skeleton */}
-                        <Skeleton variant="text" width={80} height={20} className="mb-2" />
-                        {/* Name skeleton */}
-                        <Skeleton variant="text" width="75%" height={14} className="mb-3" />
-                        {/* Price and Change skeletons */}
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <Skeleton variant="text" width={40} height={12} className="mb-1" />
-                            <Skeleton variant="text" width={60} height={16} />
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Skeleton variant="rectangular" width={48} height={48} rounded="rounded-lg" />
+                          <div className="min-w-0">
+                            <Skeleton variant="text" width={72} height={20} className="mb-2" />
+                            <Skeleton variant="text" width={140} height={14} />
                           </div>
-                          <div>
-                            <Skeleton variant="text" width={50} height={12} className="mb-1" />
-                            <Skeleton variant="text" width={50} height={16} />
-                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <Skeleton variant="text" width={88} height={22} className="mb-2" />
+                          <Skeleton variant="text" width={92} height={14} />
                         </div>
                       </div>
                     </div>
@@ -160,33 +153,33 @@ export default function WatchlistPage() {
                     <div
                       key={item.ticker}
                       onClick={() => navigateToTicker(item.ticker, router)}
-                      className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                      className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
                     >
-                      {/* Ticker Image */}
-                      <TickerImage
-                        src={item.image}
-                        ticker={item.ticker}
-                        size="md"
-                      />
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-white text-lg mb-1">
-                          {item.ticker}
-                        </div>
-                        <div className="text-sm text-gray-400 truncate mb-2">
-                          {item.name}
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <span className="text-xs text-gray-500">Price</span>
-                            <div className="text-white font-medium">
-                              ${item.price.toFixed(2)}
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <TickerImage
+                            src={item.image}
+                            ticker={item.ticker}
+                            size="md"
+                          />
+                          <div className="min-w-0">
+                            <div className="font-semibold text-white text-lg leading-tight">
+                              {item.ticker}
+                            </div>
+                            <div className="text-sm text-gray-400 truncate mt-1">
+                              {item.name}
                             </div>
                           </div>
-                          <div>
-                            <span className="text-xs text-gray-500">Change</span>
-                            <PriceChangeDisplay 
-                              change={(item.price * item.change) / 100} 
+                        </div>
+
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-xs text-gray-500 mb-1">Price</div>
+                          <div className="text-white font-semibold text-lg leading-tight">
+                            ${item.price.toFixed(2)}
+                          </div>
+                          <div className="mt-1">
+                            <PriceChangeDisplay
+                              change={(item.price * item.change) / 100}
                               changePercent={item.change}
                               size="sm"
                               showIcon={false}

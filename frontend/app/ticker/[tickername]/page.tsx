@@ -133,7 +133,7 @@ export default function TickerDetailPage() {
           </div>
 
           {/* Desktop Header with Back Button - Desktop/iPad Only */}
-          <DesktopHeader title={tickerName} subtitle={`${tickerSymbol}`} withSideBorders={false} />
+          <DesktopHeader title={tickerName} subtitle={`${tickerSymbol}`} withSideBorders={true} />
 
           {/* Content */}
           <div className="flex-1 flex pb-16 md:pb-0">
