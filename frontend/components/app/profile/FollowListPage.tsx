@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 import UserListItem from '@/components/app/profile/UserListItem';
 import Loading from '@/components/app/common/Loading';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
@@ -177,27 +175,18 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
 
   if (!pageReady) {
     return (
-      <div className="min-h-screen bg-black">
-        <div className="flex justify-center">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
-            <div className="w-full border-l border-r border-white/10 flex-1 flex pb-16 md:pb-0 items-center justify-center min-h-[400px]">
-              <Loading />
-            </div>
-          </div>
-          <RightSidebar />
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="w-full border-l border-r border-white/10 flex-1 flex pb-16 md:pb-0 items-center justify-center min-h-[400px]">
+          <Loading />
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          <MobileHeader
+    <>
+      <MobileHeader
             title={activeTab === 'followers' ? 'Followers' : 'Following'}
             onBack={() => navigateToProfile(username, router)}
           />
@@ -305,10 +294,6 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
               </div>
             </div>
           </div>
-        </div>
-
-        <RightSidebar />
-      </div>
-    </div>
+    </>
   );
 }

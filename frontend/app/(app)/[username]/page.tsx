@@ -4,11 +4,9 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { notFound } from 'next/navigation';
-import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 import ProfileHeader, { ProfileHeaderSkeleton } from '@/components/app/profile/ProfileHeader';
 import Loading from '@/components/app/common/Loading';
 import ProfileTabs from '@/components/app/profile/ProfileTabs';
@@ -505,20 +503,15 @@ export default function ProfilePage() {
   // Only show full-page "User not found" when backend returned 404
   if (profileNotFound) {
     return (
-      <div className="min-h-screen bg-black">
-        <div className="flex justify-center">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
-            <div className="flex-1 flex pb-16 md:pb-0">
-              <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center">
-                <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
-                <p className="text-gray-400">The user @{username} doesn&apos;t exist.</p>
-              </div>
-            </div>
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex-1 flex pb-16 md:pb-0">
+          <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center">
+            <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
+            <p className="text-gray-400">The user @{username} doesn&apos;t exist.</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -528,14 +521,8 @@ export default function ProfilePage() {
   const subtitleDisplay = profileLoading ? '' : (headerProfile ? `@${headerProfile.handle}` : '');
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          <MobileHeader title={titleDisplay} />
+    <>
+      <MobileHeader title={titleDisplay} />
           <div className="hidden md:block">
             <Topbar onUpgradeLabs={() => router.push('/plans')} />
           </div>
@@ -627,11 +614,6 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right Sidebar */}
-        <RightSidebar />
-      </div>
 
       {/* Modals */}
       {headerProfile && isOwnProfile && (
@@ -670,6 +652,6 @@ export default function ProfilePage() {
         currentUserHandle={currentUser.handle}
         onReport={handleReportSubmitted}
       />
-    </div>
+    </>
   );
 }

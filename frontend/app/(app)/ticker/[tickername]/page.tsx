@@ -3,9 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import TickerHeader from '@/components/app/ticker/TickerHeader';
@@ -31,7 +29,7 @@ export default function TickerDetailPage() {
   const tickername = params.tickername as string;
   
   const [chartTimeRange, setChartTimeRange] = useState<'1d' | '5d' | '30d' | '90d' | '180d' | '1y' | 'all'>('30d');
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
+  const { watchlist, setWatchlist } = useWatchlist();
   
   const { data, type, isLoading, error, refetch } = useTickerDetail({
     ticker: tickername,
@@ -71,73 +69,55 @@ export default function TickerDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black">
-        <div className="flex justify-center">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
-            <div className="flex-1 flex pb-16 md:pb-0">
-              <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
-                <TickerSkeleton />
-              </div>
-            </div>
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex-1 flex pb-16 md:pb-0">
+          <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+            <TickerSkeleton />
           </div>
-          <RightSidebar />
         </div>
-      </div>
+      </>
     );
   }
 
   // Error state
   if (error || !data || !type) {
     return (
-      <div className="min-h-screen bg-black">
-        <div className="flex justify-center">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
-            <div className="flex-1 flex pb-16 md:pb-0">
-              <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
-                <ErrorState
-                  title={error === 'Ticker not found' ? 'Ticker Not Found' : 'Something went wrong'}
-                  message={
-                    error === 'Ticker not found'
-                      ? `The ticker "${tickername.toUpperCase()}" could not be found.`
-                      : error || 'Failed to load ticker data. Please try again.'
-                  }
-                  onRetry={() => refetch()}
-                />
-              </div>
-            </div>
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex-1 flex pb-16 md:pb-0">
+          <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+            <ErrorState
+              title={error === 'Ticker not found' ? 'Ticker Not Found' : 'Something went wrong'}
+              message={
+                error === 'Ticker not found'
+                  ? `The ticker "${tickername.toUpperCase()}" could not be found.`
+                  : error || 'Failed to load ticker data. Please try again.'
+              }
+              onRetry={() => refetch()}
+            />
           </div>
-          <RightSidebar />
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
+    <>
+      {/* Mobile Header - Mobile Only */}
+      <MobileHeader title={tickerName} />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Mobile Header - Mobile Only */}
-          <MobileHeader title={tickerName} />
+      {/* Top Bar - Desktop Only */}
+      <div className="hidden md:block">
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      </div>
 
-          {/* Top Bar - Desktop Only */}
-          <div className="hidden md:block">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
-          </div>
+      {/* Desktop Header with Back Button - Desktop/iPad Only */}
+      <DesktopHeader title={tickerName} subtitle={`${tickerSymbol}`} withSideBorders={true} />
 
-          {/* Desktop Header with Back Button - Desktop/iPad Only */}
-          <DesktopHeader title={tickerName} subtitle={`${tickerSymbol}`} withSideBorders={true} />
-
-          {/* Content */}
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+      {/* Content */}
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               {/* Ticker Header */}
               <TickerHeader data={data} type={type} />
 
@@ -173,16 +153,10 @@ export default function TickerDetailPage() {
               {/* Price Stats */}
               <TickerPriceStats data={data} type={type} />
 
-              {/* Metrics Grid */}
-              <TickerMetricsGrid data={data} type={type} />
-            </div>
-          </div>
+          {/* Metrics Grid */}
+          <TickerMetricsGrid data={data} type={type} />
         </div>
-
-        {/* Right Sidebar - Desktop Only */}
-        <RightSidebar />
       </div>
-
-    </div>
+    </>
   );
 }

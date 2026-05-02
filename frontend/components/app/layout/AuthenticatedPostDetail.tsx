@@ -3,9 +3,6 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart } from 'lucide-react';
-import Sidebar from '@/components/app/layout/Sidebar';
-import RightSidebar from '@/components/app/layout/RightSidebar';
-
 const ReportModal = dynamic(
   () => import('@/components/app/modals/ReportModal'),
   { ssr: false }
@@ -79,8 +76,8 @@ export type AuthenticatedPostDetailProps = {
 };
 
 /**
- * Authenticated post detail: main content column, comments, right rail, modals.
- * Keeps PostDetailPage focused on routing and auth state (single responsibility).
+ * Authenticated post detail: main column (post, comments) and modals.
+ * The `(app)` layout provides sidebars; this component is the center column only.
  */
 export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailProps) {
   const router = useRouter();
@@ -130,13 +127,9 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
   ].join(' ');
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        <Sidebar />
-
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10">
+    <>
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10">
               <div className={stickyHeaderClasses}>
                 <div className="flex items-center px-4 h-14">
                   <button
@@ -354,11 +347,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                   ));
                 })()}
               </div>
-            </div>
-          </div>
         </div>
-
-        <RightSidebar />
       </div>
 
       {isQuoteRepostOpen && quoteRepostPostId && (
@@ -416,6 +405,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
         currentUserHandle={currentUser.handle}
         onReport={handleReportSubmitted}
       />
-    </div>
+    </>
   );
 }

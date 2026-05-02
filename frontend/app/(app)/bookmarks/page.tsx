@@ -1,8 +1,7 @@
 'use client';
 
-import Sidebar from '@/components/app/layout/Sidebar';
+import { useRouter } from 'next/navigation';
 import Topbar from '@/components/app/layout/Topbar';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 import Feed from '@/components/app/feed/Feed';
 import Loading from '@/components/app/common/Loading';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
@@ -11,6 +10,7 @@ import { useBookmarks } from '@/contexts/BookmarkContext';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 
 export default function BookmarksPage() {
+  const router = useRouter();
   const { currentUser, isClient } = useCurrentUser();
   const { bookmarkedPosts, loading: bookmarksLoading, error: bookmarksError, refetch } = useBookmarks();
   const { filterPosts } = useContentFilters({ currentUserHandle: currentUser.handle, isClient });
@@ -22,39 +22,37 @@ export default function BookmarksPage() {
 
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loading />
-      </div>
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex flex-1 items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      </>
     );
   }
 
   if (bookmarksLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loading />
-      </div>
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex flex-1 items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
+    <>
+      <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => window.location.assign('/plans')} />
+      {/* Desktop Header - Desktop Only */}
+      <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
+        <h1 className="text-xl font-bold text-white">Bookmarks</h1>
+      </div>
 
-          {/* Desktop Header - Desktop Only */}
-          <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
-            <h1 className="text-xl font-bold text-white">Bookmarks</h1>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               {bookmarksError ? (
                 <div className="text-center py-16">
                   <p className="text-red-400 mb-4">{bookmarksError}</p>
@@ -103,15 +101,9 @@ export default function BookmarksPage() {
                   allPosts={filteredPosts}
                 />
               )}
-            </div>
-          </div>
         </div>
-
-        {/* Right Sidebar */}
-        <RightSidebar />
       </div>
-
-    </div>
+    </>
   );
 }
 

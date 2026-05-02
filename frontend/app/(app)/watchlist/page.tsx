@@ -1,9 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 import { Plus } from 'lucide-react';
 import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
@@ -14,17 +12,13 @@ import { useWatchlist } from '@/hooks/features/useWatchlist';
 export default function WatchlistPage() {
   const router = useRouter();
   const { watchlist, loading: watchlistLoading, setWatchlist, openManageModal } = useWatchlist();
-  const isClient = true;
 
   if (watchlistLoading) {
     return (
-      <div className="min-h-screen bg-black">
-        <div className="flex justify-center">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
-            <div className="flex-1 flex pb-16 md:pb-0">
-              <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex-1 flex pb-16 md:pb-0">
+          <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
                 {/* Header skeleton */}
                 <div className="hidden md:flex items-center justify-between mb-6">
                   <Skeleton variant="rectangular" width={128} height={32} />
@@ -64,29 +58,17 @@ export default function WatchlistPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
           </div>
-          <RightSidebar />
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => router.push('/plans')} />
-
-          {/* Content */}
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+    <>
+      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               {/* Header - Desktop and Tablet */}
               <div className="hidden md:flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-white">Watchlist</h1>
@@ -191,14 +173,9 @@ export default function WatchlistPage() {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
         </div>
-
-        <RightSidebar />
       </div>
-
-    </div>
+    </>
   );
 }
 

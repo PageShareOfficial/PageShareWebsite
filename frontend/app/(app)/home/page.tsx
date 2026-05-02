@@ -3,11 +3,9 @@
 import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/app/layout/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import Topbar from '@/components/app/layout/Topbar';
 import Feed from '@/components/app/feed/Feed';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
 const TweetComposer = dynamic(() => import('@/components/app/composer/TweetComposer'), { ssr: false });
@@ -77,27 +75,19 @@ export default function HomePage() {
   // (Avoids briefly showing home then redirecting when backendUser loads with user_xxx)
   if (loading || !backendUser || needsOnboarding(backendUser.username)) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loading />
-      </div>
+      <>
+        <div className="flex flex-1 items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => router.push('/plans')} />
-
-          {/* Content */}
-          <div className="flex-1 flex pb-16 md:pb-0">
-            {/* Center Feed */}
-             <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
+    <>
+      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               <Feed
                 posts={filteredPosts}
                 onNewIdeaClick={() => setIsNewIdeaOpen(true)}
@@ -117,12 +107,7 @@ export default function HomePage() {
                 postError={postError}
                 onClearPostError={clearPostError}
               />
-            </div>
-          </div>
-            </div>
-
-        {/* Right Sidebar */}
-        <RightSidebar />
+        </div>
       </div>
 
       {/* Modals */}
@@ -153,7 +138,7 @@ export default function HomePage() {
         currentUserHandle={currentUser.handle}
         onReport={handleReportSubmitted}
       />
-    </div>
+    </>
   );
 }
 

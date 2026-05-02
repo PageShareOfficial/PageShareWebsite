@@ -2,28 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { GiBinoculars } from 'react-icons/gi';
-import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightSidebar from '@/components/app/layout/RightSidebar';
 
 export default function LabsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => router.push('/plans')} />
-
-          {/* Content */}
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10 px-4 py-12 md:py-16 lg:py-20">
-              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
+    <>
+      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10 px-4 py-12 md:py-16 lg:py-20">
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
                 {/* Large Icon */}
                 <GiBinoculars className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 text-white" />
 
@@ -43,16 +32,10 @@ export default function LabsPage() {
                     Coming soon
                   </span>
                 </div>
-              </div>
-            </div>
           </div>
         </div>
-
-        {/* Right Sidebar */}
-        <RightSidebar />
       </div>
-
-    </div>
+    </>
   );
 }
 
