@@ -35,6 +35,7 @@ export default function ManageWatchlistModal({
 }: ManageWatchlistModalProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasKeyboardSelection, setHasKeyboardSelection] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const isOnline = useOnlineStatus();
@@ -72,6 +73,7 @@ export default function ManageWatchlistModal({
     tickerSearch.setQuery(suggestion.ticker);
     tickerSearch.setShowSuggestions(false);
     tickerSearch.clearSuggestions();
+    setHasKeyboardSelection(false);
     await handleAddTicker(suggestion.ticker);
   };
 
@@ -141,18 +143,33 @@ export default function ManageWatchlistModal({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (tickerSearch.selectedIndex >= 0 && tickerSearch.suggestions[tickerSearch.selectedIndex]) {
-        // Suggestion selected, add it to watchlist
-        handleSelectSuggestion(tickerSearch.suggestions[tickerSearch.selectedIndex]);
+      const selectedSuggestion =
+        tickerSearch.selectedIndex >= 0 ? tickerSearch.suggestions[tickerSearch.selectedIndex] : undefined;
+
+      // Only use highlighted suggestion if user intentionally navigated with keyboard.
+      // Otherwise Enter should add exactly what user typed.
+      if (
+        hasKeyboardSelection &&
+        tickerSearch.showSuggestions &&
+        !tickerSearch.isSearching &&
+        selectedSuggestion
+      ) {
+        handleSelectSuggestion(selectedSuggestion);
       } else {
-        // No suggestion selected, add ticker directly
-        handleAddTicker();
+        handleAddTicker(tickerSearch.query);
       }
+      setHasKeyboardSelection(false);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      setHasKeyboardSelection(true);
+      tickerSearch.handleKeyDown(e);
     } else {
       // Delegate other keys to hook's handler (ArrowUp/Down, Escape)
       tickerSearch.handleKeyDown(e);
     }
   };
+
+  const inputRowClass =
+    'h-11 min-h-[2.75rem] text-sm w-full pl-10 pr-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
     <Modal
@@ -160,20 +177,19 @@ export default function ManageWatchlistModal({
       onClose={onClose}
       title="Manage Watchlist"
       maxWidth="md"
-      className="p-6"
+      contentClassName="p-5 sm:p-6"
     >
-
         {/* Add Ticker Section */}
-        <div className="mb-6 relative">
+        <div className="mb-8 relative">
           {!isOnline && (
-            <p className="text-sm text-amber-400 mb-2">Connect to the internet to add or remove tickers.</p>
+            <p className="text-sm text-amber-400 mb-3">Connect to the internet to add or remove tickers.</p>
           )}
-          <label htmlFor="ticker-input" className="block text-sm font-medium text-gray-300 mb-2">
-            Add Ticker (Crypto)
+          <label htmlFor="ticker-input" className="block text-sm font-semibold text-white mb-2.5">
+            Add crypto ticker
           </label>
-          <div className="relative flex gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="relative flex flex-row gap-2 items-stretch">
+            <div className="flex-1 min-w-0 relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 ref={inputRef}
                 id="ticker-input"
@@ -181,6 +197,8 @@ export default function ManageWatchlistModal({
                 value={tickerSearch.query}
                 onChange={(e) => {
                   tickerSearch.setQuery(e.target.value);
+                  tickerSearch.setSelectedIndex(-1);
+                  setHasKeyboardSelection(false);
                   setError('');
                 }}
                 onKeyDown={handleKeyPress}
@@ -189,10 +207,10 @@ export default function ManageWatchlistModal({
                     tickerSearch.setShowSuggestions(true);
                   }
                 }}
-                placeholder="Search by ticker (AAPL) or name (Apple)..."
+                placeholder="BTC, ETH, or search by name…"
                 disabled={isLoading || !isOnline}
                 title={!isOnline ? 'Connect to the internet to continue' : undefined}
-                className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={inputRowClass}
               />
               
               {/* Autocomplete Suggestions Dropdown */}
@@ -274,28 +292,28 @@ export default function ManageWatchlistModal({
               onClick={() => handleAddTicker()}
               disabled={isLoading || !tickerSearch.query.trim() || !isOnline}
               title={!isOnline ? 'Connect to the internet to continue' : undefined}
-              className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex h-11 min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-black transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
-                <Plus className="w-4 h-4" />
+                <Plus className="h-4 w-4 shrink-0" />
               )}
-              {isLoading ? 'Adding...' : 'Add'}
+              {isLoading ? 'Adding…' : 'Add'}
             </button>
           </div>
           {error && (
-            <p className="mt-2 text-sm text-red-400">{error}</p>
+            <p className="mt-2.5 text-sm text-red-400" role="alert">
+              {error}
+            </p>
           )}
-          <p className="mt-2 text-xs text-gray-500">
-            Search by ticker symbol (BTC, ETH) or name (Bitcoin, Ethereum).
-          </p>
         </div>
 
         {/* Watchlist Items */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-300 mb-3">
-            Your Watchlist ({watchlist.length})
+        <div className="border-t border-white/10 pt-7">
+          <h3 className="mb-4 text-sm font-semibold tracking-wide text-gray-200">
+            Your watchlist{' '}
+            <span className="font-normal text-gray-500">({watchlist.length})</span>
           </h3>
           {watchlist.length === 0 ? (
             <EmptyState
@@ -304,48 +322,58 @@ export default function ManageWatchlistModal({
               description="Add tickers above to track cryptocurrencies"
             />
           ) : (
-            <div className="space-y-3">
+            <ul className="max-h-[min(24rem,45vh)] space-y-2.5 overflow-y-auto pr-0.5 [-webkit-overflow-scrolling:touch]">
               {watchlist.map((item) => {
                 return (
-                  <div
+                  <li
                     key={item.ticker}
-                    className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors relative"
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3.5 transition-colors hover:border-white/15 hover:bg-white/[0.07]"
                   >
-                    {/* Ticker Image */}
                     <TickerImage
                       src={item.image}
                       ticker={item.ticker}
                       size="sm"
-                      className="z-10"
+                      className="shrink-0"
                     />
-                    
-                    <div className="flex-1 min-w-0 z-10">
-                      <div className="font-medium text-white">{item.ticker}</div>
-                      <div className="text-xs text-gray-400 truncate">{item.name}</div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-sm text-white">${item.price.toFixed(2)}</span>
-                        <PriceChangeDisplay 
-                          change={(item.price * item.change) / 100} 
-                          changePercent={item.change}
-                          size="sm"
-                          showIcon={false}
-                        />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[15px] font-semibold leading-tight text-white">
+                            {item.ticker}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-gray-400">{item.name}</p>
+                        </div>
+                        <div className="shrink-0 text-right tabular-nums">
+                          <p className="text-sm font-semibold text-white">
+                            ${item.price.toFixed(2)}
+                          </p>
+                          <div className="mt-0.5 flex justify-end">
+                            <PriceChangeDisplay
+                              change={(item.price * item.change) / 100}
+                              changePercent={item.change}
+                              size="sm"
+                              showIcon={false}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
+
                     <button
                       type="button"
                       onClick={() => handleRemoveTicker(item.ticker)}
                       disabled={!isOnline}
-                      title={!isOnline ? 'Connect to the internet to continue' : undefined}
-                      className="ml-3 p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 z-10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
+                      title={!isOnline ? 'Connect to the internet to continue' : 'Remove from watchlist'}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-500/15 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label={`Remove ${item.ticker}`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-5 w-5" strokeWidth={2} />
                     </button>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
         </div>
     </Modal>

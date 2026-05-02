@@ -7,13 +7,19 @@ interface DesktopHeaderProps {
   title: string;
   subtitle?: string;
   onBack?: () => void;
+  withSideBorders?: boolean;
 }
 
 /**
  * Reusable desktop header component with back button
  * Used on profile pages, ticker pages, etc.
  */
-export default function DesktopHeader({ title, subtitle, onBack }: DesktopHeaderProps) {
+export default function DesktopHeader({
+  title,
+  subtitle,
+  onBack,
+  withSideBorders = true,
+}: DesktopHeaderProps) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -25,7 +31,11 @@ export default function DesktopHeader({ title, subtitle, onBack }: DesktopHeader
   };
 
   return (
-    <div className="hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-l border-r border-white/10 border-b border-white/10">
+    <div
+      className={`hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10 ${
+        withSideBorders ? 'border-l border-r border-white/10' : ''
+      }`}
+    >
       <div className="px-4 py-4">
         <div className="flex items-center gap-4">
           <button
