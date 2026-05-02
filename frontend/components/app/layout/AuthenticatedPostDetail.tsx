@@ -3,9 +3,6 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart } from 'lucide-react';
-import Sidebar from '@/components/app/layout/Sidebar';
-import RightRail from '@/components/app/layout/RightRail';
-
 const ReportModal = dynamic(
   () => import('@/components/app/modals/ReportModal'),
   { ssr: false }
@@ -23,7 +20,7 @@ import LoadingState from '@/components/app/common/LoadingState';
 import ErrorState from '@/components/app/common/ErrorState';
 import { formatDateTime } from '@/utils/core/dateUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import type { Comment, Post, User, WatchlistItem } from '@/types';
+import type { Comment, Post, User} from '@/types';
 
 export type AuthenticatedPostDetailProps = {
   post: Post;
@@ -72,10 +69,6 @@ export type AuthenticatedPostDetailProps = {
     commentPostId?: string
   ) => void;
   handleReportSubmitted: () => void;
-  watchlist: WatchlistItem[];
-  openManageModal: () => void;
-  setWatchlist: React.Dispatch<React.SetStateAction<WatchlistItem[]>>;
-  watchlistLoading: boolean;
   selectedImageIndex: number | null;
   setSelectedImageIndex: React.Dispatch<React.SetStateAction<number | null>>;
   selectedImageUrls: string[];
@@ -83,8 +76,8 @@ export type AuthenticatedPostDetailProps = {
 };
 
 /**
- * Authenticated post detail: main content column, comments, right rail, modals.
- * Keeps PostDetailPage focused on routing and auth state (single responsibility).
+ * Authenticated post detail: main column (post, comments) and modals.
+ * The `(app)` layout provides sidebars; this component is the center column only.
  */
 export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailProps) {
   const router = useRouter();
@@ -123,10 +116,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
     reportUserDisplayName,
     handleReportClick,
     handleReportSubmitted,
-    watchlist,
-    openManageModal,
-    setWatchlist,
-    watchlistLoading,
     selectedImageIndex,
     setSelectedImageIndex,
     selectedImageUrls,
@@ -138,13 +127,9 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
   ].join(' ');
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        <Sidebar />
-
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10">
+    <>
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10">
               <div className={stickyHeaderClasses}>
                 <div className="flex items-center px-4 h-14">
                   <button
@@ -362,18 +347,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                   ));
                 })()}
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
         </div>
       </div>
 
@@ -432,6 +405,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
         currentUserHandle={currentUser.handle}
         onReport={handleReportSubmitted}
       />
-    </div>
+    </>
   );
 }

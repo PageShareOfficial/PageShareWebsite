@@ -1,9 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import Sidebar from '@/components/app/layout/Sidebar';
 import Topbar from '@/components/app/layout/Topbar';
-import RightRail from '@/components/app/layout/RightRail';
 import DeleteAccountModal from '@/components/app/modals/DeleteAccountModal';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
@@ -11,7 +9,6 @@ import { getCurrentUser } from '@/utils/user/profileUtils';
 import { Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/content/reportUtils';
 import { listMyReports, type ReportHistoryItemResponse } from '@/lib/api/reportApi';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useWatchlist } from '@/hooks/features/useWatchlist';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
@@ -30,7 +27,6 @@ function SettingsContent() {
     unmute,
     unblock,
   } = useContentFiltersContext();
-  const { watchlist, setWatchlist, loading: watchlistLoading, openManageModal } = useWatchlist();
   const [isClient, setIsClient] = useState(false);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -164,31 +160,26 @@ function SettingsContent() {
 
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loading />
-      </div>
+      <>
+        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <div className="flex flex-1 items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex justify-center">
-        {/* Left Sidebar */}
-        <Sidebar />
+    <>
+      <Topbar onUpgradeLabs={() => router.push('/plans')} />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[600px]">
-          {/* Top Bar - Mobile Only */}
-          <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      {/* Desktop Header - Desktop Only */}
+      <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
+        <h1 className="text-xl font-bold text-white">Settings</h1>
+      </div>
 
-          {/* Desktop Header - Desktop Only */}
-          <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
-            <h1 className="text-xl font-bold text-white">Settings</h1>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 flex pb-16 md:pb-0">
-            <div className="w-full border-l border-r border-white/10">
+      <div className="flex-1 flex pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10">
               {/* Privacy and Security Section */}
               <div className="px-2 py-6 lg:px-4">
                 <div className="mb-6">
@@ -507,19 +498,6 @@ function SettingsContent() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
-          <RightRail
-            watchlist={watchlist}
-            onManageWatchlist={openManageModal}
-            onUpgradeLabs={() => router.push('/plans')}
-            onUpdateWatchlist={setWatchlist}
-            isLoading={watchlistLoading}
-          />
-        </div>
-      </div>
 
       {/* Delete Account Modal */}
       <DeleteAccountModal
@@ -528,7 +506,7 @@ function SettingsContent() {
         username={deleteUsername}
         onConfirm={handleDeleteAccount}
       />
-    </div>
+    </>
   );
 }
 
@@ -536,7 +514,7 @@ export default function SettingsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center min-h-[50vh]">
           <Loading />
         </div>
       }

@@ -65,12 +65,29 @@ export async function fetchCryptoData(ticker: string): Promise<StockData | null>
 
 async function fetchCryptoDataBySearch(ticker: string): Promise<StockData | null> {
   try {
-    const searchUrl = `https://api.coingecko.com/api/v3/search?query=${ticker.toLowerCase()}`;
+    const normalizedTicker = ticker.trim().toLowerCase();
+    const searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(normalizedTicker)}`;
     const searchResponse = await fetch(searchUrl);
     if (!searchResponse.ok) return null;
     const searchData = await searchResponse.json();
     if (!searchData.coins?.length) return null;
-    const coin = searchData.coins[0];
+
+    // Prefer exact symbol match (e.g. POL -> POL), then exact name, then prefix match.
+    // Fallback to first result only when there is no better match.
+    const exactSymbol = searchData.coins.find(
+      (c: { symbol?: string }) => (c.symbol || '').toString().toLowerCase() === normalizedTicker
+    );
+    const exactName = searchData.coins.find(
+      (c: { name?: string }) => (c.name || '').toString().toLowerCase() === normalizedTicker
+    );
+    const prefixSymbol = searchData.coins.find(
+      (c: { symbol?: string }) => (c.symbol || '').toString().toLowerCase().startsWith(normalizedTicker)
+    );
+    const prefixName = searchData.coins.find(
+      (c: { name?: string }) => (c.name || '').toString().toLowerCase().startsWith(normalizedTicker)
+    );
+
+    const coin = exactSymbol || exactName || prefixSymbol || prefixName || searchData.coins[0];
     const coinId = coin.id;
     const priceUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`;
     const priceResponse = await fetch(priceUrl);

@@ -49,17 +49,17 @@ export default function TickerHeader({ data, type }: TickerHeaderProps) {
             <TickerTypeBadge type={type} size="md" className="flex-shrink-0" />
           </div>
           
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <span className="font-semibold text-white text-lg">
-              ${ticker}
+          <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm">
+            <span className="font-semibold text-white text-base md:text-lg">
+              {ticker}
             </span>
             {exchangeOrRank && (
-              <span className="hidden md:inline">
+              <span className="inline-flex items-center rounded-md bg-white/10 px-2 py-0.5 text-gray-300">
                 {exchangeOrRank}
               </span>
             )}
             {sectorOrType && (
-              <span className="hidden md:inline">
+              <span className="inline-flex items-center rounded-md bg-white/10 px-2 py-0.5 text-gray-300">
                 {sectorOrType}
               </span>
             )}
