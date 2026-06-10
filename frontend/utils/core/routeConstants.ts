@@ -16,6 +16,8 @@ export const RESERVED_ROUTES = new Set<string>([
   'labs',
   'onboarding',
   'plans',
+  'predictions',
+  'submit-prediction',
   'privacy',
   'settings',
   'terms',
@@ -53,6 +55,8 @@ export const RESERVED_ROUTES = new Set<string>([
  */
 export const AUTH_PROTECTED_ROUTES = new Set<string>([
   'home',
+  'predictions',
+  'submit-prediction',
   'onboarding',
   'settings',
   'bookmarks',

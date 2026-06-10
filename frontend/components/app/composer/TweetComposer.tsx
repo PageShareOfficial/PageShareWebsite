@@ -17,6 +17,7 @@ import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
 import UserBadge from '@/components/app/common/UserBadge';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -383,22 +384,12 @@ export default function TweetComposer({
           {/* Media Previews */}
           {(mediaPreviews.length > 0 || selectedGif) && (
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {mediaPreviews.map((preview, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-24 sm:h-32 object-cover rounded-xl"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMedia(index)}
-                    className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                  >
-                    <HiX className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  </button>
-                </div>
-              ))}
+              <MediaPreviewGrid
+                previews={mediaPreviews}
+                onRemove={handleRemoveMedia}
+                containerClassName="col-span-2 grid grid-cols-2 gap-2"
+                imageClassName="w-full h-24 sm:h-32 object-cover rounded-xl"
+              />
               {selectedGif && (
                 <div className="relative group">
                   <img

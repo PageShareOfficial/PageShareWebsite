@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import Skeleton from '@/components/app/common/Skeleton';
+import { LuChartCandlestick } from 'react-icons/lu';
 
 const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
 
@@ -73,6 +74,7 @@ export default function Sidebar() {
   const profileHref = currentUser?.handle ? `/${currentUser.handle}` : '/home';
   const allNavItems = [
     { name: 'Home', icon: Home, href: '/home', prefetch: true },
+    { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
     { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
@@ -88,6 +90,7 @@ export default function Sidebar() {
   // Mobile nav items: Home, Discover, Labs, Watchlist, More, Profile (More will have dropdown with Settings and Bookmarks)
   const mobileNavItems = [
     { name: 'Home', icon: Home, href: '/home', prefetch: true },
+    { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
     { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
