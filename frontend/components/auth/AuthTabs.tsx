@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingState from '@/components/app/common/LoadingState';
 import EmailSignUpForm from './EmailSignUpForm';
 import EmailSignInForm from './EmailSignInForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { ArrowRight, Lock, Shield } from 'lucide-react';
 
 type AuthTab = 'signup' | 'signin';
 type AuthView = AuthTab | 'forgot';
@@ -21,6 +21,15 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError ?? null);
   const { signInWithGoogle } = useAuth();
+
+  useEffect(() => {
+    const openSignup = () => {
+      setView('signup');
+      setError(null);
+    };
+    window.addEventListener('pageshare:open-signup', openSignup);
+    return () => window.removeEventListener('pageshare:open-signup', openSignup);
+  }, []);
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
@@ -44,36 +53,51 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
   );
 
   return (
-    <div className="w-full max-w-lg bg-black p-6 sm:p-8 md:p-10">
-      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">
-        Welcome to PageShare
-      </h1>
+    <div
+      id="auth"
+      className="w-full max-w-md rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-[#111827]/90 to-black/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(34,211,238,0.12)] backdrop-blur-sm"
+    >
+      <div className="flex flex-col items-center text-center mb-6">
+        <div className="w-12 h-12 rounded-full border border-cyan-500/30 bg-cyan-500/10 flex items-center justify-center mb-4">
+          <Lock className="w-5 h-5 text-cyan-400" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-white">Welcome to PageShare</h2>
+        <p className="text-sm text-gray-500 mt-1.5">
+          Join traders and analysts building the future of market intelligence.
+        </p>
+      </div>
 
       {view !== 'forgot' && (
-        <div className="flex rounded-full bg-gray-900/80 p-1 mt-6 mb-6">
-          <button
-            type="button"
-            onClick={() => { setView('signup'); setError(null); }}
-            className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-colors ${
-              view === 'signup' ? 'bg-white text-gray-900' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Sign up
-          </button>
+        <div className="flex border-b border-white/10 mb-6">
           <button
             type="button"
             onClick={() => { setView('signin'); setError(null); }}
-            className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-colors ${
-              view === 'signin' ? 'bg-white text-gray-900' : 'text-gray-400 hover:text-white'
+            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${
+              view === 'signin' ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             Sign in
+            {view === 'signin' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setView('signup'); setError(null); }}
+            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${
+              view === 'signup' ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            Create account
+            {view === 'signup' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+            )}
           </button>
         </div>
       )}
 
       {view === 'forgot' && (
-        <p className="text-gray-400 text-center text-sm mt-2 mb-4">
+        <p className="text-gray-400 text-center text-sm mb-4">
           Enter your email and we&apos;ll send you a reset link.
         </p>
       )}
@@ -84,27 +108,30 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
         </div>
       )}
 
-      {view === 'forgot' ? (
-        <ForgotPasswordForm
-          onBack={() => { setView('signin'); setError(null); }}
-        />
-      ) : view === 'signup' ? (
-        <EmailSignUpForm onError={(msg) => setError(msg ?? null)} />
-      ) : (
-        <EmailSignInForm
-          onError={(msg) => setError(msg ?? null)}
-          onForgotPassword={() => { setView('forgot'); setError(null); }}
-        />
-      )}
+      <div className={view === 'forgot' ? 'min-h-0' : 'min-h-[19.5rem]'}>
+        {view === 'forgot' ? (
+          <ForgotPasswordForm
+            onBack={() => { setView('signin'); setError(null); }}
+          />
+        ) : view === 'signup' ? (
+          <EmailSignUpForm variant="landing" onError={(msg) => setError(msg ?? null)} />
+        ) : (
+          <EmailSignInForm
+            variant="landing"
+            onError={(msg) => setError(msg ?? null)}
+            onForgotPassword={() => { setView('forgot'); setError(null); }}
+          />
+        )}
+      </div>
 
       {view !== 'forgot' && (
         <>
-          <div className="relative my-6">
+          <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700" />
+              <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-black text-gray-500">or</span>
+              <span className="px-3 bg-[#0d1117] text-gray-500">or</span>
             </div>
           </div>
 
@@ -112,10 +139,10 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
             type="button"
             onClick={handleGoogleAuth}
             disabled={isLoading}
-            className="w-full px-6 py-3.5 bg-white rounded-full text-gray-900 font-semibold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full px-6 py-3 rounded-xl border border-white/15 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <LoadingState text="Connecting..." size="sm" inline className="text-gray-900" />
+              <LoadingState text="Connecting..." size="sm" inline />
             ) : (
               <>
                 <GoogleIcon />
@@ -123,21 +150,13 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
               </>
             )}
           </button>
-
-          <p className="text-sm text-gray-400 text-center mt-4 mb-6">
-            {view === 'signup' ? "We'll create your account automatically." : 'New here? Sign up above.'}
-          </p>
         </>
       )}
 
-      <p className="text-[10px] sm:text-xs text-gray-500 text-center leading-relaxed px-2">
-        By continuing, you agree to the{" "}
-        <Link href="/terms" className="text-cyan-400 hover:underline">Terms of Service</Link>
-        {" "}and{" "}
-        <Link href="/privacy" className="text-cyan-400 hover:underline">Privacy Policy</Link>
-        , including{" "}
-        <Link href="/cookies" className="text-cyan-400 hover:underline">Cookie Use</Link>.
-      </p>
+      <div className="flex items-center justify-center gap-2 mt-6 text-[11px] sm:text-xs text-gray-500">
+        <Shield className="w-3.5 h-3.5 text-cyan-400/70 shrink-0" />
+        <span>Your data is encrypted and always secure.</span>
+      </div>
     </div>
   );
 }
