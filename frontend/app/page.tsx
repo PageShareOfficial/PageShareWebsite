@@ -5,6 +5,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import AuthTabs from '@/components/auth/AuthTabs';
+import FeaturesSection from '@/components/landing/FeaturesSection';
+import BottomCTA from '@/components/landing/BottomCTA';
+import { Shield, UserCheck, Brain, Zap } from 'lucide-react';
+
+const HERO_FEATURES = [
+  { icon: Shield, line1: 'Verified', line2: 'Predictions' },
+  { icon: UserCheck, line1: 'Analyst', line2: 'Credibility' },
+  { icon: Brain, line1: 'AI-Powered', line2: 'Research' },
+  { icon: Zap, line1: 'Early', line2: 'Narratives' },
+] as const;
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -15,19 +25,19 @@ function HomeContent() {
       {/* Background */}
       <div className="fixed inset-0 pointer-events-none z-0 bg-black"></div>
 
-      {/* Logo - Mobile/Tablet (Top Left) */}
-      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8 z-50 lg:hidden">
+      {/* Logo header - mobile & tablet only */}
+      <header className="relative z-10 lg:hidden flex justify-center items-center py-6 sm:py-8 border-b border-white/10">
         <Link href="/" className="block">
           <Image
             src="/pageshare_final.png"
             alt="PageShare Logo"
             width={200}
             height={200}
-            className="w-auto h-12 sm:h-24 md:h-24"
+            className="w-auto h-12 sm:h-16 md:h-20"
             priority
           />
         </Link>
-      </div>
+      </header>
 
       {/* Main Content */}
       <main className="flex-1 relative z-10 flex items-center justify-center py-8 sm:py-12 md:py-16 lg:py-20">
@@ -59,21 +69,26 @@ function HomeContent() {
                   </span>
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 leading-relaxed">
-                A social platform built exclusively for crypto traders and investors. Track tokens, follow narratives, uncover early signals, and explore AI-powered crypto tools.
+                PageShare turns market ideas into structured predictions, measurable track records, and actionable intelligence for traders, analysts, investors, and institutions.
                 </p>
               </div>
 
-              {/* Professional Feature Pills - Twitter Style */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  Crypto Alpha
-                </button>
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  DeFi • NFTs • Web3
-                </button>
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 border border-white/20 rounded-full text-xs text-white font-medium hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-200">
-                  Labs: AI Experiments
-                </button>
+              <div className="flex flex-wrap items-center gap-5 pt-2 sm:pt-4 w-full">
+                {HERO_FEATURES.map(({ icon: Icon, line1, line2 }) => (
+                  <div key={`${line1}-${line2}`} className="flex items-center gap-2.5 shrink-0">
+                    <div className="w-11 h-11 shrink-0 rounded-xl border border-cyan-500/20 bg-cyan-500/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-xs sm:text-sm text-gray-300 font-medium whitespace-nowrap">
+                        {line1}
+                      </span>
+                      <span className="text-xs sm:text-sm text-gray-300 font-medium whitespace-nowrap">
+                        {line2}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
 
             </div>
@@ -85,6 +100,24 @@ function HomeContent() {
           </div>
         </div>
       </main>
+
+      <section className="relative z-10 w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-8 sm:py-12 md:py-16">
+        <div className="max-w-[1400px] mx-auto flex justify-center">
+          <Image
+            src="/cta/landing-photo.png"
+            alt="PageShare prediction dashboard with market narrative insights"
+            width={1400}
+            height={700}
+            className="w-full h-auto max-w-full object-contain"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1400px"
+          />
+        </div>
+      </section>
+
+      <div className="relative z-10">
+        <FeaturesSection />
+        <BottomCTA />
+      </div>
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 bg-black mt-auto">
