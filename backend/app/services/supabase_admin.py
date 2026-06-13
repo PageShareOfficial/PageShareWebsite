@@ -24,8 +24,8 @@ def delete_auth_user(user_id: str) -> None:
         resp = http.delete(
             url,
             headers={
-                "Authorization": f"Bearer {settings.supabase_service_role_key}",
-                "apikey": settings.supabase_anon_key,
+                "Authorization": f"Bearer {settings.supabase_secret_key}",
+                "apikey": settings.supabase_publishable_key,
             },
         )
         resp.raise_for_status()

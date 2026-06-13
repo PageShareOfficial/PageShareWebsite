@@ -47,8 +47,8 @@ def _verify_via_supabase_api(token: str) -> CurrentUser | None:
     Use when local JWT decode fails (e.g. project uses JWKS/RS256 instead of legacy secret).
     """
     url = settings.supabase_url
-    anon_key = settings.supabase_anon_key
-    if not url or not anon_key:
+    publishable_key = settings.supabase_publishable_key
+    if not url or not publishable_key:
         return None
     base = url.rstrip("/")
     auth_url = f"{base}/auth/v1/user"
@@ -58,7 +58,7 @@ def _verify_via_supabase_api(token: str) -> CurrentUser | None:
                 auth_url,
                 headers={
                     "Authorization": f"Bearer {token}",
-                    "apikey": anon_key,
+                    "apikey": publishable_key,
                 },
             )
         if r.status_code != 200:
