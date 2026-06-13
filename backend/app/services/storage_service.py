@@ -12,10 +12,10 @@ settings = get_settings()
 
 @lru_cache(maxsize=1)
 def get_supabase_client() -> Client:
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        raise RuntimeError("Supabase URL and SUPABASE_SERVICE_ROLE_KEY must be configured")
+    if not settings.supabase_url or not settings.supabase_secret_key:
+        raise RuntimeError("Supabase URL and SUPABASE_SECRET_KEY must be configured")
     url = settings.supabase_url.rstrip("/") + "/"
-    return create_client(url, settings.supabase_service_role_key)
+    return create_client(url, settings.supabase_secret_key)
 
 def _profile_picture_path(user_id: str, filename: str) -> str:
     ts = int(time.time())

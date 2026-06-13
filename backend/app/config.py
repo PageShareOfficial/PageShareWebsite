@@ -25,10 +25,8 @@ class Settings:
 
         # Supabase project settings
         self.supabase_url: str = os.getenv("SUPABASE_URL", "")
-        self.supabase_anon_key: str = os.getenv("SUPABASE_ANON_KEY", "")
-        self.supabase_service_role_key: str = os.getenv(
-            "SUPABASE_SERVICE_ROLE_KEY", ""
-        )
+        self.supabase_publishable_key: str = os.getenv("SUPABASE_PUBLISHABLE_KEY", "")
+        self.supabase_secret_key: str = os.getenv("SUPABASE_SECRET_KEY", "")
         self.supabase_storage_bucket: str = os.getenv(
             "SUPABASE_STORAGE_BUCKET", "profile-pictures"
         )
