@@ -1,11 +1,13 @@
 """Stripe Checkout, Portal, and webhook handling."""
 
+import logging
 from typing import Any, Optional
 from uuid import UUID
 import stripe
 from sqlalchemy.orm import Session
 from app.config import Settings
 from app.schemas.billing import CheckoutSessionBody
+from app.services.billing_constants import is_cancelable_subscription_status
 from app.services.billing_constants import resolve_stripe_price_id
 from app.services.subscription_service import (
     get_entitlement,
@@ -14,6 +16,7 @@ from app.services.subscription_service import (
     upsert_from_stripe_subscription,
 )
 
+logger = logging.getLogger(__name__)
 class BillingNotConfiguredError(Exception):
     """Raised when required Stripe env vars are missing."""
 
@@ -54,6 +57,87 @@ def get_or_create_stripe_customer(
     db.refresh(row)
     return customer["id"]
 
+def _cancel_stripe_subscription_id(
+    settings: Settings,
+    subscription_id: str,
+) -> None:
+    _configure_stripe(settings)
+    try:
+        stripe.Subscription.cancel(subscription_id)
+    except stripe.InvalidRequestError as exc:
+        if "No such subscription" not in str(exc):
+            raise
+
+def _mark_entitlement_canceled_locally(db: Session, user_id: UUID) -> None:
+    row = get_entitlement(db, user_id)
+    if not row:
+        return
+    row.status = "canceled"
+    row.stripe_subscription_id = None
+    row.past_due_grace_ends_at = None
+    db.add(row)
+    db.commit()
+
+def cancel_existing_subscription_for_checkout(
+    db: Session,
+    settings: Settings,
+    user_id: UUID,
+) -> None:
+    """
+    Cancel the current Stripe subscription immediately before a new checkout.
+    No prorated refund — user pays full price for the new plan (Cursor-style switch).
+    """
+    row = get_entitlement(db, user_id)
+    if not row or not row.stripe_subscription_id:
+        return
+    if not is_cancelable_subscription_status(row.status):
+        return
+
+    subscription_id = row.stripe_subscription_id
+    try:
+        _cancel_stripe_subscription_id(settings, subscription_id)
+    except BillingNotConfiguredError:
+        raise
+    except Exception as exc:
+        logger.warning(
+            "Failed to cancel subscription %s before checkout for user %s: %s",
+            subscription_id,
+            user_id,
+            exc,
+        )
+        raise
+
+    _mark_entitlement_canceled_locally(db, user_id)
+
+def cancel_user_stripe_subscription(
+    db: Session,
+    settings: Settings,
+    user_id: UUID,
+) -> None:
+    """Cancel Stripe subscription when deleting an account. Best-effort; logs on failure."""
+    row = get_entitlement(db, user_id)
+    if not row or not row.stripe_subscription_id:
+        return
+    if not is_cancelable_subscription_status(row.status):
+        return
+
+    subscription_id = row.stripe_subscription_id
+    try:
+        _configure_stripe(settings)
+        _cancel_stripe_subscription_id(settings, subscription_id)
+    except BillingNotConfiguredError:
+        logger.info(
+            "Stripe not configured; skipping subscription cancel for user %s",
+            user_id,
+        )
+    except Exception as exc:
+        logger.warning(
+            "Failed to cancel subscription %s for deleted user %s: %s",
+            subscription_id,
+            user_id,
+            exc,
+        )
+
 def create_checkout_session(
     db: Session,
     settings: Settings,
@@ -63,6 +147,7 @@ def create_checkout_session(
     email: Optional[str] = None,
 ) -> str:
     _configure_stripe(settings)
+    cancel_existing_subscription_for_checkout(db, settings, user_id)
     price_map = build_price_map(settings)
     price_id = resolve_stripe_price_id(body.plan_id, body.interval, price_map)
     customer_id = get_or_create_stripe_customer(db, settings, user_id, email)

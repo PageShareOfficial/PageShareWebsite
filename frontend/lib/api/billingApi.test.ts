@@ -22,10 +22,11 @@ describe('billingApi', () => {
   it('getBillingStatus calls GET /billing/status', async () => {
     const status = {
       is_premium: true,
-      plan_id: 'analyst',
-      status: 'active',
-      interval: 'monthly',
+      plan_id: 'analyst' as const,
+      status: 'active' as const,
+      interval: 'monthly' as const,
       current_period_end: '2026-07-01T00:00:00Z',
+      past_due_grace_ends_at: null,
     };
     vi.mocked(apiGet).mockResolvedValue(status);
 

@@ -45,6 +45,19 @@ class TestEntitlementToStatus:
         assert status.is_premium is False
         assert status.plan_id == "investor"
 
+    def test_past_due_within_grace_is_premium(self):
+        row = UserEntitlement(
+            user_id=USER_ID,
+            plan_id="analyst",
+            interval="monthly",
+            status="past_due",
+            past_due_grace_ends_at=datetime(2026, 12, 1, tzinfo=timezone.utc),
+        )
+        status = entitlement_to_status(row)
+        assert status.is_premium is True
+        assert status.status == "past_due"
+        assert status.past_due_grace_ends_at is not None
+
 
 class TestParseSubscriptionRecord:
     def test_parses_metadata_and_recurring_interval(self):

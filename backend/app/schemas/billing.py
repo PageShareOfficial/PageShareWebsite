@@ -23,6 +23,7 @@ class BillingStatusResponse(BaseModel):
     status: SubscriptionStatus = "none"
     interval: Optional[BillingInterval] = None
     current_period_end: Optional[datetime] = None
+    past_due_grace_ends_at: Optional[datetime] = None
 
 
 class CreateCheckoutSessionRequest(BaseModel):

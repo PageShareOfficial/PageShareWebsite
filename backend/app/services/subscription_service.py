@@ -1,13 +1,14 @@
 """Read and upsert user subscription entitlements."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.user_entitlement import UserEntitlement
 from app.schemas.billing import BillingStatusResponse
 from app.services.billing_constants import (
-    is_premium_status,
+    compute_past_due_grace_ends_at,
+    is_premium_entitlement,
     normalize_interval,
     normalize_plan_id,
 )
@@ -26,6 +27,17 @@ def get_or_create_entitlement(db: Session, user_id: UUID) -> UserEntitlement:
     db.refresh(row)
     return row
 
+def row_grants_premium(
+    row: UserEntitlement,
+    *,
+    now: Optional[datetime] = None,
+) -> bool:
+    return is_premium_entitlement(
+        row.status,
+        row.past_due_grace_ends_at,
+        now=now,
+    )
+
 def entitlement_to_status(row: Optional[UserEntitlement]) -> BillingStatusResponse:
     if not row:
         return BillingStatusResponse(
@@ -34,6 +46,7 @@ def entitlement_to_status(row: Optional[UserEntitlement]) -> BillingStatusRespon
             status="none",
             interval=None,
             current_period_end=None,
+            past_due_grace_ends_at=None,
         )
 
     plan_id = normalize_plan_id(row.plan_id)
@@ -48,22 +61,26 @@ def entitlement_to_status(row: Optional[UserEntitlement]) -> BillingStatusRespon
     } else "none"
 
     return BillingStatusResponse(
-        is_premium=is_premium_status(status),
+        is_premium=row_grants_premium(row),
         plan_id=plan_id,
         status=status,  # type: ignore[arg-type]
         interval=interval,
         current_period_end=row.current_period_end,
+        past_due_grace_ends_at=row.past_due_grace_ends_at,
     )
 
 def get_billing_status(db: Session, user_id: UUID) -> BillingStatusResponse:
     return entitlement_to_status(get_entitlement(db, user_id))
 
 def is_premium_user(db: Session, user_id: UUID) -> bool:
-    return get_billing_status(db, user_id).is_premium
+    row = get_entitlement(db, user_id)
+    if not row:
+        return False
+    return row_grants_premium(row)
 
 def get_user_plan_id(db: Session, user_id: UUID) -> Optional[str]:
     row = get_entitlement(db, user_id)
-    if not row or not is_premium_status(row.status):
+    if not row or not row_grants_premium(row):
         return None
     return normalize_plan_id(row.plan_id)
 
@@ -80,7 +97,7 @@ def get_active_plan_ids_for_users(
     )
     plan_map: Dict[UUID, str] = {}
     for row in rows:
-        if not is_premium_status(row.status):
+        if not row_grants_premium(row):
             continue
         plan_id = normalize_plan_id(row.plan_id)
         if plan_id:
@@ -91,6 +108,22 @@ def _epoch_to_datetime(epoch: Optional[int]) -> Optional[datetime]:
     if epoch is None:
         return None
     return datetime.fromtimestamp(epoch, tz=timezone.utc)
+
+def _apply_grace_on_status_change(
+    row: UserEntitlement,
+    new_status: str,
+) -> None:
+    if new_status == "past_due":
+        if row.past_due_grace_ends_at is None:
+            row.past_due_grace_ends_at = compute_past_due_grace_ends_at()
+        return
+
+    if new_status in ("active", "trialing"):
+        row.past_due_grace_ends_at = None
+        return
+
+    if new_status in ("canceled", "incomplete", "none"):
+        row.past_due_grace_ends_at = None
 
 def upsert_from_stripe_subscription(
     db: Session,
@@ -108,7 +141,10 @@ def upsert_from_stripe_subscription(
         row.stripe_customer_id = stripe_customer_id
     if stripe_subscription_id:
         row.stripe_subscription_id = stripe_subscription_id
-    row.status = status or "none"
+
+    new_status = status or "none"
+    _apply_grace_on_status_change(row, new_status)
+    row.status = new_status
     row.plan_id = normalize_plan_id(plan_id)
     row.interval = normalize_interval(interval)
     row.current_period_end = _epoch_to_datetime(current_period_end)

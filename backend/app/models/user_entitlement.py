@@ -21,6 +21,7 @@ class UserEntitlement(Base):
     interval = Column(String(20), nullable=True)
     status = Column(String(32), nullable=False, server_default="none")
     current_period_end = Column(DateTime(timezone=True), nullable=True)
+    past_due_grace_ends_at = Column(DateTime(timezone=True), nullable=True)
     updated_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),

@@ -51,9 +51,32 @@ class TestPremiumStatus:
     def test_premium_statuses(self, status: str):
         assert is_premium_status(status) is True
 
-    @pytest.mark.parametrize("status", ["canceled", "past_due", "incomplete", "none", None])
+    @pytest.mark.parametrize("status", ["canceled", "incomplete", "none", None])
     def test_non_premium_statuses(self, status: str | None):
         assert is_premium_status(status) is False
+
+    def test_past_due_alone_is_not_premium_status(self):
+        assert is_premium_status("past_due") is False
+
+
+class TestPremiumEntitlement:
+    def test_past_due_within_grace_is_premium(self):
+        from datetime import datetime, timedelta, timezone
+
+        from app.services.billing_constants import is_premium_entitlement
+
+        now = datetime(2026, 6, 10, tzinfo=timezone.utc)
+        grace_end = now + timedelta(days=3)
+        assert is_premium_entitlement("past_due", grace_end, now=now) is True
+
+    def test_past_due_after_grace_is_not_premium(self):
+        from datetime import datetime, timedelta, timezone
+
+        from app.services.billing_constants import is_premium_entitlement
+
+        now = datetime(2026, 6, 10, tzinfo=timezone.utc)
+        grace_end = now - timedelta(days=1)
+        assert is_premium_entitlement("past_due", grace_end, now=now) is False
 
 
 class TestNormalizers:

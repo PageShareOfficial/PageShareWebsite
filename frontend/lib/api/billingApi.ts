@@ -15,6 +15,7 @@ export interface BillingStatus {
   status: SubscriptionStatus;
   interval: BillingInterval | null;
   current_period_end: string | null;
+  past_due_grace_ends_at: string | null;
 }
 
 export interface CreateCheckoutSessionRequest {

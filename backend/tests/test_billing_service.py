@@ -65,3 +65,26 @@ class TestBillingConfiguration:
 
         with pytest.raises(BillingNotConfiguredError):
             construct_webhook_event(settings, b"{}", "sig")
+
+
+class TestCancelSubscription:
+    @patch("app.services.billing_service.stripe.Subscription.cancel")
+    @patch("app.services.billing_service.get_entitlement")
+    def test_cancel_before_checkout(self, mock_get_entitlement, mock_cancel):
+        from uuid import UUID
+
+        from app.services.billing_service import cancel_existing_subscription_for_checkout
+
+        user_id = UUID("11111111-1111-1111-1111-111111111111")
+        row = MagicMock()
+        row.stripe_subscription_id = "sub_123"
+        row.status = "active"
+        mock_get_entitlement.return_value = row
+
+        db = MagicMock()
+        settings = _settings_with_prices()
+        cancel_existing_subscription_for_checkout(db, settings, user_id)
+
+        mock_cancel.assert_called_once_with("sub_123")
+        db.add.assert_called()
+        db.commit.assert_called()

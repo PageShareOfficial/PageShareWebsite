@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.orm import Session
+from app.config import Settings, get_settings
 from app.database import get_db
 from app.middleware.auth import get_current_user, get_optional_user
 from app.schemas.user import (
@@ -41,6 +42,7 @@ from app.services.user_service import (
     get_user_stats,
 )
 from app.services.supabase_admin import delete_auth_user
+from app.services.billing_service import cancel_user_stripe_subscription
 from app.utils.media_validator import validate_image_file
 from app.api.deps import get_user_or_404
 from app.utils.http import parse_uuid_or_404
@@ -401,9 +403,15 @@ async def delete_profile_picture_endpoint(
 async def delete_me(
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
 ):
     """Permanently delete the current user's account and all associated data."""
     auth_user_id = str(current_user.auth_user_id)
+    cancel_user_stripe_subscription(
+        db,
+        settings,
+        UUID(current_user.auth_user_id),
+    )
     delete_account(db, current_user)
     try:
         delete_auth_user(auth_user_id)

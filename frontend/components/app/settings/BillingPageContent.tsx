@@ -150,6 +150,17 @@ export default function BillingPageContent() {
                   </span>
                 </div>
 
+                {billingStatus?.status === 'past_due' &&
+                  billingStatus.past_due_grace_ends_at && (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      Payment failed. Premium access continues until{' '}
+                      {formatDate(billingStatus.past_due_grace_ends_at)} while you
+                      update your payment method.
+                    </p>
+                  </div>
+                )}
+
                 {renewalLabel && (
                   <div className={`rounded-lg border px-3 py-2.5 ${accent.border} bg-black/20`}>
                     <p className="text-xs text-gray-400 mb-0.5">
@@ -217,8 +228,9 @@ export default function BillingPageContent() {
 
             <p className="mt-4 text-[11px] text-gray-500 leading-relaxed">
               Payments are processed securely by Stripe. PageShare does not store your card
-              details. Subscription changes may take a moment to reflect after returning from
-              the billing portal.
+              details. To change plans, select a new plan in checkout — your current subscription
+              is canceled immediately with no mid-cycle refund, then you pay for the new plan.
+              Subscription changes may take a moment to reflect after returning from Stripe.
             </p>
           </div>
         </div>
