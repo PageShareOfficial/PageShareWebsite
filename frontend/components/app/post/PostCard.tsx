@@ -11,7 +11,7 @@ import PostActions from './PostActions';
 import PostMedia from './PostMedia';
 import PollComponent from './PollComponent';
 import ImageViewerModal from '../modals/ImageViewerModal';
-import UserBadge from '../common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '../common/AvatarWithFallback';
 
 interface PostCardProps {
@@ -236,9 +236,7 @@ export default function PostCard({
                       {originalPost.author.displayName}
                     </span>
                     <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
-                    {originalPost.author.badge && (
-                      <UserBadge badge={originalPost.author.badge} size="sm" />
-                    )}
+                    <AuthorBadges subscriptionPlanId={originalPost.author.subscriptionPlanId} size="sm" />
                     <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
                   </div>
                   {originalPost && isTweet(originalPost) && (

@@ -10,6 +10,7 @@ export interface CommentAuthorResponse {
   username: string;
   display_name: string;
   profile_picture_url?: string | null;
+  subscription_plan_id?: string | null;
 }
 
 export interface CommentResponse {

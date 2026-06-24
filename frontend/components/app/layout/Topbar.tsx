@@ -10,19 +10,17 @@ import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 
-interface TopbarProps {
-  onUpgradeLabs: () => void;
-}
-
-export default function Topbar({ onUpgradeLabs }: TopbarProps) {
+export default function Topbar() {
   const { currentUser } = useCurrentUser();
   const { signOut } = useAuth();
   const isOnline = useOnlineStatus();
   const { setShowOfflineOverlay } = useOfflineOverlay();
+  const { openPremium } = usePremiumOverlay();
 
   const handleUpgradeClick = () => {
-    if (isOnline) onUpgradeLabs();
+    if (isOnline) openPremium();
     else setShowOfflineOverlay(true);
   };
 

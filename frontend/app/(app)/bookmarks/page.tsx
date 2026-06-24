@@ -23,7 +23,7 @@ export default function BookmarksPage() {
   if (!isClient) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="flex flex-1 items-center justify-center min-h-[50vh]">
           <Loading />
         </div>
@@ -34,7 +34,7 @@ export default function BookmarksPage() {
   if (bookmarksLoading) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="flex flex-1 items-center justify-center min-h-[50vh]">
           <Loading />
         </div>
@@ -44,7 +44,7 @@ export default function BookmarksPage() {
 
   return (
     <>
-      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <Topbar />
 
       {/* Desktop Header - Desktop Only */}
       <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">

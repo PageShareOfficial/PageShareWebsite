@@ -18,6 +18,7 @@ from app.services.follow_service import (
 )
 from app.api.deps import get_user_or_404
 from app.services.user_service import get_user_by_id
+from app.services.subscription_service import get_active_plan_ids_for_users
 from app.utils.http import parse_uuid_or_404
 from app.utils.responses import paginated_response
 
@@ -68,6 +69,7 @@ def list_followers_endpoint(
     get_user_or_404(db, user_id)
     current_id = UUID(current_user.auth_user_id) if current_user else None
     rows, total = list_followers(db, uid, page=page, per_page=per_page, current_user_id=current_id)
+    plan_map = get_active_plan_ids_for_users(db, [user.id for user, _ in rows])
     # For each follower, is_following = whether current user follows that follower
     data = []
     for user, followed_at in rows:
@@ -78,6 +80,7 @@ def list_followers_endpoint(
                 username=user.username,
                 display_name=user.display_name,
                 profile_picture_url=user.profile_picture_url,
+                subscription_plan_id=plan_map.get(user.id),
                 is_following=is_fol,
                 followed_at=followed_at,
             )
@@ -97,6 +100,7 @@ def list_following_endpoint(
     get_user_or_404(db, user_id)
     current_id = UUID(current_user.auth_user_id) if current_user else None
     rows, total = list_following(db, uid, page=page, per_page=per_page, current_user_id=current_id)
+    plan_map = get_active_plan_ids_for_users(db, [user.id for user, _ in rows])
     data = []
     for user, followed_at in rows:
         # Listed user is "following" from perspective of the profile user; is_following = current user follows them
@@ -107,6 +111,7 @@ def list_following_endpoint(
                 username=user.username,
                 display_name=user.display_name,
                 profile_picture_url=user.profile_picture_url,
+                subscription_plan_id=plan_map.get(user.id),
                 is_following=is_fol,
                 followed_at=followed_at,
             )

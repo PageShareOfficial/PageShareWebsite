@@ -85,7 +85,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <Topbar />
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               <Feed

@@ -7,6 +7,7 @@ import { addBookmark as apiAddBookmark, removeBookmark as apiRemoveBookmark, lis
 import { formatRelativeTime } from '@/utils/core/dateUtils';
 import { getContextCache, setContextCache, invalidateContextCache } from '@/lib/contextCache';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { mapApiAuthorToUser } from '@/utils/user/mapApiAuthor';
 
 function mapBookmarkedItemToPost(item: BookmarkedPostItem): Post {
   const dateStr = item.created_at ?? item.bookmarked_at;
@@ -15,13 +16,7 @@ function mapBookmarkedItemToPost(item: BookmarkedPostItem): Post {
 
   return {
     id: item.id,
-    author: {
-      id: item.author.username,
-      displayName: item.author.display_name,
-      handle: item.author.username,
-      avatar: item.author.profile_picture_url ?? '',
-      badge: undefined,
-    },
+    author: mapApiAuthorToUser(item.author),
     content: item.content,
     createdAt: displayTime,
     stats: { likes: 0, comments: 0, reposts: 0 },

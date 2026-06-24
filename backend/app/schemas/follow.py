@@ -18,5 +18,6 @@ class FollowerFollowingItem(BaseModel):
     username: str
     display_name: str
     profile_picture_url: Optional[str] = None
+    subscription_plan_id: Optional[str] = None
     is_following: bool = False
     followed_at: datetime
