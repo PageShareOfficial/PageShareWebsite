@@ -13,6 +13,7 @@ import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
 import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import {
   FREE_CONTENT_MAX_LENGTH,
   PREMIUM_CONTENT_MAX_LENGTH,
@@ -218,23 +219,12 @@ export default function CommentComposer({
           {/* Media Previews */}
           {(mediaPreviews.length > 0 || selectedGif) && (
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {mediaPreviews.map((preview, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-xl"
-                    loading="lazy"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMedia(index)}
-                    className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                  >
-                    <HiX className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              ))}
+              <MediaPreviewGrid
+                previews={mediaPreviews}
+                onRemove={handleRemoveMedia}
+                containerClassName="col-span-2 grid grid-cols-2 gap-2"
+                imageClassName="w-full h-24 object-cover rounded-xl"
+              />
               {selectedGif && (
                 <div className="relative group">
                   <img

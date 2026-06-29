@@ -2,13 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface MobileHeaderProps {
   title: string;
   onBack?: () => void;
+  rightContent?: ReactNode;
 }
 
-export default function MobileHeader({ title, onBack }: MobileHeaderProps) {
+export default function MobileHeader({ title, onBack, rightContent }: MobileHeaderProps) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -21,7 +23,7 @@ export default function MobileHeader({ title, onBack }: MobileHeaderProps) {
 
   return (
     <div className="md:hidden sticky top-0 z-50 bg-black border-b border-white/10">
-      <div className="flex items-center gap-4 px-4 py-3">
+      <div className="flex items-center gap-3 px-4 py-3">
         <button
           onClick={handleBack}
           className="p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -29,9 +31,8 @@ export default function MobileHeader({ title, onBack }: MobileHeaderProps) {
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
-        <h1 className="text-lg font-semibold text-white truncate flex-1">
-          {title}
-        </h1>
+        <h1 className="text-lg font-semibold text-white truncate flex-1">{title}</h1>
+        {rightContent ? <div className="flex-shrink-0">{rightContent}</div> : null}
       </div>
     </div>
   );

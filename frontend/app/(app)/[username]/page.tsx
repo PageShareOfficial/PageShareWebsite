@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { notFound } from 'next/navigation';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
@@ -24,6 +23,7 @@ import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
 import { isReservedRoute } from '@/utils/core/routeUtils';
 import { getBaseUrl } from '@/lib/api/client';
+import { FaUserSlash } from 'react-icons/fa';
 import {
   getProfileByUsername,
   followUserApi,
@@ -153,12 +153,6 @@ export default function ProfilePage() {
     if (!username || !isReserved) return;
     router.replace(`/${username.toLowerCase()}`);
   }, [username, router, isReserved]);
-
-  // Backend is the only source of truth: 404 when backend returns 404 or when API is not configured
-  if (username && !isReserved) {
-    if (!apiUrl) notFound();
-    if (profileNotFound) notFound();
-  }
 
   const isOwnProfile = backendProfile ? currentUser.handle === backendProfile.username : currentUser.handle === username.toLowerCase();
 
@@ -495,9 +489,14 @@ export default function ProfilePage() {
       <>
         <Topbar />
         <div className="flex-1 flex pb-16 md:pb-0">
-          <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center">
-            <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
-            <p className="text-gray-400">The user @{username} doesn&apos;t exist.</p>
+          <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center flex items-center justify-center min-h-[60vh]">
+            <div className="max-w-md mx-auto">
+              <div className="w-40 h-40 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                <FaUserSlash className="w-20 h-20 text-gray-300" />
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">User not found</h1>
+              <p className="text-gray-400">The user @{username} doesn&apos;t exist.</p>
+            </div>
           </div>
         </div>
       </>
