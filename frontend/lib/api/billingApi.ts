@@ -15,7 +15,10 @@ export interface BillingStatus {
   status: SubscriptionStatus;
   interval: BillingInterval | null;
   current_period_end: string | null;
+  cancel_at_period_end: boolean;
   past_due_grace_ends_at: string | null;
+  credit_balance: number;
+  currency: string | null;
 }
 
 export interface CreateCheckoutSessionRequest {
@@ -23,6 +26,11 @@ export interface CreateCheckoutSessionRequest {
   interval: BillingInterval;
   success_url: string;
   cancel_url: string;
+}
+
+export interface SwitchPlanRequest {
+  plan_id: PlanId;
+  interval: BillingInterval;
 }
 
 export interface CheckoutSessionResponse {
@@ -48,6 +56,13 @@ export async function createCheckoutSession(
     payload,
     accessToken
   );
+}
+
+export async function switchSubscriptionPlan(
+  accessToken: string,
+  payload: SwitchPlanRequest
+): Promise<BillingStatus> {
+  return apiPost<BillingStatus>('/billing/switch', payload, accessToken);
 }
 
 export async function createPortalSession(

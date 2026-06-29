@@ -26,6 +26,7 @@ describe('billingApi', () => {
       status: 'active' as const,
       interval: 'monthly' as const,
       current_period_end: '2026-07-01T00:00:00Z',
+      cancel_at_period_end: false,
       past_due_grace_ends_at: null,
     };
     vi.mocked(apiGet).mockResolvedValue(status);

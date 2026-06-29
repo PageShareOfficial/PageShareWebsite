@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -8,6 +8,7 @@ import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import {
   createCheckoutSession,
   createPortalSession,
+  switchSubscriptionPlan,
 } from '@/lib/api/billingApi';
 import type { BillingInterval, PlanId } from '@/types/billing';
 import { buildCheckoutReturnUrls } from '@/utils/billing/checkoutReturnUrls';
@@ -27,6 +28,7 @@ export function usePlanCheckout(): UsePlanCheckoutResult {
   const isOnline = useOnlineStatus();
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkingOutPlanId, setCheckingOutPlanId] = useState<PlanId | null>(null);
+  const checkoutInFlightRef = useRef(false);
 
   const clearCheckoutError = useCallback(() => {
     setCheckoutError(null);
@@ -38,6 +40,10 @@ export function usePlanCheckout(): UsePlanCheckoutResult {
 
   const handleSelectPlan = useCallback(
     async (planId: PlanId, interval: BillingInterval) => {
+      if (checkoutInFlightRef.current) {
+        return;
+      }
+
       setCheckoutError(null);
 
       if (!isOnline) {
@@ -52,16 +58,32 @@ export function usePlanCheckout(): UsePlanCheckoutResult {
         return;
       }
 
+      checkoutInFlightRef.current = true;
       setCheckingOutPlanId(planId);
 
       try {
-        const hasActivePlan =
-          billingStatus?.is_premium && billingStatus.plan_id === planId;
+        const isPremium = billingStatus?.is_premium === true;
+        const hasExactActivePlan =
+          isPremium &&
+          billingStatus?.plan_id === planId &&
+          billingStatus?.interval === interval;
 
-        if (hasActivePlan) {
+        if (hasExactActivePlan) {
           const { url } = await createPortalSession(accessToken);
           window.open(url, '_blank', 'noopener,noreferrer');
-          setCheckingOutPlanId(null);
+          return;
+        }
+
+        // Already premium on a different plan/interval: switch in place with
+        // proration (no second checkout, no loss of access) instead of
+        // cancel-then-checkout. New subscribers go through Stripe Checkout.
+        if (isPremium) {
+          await switchSubscriptionPlan(accessToken, {
+            plan_id: planId,
+            interval,
+          });
+          const { success_url } = buildCheckoutReturnUrls();
+          redirectToStripe(success_url);
           return;
         }
 
@@ -75,15 +97,18 @@ export function usePlanCheckout(): UsePlanCheckoutResult {
 
         redirectToStripe(url);
       } catch (error) {
-        setCheckingOutPlanId(null);
         setCheckoutError(
           getErrorMessage(error, 'Could not start checkout. Please try again.')
         );
+      } finally {
+        checkoutInFlightRef.current = false;
+        setCheckingOutPlanId(null);
       }
     },
     [
       billingStatus?.is_premium,
       billingStatus?.plan_id,
+      billingStatus?.interval,
       isOnline,
       redirectToStripe,
       router,

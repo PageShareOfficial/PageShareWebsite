@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.user_entitlement import UserEntitlement
 from app.schemas.billing import BillingStatusResponse
 from app.services.billing_constants import (
+    STALE_SUBSCRIPTION_STATUSES,
     compute_past_due_grace_ends_at,
     is_premium_entitlement,
     normalize_interval,
@@ -38,6 +39,20 @@ def row_grants_premium(
         now=now,
     )
 
+def entitlement_matches_checkout(
+    row: Optional[UserEntitlement],
+    plan_id: str,
+    interval: str,
+) -> bool:
+    """True when the user already has premium on this exact plan and interval."""
+    if not row:
+        return False
+    return (
+        row_grants_premium(row)
+        and normalize_plan_id(row.plan_id) == normalize_plan_id(plan_id)
+        and normalize_interval(row.interval) == normalize_interval(interval)
+    )
+
 def entitlement_to_status(row: Optional[UserEntitlement]) -> BillingStatusResponse:
     if not row:
         return BillingStatusResponse(
@@ -46,6 +61,7 @@ def entitlement_to_status(row: Optional[UserEntitlement]) -> BillingStatusRespon
             status="none",
             interval=None,
             current_period_end=None,
+            cancel_at_period_end=False,
             past_due_grace_ends_at=None,
         )
 
@@ -66,6 +82,7 @@ def entitlement_to_status(row: Optional[UserEntitlement]) -> BillingStatusRespon
         status=status,  # type: ignore[arg-type]
         interval=interval,
         current_period_end=row.current_period_end,
+        cancel_at_period_end=bool(getattr(row, "cancel_at_period_end", False)),
         past_due_grace_ends_at=row.past_due_grace_ends_at,
     )
 
@@ -125,6 +142,24 @@ def _apply_grace_on_status_change(
     if new_status in ("canceled", "incomplete", "none"):
         row.past_due_grace_ends_at = None
 
+def should_apply_subscription_webhook(
+    row: UserEntitlement,
+    incoming_subscription_id: Optional[str],
+    incoming_status: str,
+) -> bool:
+    """
+    Ignore terminal webhooks for subscriptions we are not tracking.
+    Prevents a canceled analyst sub from overwriting a new investor sub when
+    stripe_subscription_id was cleared locally during a plan switch.
+    """
+    if not incoming_subscription_id:
+        return True
+    if incoming_subscription_id == row.stripe_subscription_id:
+        return True
+    if incoming_status in STALE_SUBSCRIPTION_STATUSES:
+        return False
+    return True
+
 def upsert_from_stripe_subscription(
     db: Session,
     *,
@@ -135,8 +170,16 @@ def upsert_from_stripe_subscription(
     plan_id: Optional[str],
     interval: Optional[str],
     current_period_end: Optional[int],
+    cancel_at_period_end: bool = False,
 ) -> UserEntitlement:
     row = get_or_create_entitlement(db, user_id)
+    if not should_apply_subscription_webhook(
+        row,
+        stripe_subscription_id,
+        status or "none",
+    ):
+        return row
+
     if stripe_customer_id:
         row.stripe_customer_id = stripe_customer_id
     if stripe_subscription_id:
@@ -145,9 +188,22 @@ def upsert_from_stripe_subscription(
     new_status = status or "none"
     _apply_grace_on_status_change(row, new_status)
     row.status = new_status
-    row.plan_id = normalize_plan_id(plan_id)
-    row.interval = normalize_interval(interval)
-    row.current_period_end = _epoch_to_datetime(current_period_end)
+
+    # Keep plan details while access is (or may still be) granted; otherwise
+    # revert to a Free-like row so a canceled sub never leaks stale plan/period.
+    if new_status in ("active", "trialing", "past_due"):
+        row.plan_id = normalize_plan_id(plan_id)
+        row.interval = normalize_interval(interval)
+        # Some Stripe events omit the period; keep the known value instead of
+        # nulling it (e.g. a cancel-at-period-end update should preserve it).
+        if current_period_end is not None:
+            row.current_period_end = _epoch_to_datetime(current_period_end)
+        row.cancel_at_period_end = bool(cancel_at_period_end)
+    else:
+        row.plan_id = None
+        row.interval = None
+        row.current_period_end = None
+        row.cancel_at_period_end = False
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -166,6 +222,13 @@ def parse_subscription_record(subscription: dict[str, Any]) -> dict[str, Any]:
     elif interval == "month":
         interval = "monthly"
 
+    # Stripe's newer API versions expose current_period_end on the subscription
+    # item rather than the top-level subscription, so fall back to the item.
+    item = items[0] if items else {}
+    current_period_end = subscription.get("current_period_end")
+    if current_period_end is None:
+        current_period_end = item.get("current_period_end")
+
     user_id_raw = metadata.get("supabase_user_id")
     return {
         "user_id": UUID(user_id_raw) if user_id_raw else None,
@@ -174,5 +237,6 @@ def parse_subscription_record(subscription: dict[str, Any]) -> dict[str, Any]:
         "status": subscription.get("status") or "none",
         "plan_id": metadata.get("plan_id"),
         "interval": interval,
-        "current_period_end": subscription.get("current_period_end"),
+        "current_period_end": current_period_end,
+        "cancel_at_period_end": bool(subscription.get("cancel_at_period_end", False)),
     }

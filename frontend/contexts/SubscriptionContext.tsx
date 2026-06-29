@@ -31,6 +31,10 @@ const DEFAULT_STATUS: BillingStatus = {
   status: 'none',
   interval: null,
   current_period_end: null,
+  cancel_at_period_end: false,
+  past_due_grace_ends_at: null,
+  credit_balance: 0,
+  currency: null,
 };
 
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);

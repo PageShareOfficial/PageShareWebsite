@@ -8,6 +8,12 @@ BillingInterval = Literal["monthly", "yearly"]
 
 PREMIUM_STATUSES = frozenset({"active", "trialing"})
 CANCELABLE_STATUSES = frozenset({"active", "trialing", "past_due"})
+STALE_SUBSCRIPTION_STATUSES = frozenset({
+    "canceled",
+    "incomplete",
+    "incomplete_expired",
+    "unpaid",
+})
 VALID_PLAN_IDS = frozenset({"analyst", "investor"})
 VALID_INTERVALS = frozenset({"monthly", "yearly"})
 PAST_DUE_GRACE_DAYS = 7

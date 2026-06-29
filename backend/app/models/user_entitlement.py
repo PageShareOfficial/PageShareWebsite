@@ -1,6 +1,6 @@
 """User subscription entitlement mirror (updated via Stripe webhooks)."""
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 
 from . import Base
@@ -21,6 +21,9 @@ class UserEntitlement(Base):
     interval = Column(String(20), nullable=True)
     status = Column(String(32), nullable=False, server_default="none")
     current_period_end = Column(DateTime(timezone=True), nullable=True)
+    cancel_at_period_end = Column(
+        Boolean, nullable=False, server_default=func.false()
+    )
     past_due_grace_ends_at = Column(DateTime(timezone=True), nullable=True)
     updated_at = Column(
         DateTime(timezone=True),

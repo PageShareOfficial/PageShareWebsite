@@ -43,7 +43,7 @@ function getPlanDetails(planId: PlanId | null | undefined) {
 }
 
 export default function BillingPageContent() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { billingStatus, isPremium, isLoading, refreshBillingStatus } =
     useSubscription();
   const { openPremium } = usePremiumOverlay();
@@ -88,6 +88,25 @@ export default function BillingPageContent() {
   const renewalLabel = billingStatus?.current_period_end
     ? formatDate(billingStatus.current_period_end)
     : null;
+  const isScheduledToCancel =
+    billingStatus?.cancel_at_period_end === true &&
+    billingStatus.status !== 'canceled';
+  const showAccessUntil =
+    billingStatus?.status === 'canceled' || isScheduledToCancel;
+  // On a hard refresh Supabase re-resolves the session before the billing fetch
+  // can start, so show the loader until auth settles and billing has resolved
+  // (otherwise the Free section flashes for an authenticated premium user).
+  const isResolvingBilling =
+    authLoading || isLoading || (!!session && billingStatus === null);
+
+  const creditBalance = billingStatus?.credit_balance ?? 0;
+  const formattedCredit =
+    creditBalance > 0
+      ? new Intl.NumberFormat(undefined, {
+          style: 'currency',
+          currency: (billingStatus?.currency ?? 'usd').toUpperCase(),
+        }).format(creditBalance / 100)
+      : null;
 
   return (
     <>
@@ -122,7 +141,7 @@ export default function BillingPageContent() {
           </div>
 
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
-            {isLoading ? (
+            {isResolvingBilling ? (
               <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
                 <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
                 Loading subscription details...
@@ -161,10 +180,20 @@ export default function BillingPageContent() {
                   </div>
                 )}
 
+                {isScheduledToCancel && renewalLabel && (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      Your {plan.roleTitle} plan is set to cancel. You&apos;ll keep
+                      premium access until {renewalLabel}. Reactivate anytime from
+                      Manage billing before then.
+                    </p>
+                  </div>
+                )}
+
                 {renewalLabel && (
                   <div className={`rounded-lg border px-3 py-2.5 ${accent.border} bg-black/20`}>
                     <p className="text-xs text-gray-400 mb-0.5">
-                      {billingStatus?.status === 'canceled' ? 'Access until' : 'Renews on'}
+                      {showAccessUntil ? 'Access until' : 'Renews on'}
                     </p>
                     <p className="text-sm font-medium text-white">{renewalLabel}</p>
                   </div>
@@ -209,15 +238,48 @@ export default function BillingPageContent() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={openPremium}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" aria-hidden />
-                  View premium plans
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={openPremium}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" aria-hidden />
+                    View premium plans
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void refreshBillingStatus()}
+                    className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors"
+                  >
+                    Refresh status
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Just upgraded? It can take a moment to sync — tap Refresh status.
+                </p>
               </div>
+            )}
+
+            {isResolvingBilling ? (
+              <div className="mt-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden />
+                  Checking account credit...
+                </div>
+              </div>
+            ) : (
+              formattedCredit && (
+                <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5">
+                  <p className="text-xs font-semibold text-emerald-200">
+                    {formattedCredit} in account credit
+                  </p>
+                  <p className="text-xs text-emerald-200/80 leading-relaxed mt-0.5">
+                    This credit is applied automatically to your upcoming invoices,
+                    so you won&apos;t be charged until it runs out.
+                  </p>
+                </div>
+              )
             )}
 
             {error && (
@@ -228,9 +290,10 @@ export default function BillingPageContent() {
 
             <p className="mt-4 text-[11px] text-gray-500 leading-relaxed">
               Payments are processed securely by Stripe. PageShare does not store your card
-              details. To change plans, select a new plan in checkout — your current subscription
-              is canceled immediately with no mid-cycle refund, then you pay for the new plan.
-              Subscription changes may take a moment to reflect after returning from Stripe.
+              details. When you switch plans, we update your existing subscription with
+              proration: upgrades are charged only the difference, and downgrades add the
+              unused balance as account credit toward future invoices. Changes may take a
+              moment to reflect after returning from Stripe.
             </p>
           </div>
         </div>

@@ -114,7 +114,8 @@ export default function PlansPageContent({
         {PLANS.map((plan) => {
           const isCurrentPlan =
             billingStatus?.is_premium === true &&
-            billingStatus.plan_id === plan.id;
+            billingStatus.plan_id === plan.id &&
+            billingStatus.interval === billingInterval;
           const hasOtherActivePlan =
             billingStatus?.is_premium === true &&
             billingStatus.plan_id !== plan.id;
@@ -170,11 +171,13 @@ export default function PlansPageContent({
           <Shield className="w-4 h-4 text-cyan-400" aria-hidden />
         </div>
         <div>
-          <h3 className="text-xs font-semibold text-white mb-1.5">Not financial advice.</h3>
+          <h3 className="text-xs font-semibold text-white mb-1.5">
+            Build your credibility, not just your watchlist.
+          </h3>
           <p className="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
-            PageShare is an educational and informational platform for structured
-            market commentary and prediction history. Nothing on PageShare is
-            financial advice or a recommendation to buy, sell, or hold any asset.
+            PageShare turns your market calls into a transparent, time-stamped
+            track record. Share structured commentary, prove your insight over
+            time, and grow an audience that trusts your edge.
           </p>
         </div>
       </footer>

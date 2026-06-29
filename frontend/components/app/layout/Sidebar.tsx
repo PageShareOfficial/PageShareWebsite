@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import Skeleton from '@/components/app/common/Skeleton';
 
 const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
@@ -91,7 +92,6 @@ export default function Sidebar() {
   const mobileNavItems = [
     { name: 'Home', icon: Home, href: '/home', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
-    { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
     { name: 'More', icon: MoreHorizontal, href: '#', isMore: true, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
@@ -217,8 +217,11 @@ export default function Sidebar() {
                   className="flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0 text-left hidden lg:block">
-                  <div className="font-semibold text-white text-sm truncate">
-                    {currentUser.displayName}
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="font-semibold text-white text-sm truncate">
+                      {currentUser.displayName}
+                    </span>
+                    <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
                   </div>
                   <div className="text-gray-400 text-xs truncate">
                     @{currentUser.handle}
@@ -232,6 +235,17 @@ export default function Sidebar() {
           {/* Dropdown Menu */}
           {isProfileMenuOpen && (
             <div className="absolute bottom-full left-0 lg:left-4 lg:right-4 right-0 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[200px] lg:min-w-0">
+              <div className="px-4 py-3 border-b border-white/10 lg:hidden">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="font-semibold text-white text-sm truncate">
+                    {currentUser.displayName}
+                  </span>
+                  <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
+                </div>
+                <div className="text-gray-400 text-xs truncate">
+                  @{currentUser.handle}
+                </div>
+              </div>
               <Link
                 href="/settings?action=delete"
                 onClick={() => setIsProfileMenuOpen(false)}
@@ -289,13 +303,27 @@ export default function Sidebar() {
                   {isMoreMenuOpen && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
                       <Link
+                        href="/labs"
+                        prefetch={true}
+                        onClick={() => {
+                          setIsMoreMenuOpen(false);
+                          setActiveNav('Labs');
+                        }}
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                          getActiveNav('/labs') ? 'bg-white/10 text-white' : 'text-white'
+                        }`}
+                      >
+                        <FlaskConical className="w-4 h-4" />
+                        <span className="text-sm">Labs</span>
+                      </Link>
+                      <Link
                         href="/bookmarks"
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Bookmarks');
                         }}
-                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
                           getActiveNav('/bookmarks') ? 'bg-white/10 text-white' : 'text-white'
                         }`}
                       >
