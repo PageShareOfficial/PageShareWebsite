@@ -8,7 +8,6 @@ from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.schemas.post import (
     PollInfo,
-    PostAuthor,
     PostInFeedResponse,
     PostStats,
     TickerInfo,
@@ -24,6 +23,7 @@ from app.services.post_service import (
     get_post_tickers,
 )
 from app.services.poll_service import get_polls_for_posts
+from app.utils.post_author import build_post_author, load_subscription_plan_map
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
@@ -42,7 +42,16 @@ def _poll_info_from_tuple(t):
         expires_at=expires_at,
     )
 
-def _post_response(db: Session, post, author, stats: tuple, interactions: tuple, tickers: list, poll_info=None) -> PostInFeedResponse:
+def _post_response(
+    db: Session,
+    post,
+    author,
+    stats: tuple,
+    interactions: tuple,
+    tickers: list,
+    poll_info=None,
+    subscription_plan_id: str | None = None,
+) -> PostInFeedResponse:
     """Build PostInFeedResponse from post, author, stats, interactions, tickers, optional poll, optional original_post for quote reposts."""
     likes, comments, reposts = stats
     liked, reposted = interactions
@@ -50,13 +59,7 @@ def _post_response(db: Session, post, author, stats: tuple, interactions: tuple,
     poll_obj = _poll_info_from_tuple(poll_info) if poll_info else None
     return PostInFeedResponse(
         id=str(post.id),
-        author=PostAuthor(
-            id=str(author.id),
-            username=author.username,
-            display_name=author.display_name,
-            profile_picture_url=author.profile_picture_url,
-            badge=author.badge,
-        ),
+        author=build_post_author(author, subscription_plan_id),
         content=post.content,
         media_urls=post.media_urls,
         gif_url=post.gif_url,
@@ -94,6 +97,8 @@ def get_feed_endpoint(
     interactions_map = _get_user_interactions(db, current_id, logical_ids)
     tickers_map = {p.id: get_post_tickers(db, p.id) for p, _ in rows}
     poll_map = get_polls_for_posts(db, post_ids, current_id)
+    author_ids = [u.id for _, u in rows]
+    plan_map = load_subscription_plan_map(db, author_ids)
     data = [
         _post_response(
             db,
@@ -103,6 +108,7 @@ def get_feed_endpoint(
             interactions_map.get(logical_id(p), (False, False)),
             tickers_map.get(p.id, []),
             poll_map.get(p.id),
+            plan_map.get(u.id),
         )
         for p, u in rows
     ]

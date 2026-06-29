@@ -1,19 +1,13 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import RightRail from './RightRail';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
-
-interface RightSidebarProps {
-  upgradePath?: string;
-}
 
 /**
  * Shared right sidebar wrapper.
  * Keeps page files clean by centralizing RightRail + watchlist wiring.
  */
-export default function RightSidebar({ upgradePath = '/plans' }: RightSidebarProps) {
-  const router = useRouter();
+export default function RightSidebar() {
   const {
     watchlist,
     setWatchlist,
@@ -26,7 +20,6 @@ export default function RightSidebar({ upgradePath = '/plans' }: RightSidebarPro
       <RightRail
         watchlist={watchlist}
         onManageWatchlist={openManageModal}
-        onUpgradeLabs={() => router.push(upgradePath)}
         onUpdateWatchlist={setWatchlist}
         isLoading={watchlistLoading}
       />

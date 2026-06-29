@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Calendar, UserPlus, UserMinus } from 'lucide-react';
 import { User } from '@/types';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import Skeleton from '@/components/app/common/Skeleton';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
@@ -106,9 +106,7 @@ export default function ProfileHeader({
               <h1 className="text-xl md:text-2xl font-bold text-white truncate">
                 {profileUser.displayName}
               </h1>
-              {profileUser.badge && (
-                <UserBadge badge={profileUser.badge} size="md" />
-              )}
+              <AuthorBadges subscriptionPlanId={profileUser.subscriptionPlanId} size="md" />
             </div>
             {!basicOnly && (
               <>

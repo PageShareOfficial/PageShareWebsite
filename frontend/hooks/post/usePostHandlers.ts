@@ -205,7 +205,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
           displayName: currentUser.displayName,
           handle: currentUser.handle,
           avatar: currentUser.avatar,
-          badge: currentUser.badge,
+          subscriptionPlanId: currentUser.subscriptionPlanId,
         },
       });
 
@@ -377,7 +377,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
         displayName: currentUser.displayName,
         handle: currentUser.handle,
         avatar: currentUser.avatar,
-        badge: currentUser.badge,
+        subscriptionPlanId: currentUser.subscriptionPlanId,
       },
       content,
       createdAt: 'now',
@@ -419,7 +419,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
           displayName: currentUser.displayName,
           handle: currentUser.handle,
           avatar: currentUser.avatar,
-          badge: currentUser.badge,
+          subscriptionPlanId: currentUser.subscriptionPlanId,
         },
         hasPoll ? { options: poll!.options.filter((o) => o.trim()), duration: poll!.duration } : undefined
       );
@@ -477,7 +477,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
         displayName: currentUser.displayName,
         handle: currentUser.handle,
         avatar: currentUser.avatar,
-        badge: currentUser.badge || 'Verified',
+        subscriptionPlanId: currentUser.subscriptionPlanId,
       },
       quoteText: text,
     });

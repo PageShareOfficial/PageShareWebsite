@@ -70,7 +70,7 @@ export default function TickerDetailPage() {
   if (isLoading) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="flex-1 flex pb-16 md:pb-0">
           <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
             <TickerSkeleton />
@@ -84,7 +84,7 @@ export default function TickerDetailPage() {
   if (error || !data || !type) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="flex-1 flex pb-16 md:pb-0">
           <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
             <ErrorState
@@ -109,7 +109,7 @@ export default function TickerDetailPage() {
 
       {/* Top Bar - Desktop Only */}
       <div className="hidden md:block">
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
       </div>
 
       {/* Desktop Header with Back Button - Desktop/iPad Only */}

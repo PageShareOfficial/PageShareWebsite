@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
 import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
 import dynamic from 'next/dynamic';
@@ -15,8 +14,14 @@ import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
 import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
 import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import {
+  FREE_CONTENT_MAX_LENGTH,
+  PREMIUM_CONTENT_MAX_LENGTH,
+} from '@/constants/contentLimits';
+import { useSubscription } from '@/hooks/billing/useSubscription';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -53,7 +58,8 @@ export default function TweetComposer({
   allPosts = [],
   isPosting = false,
 }: TweetComposerProps) {
-  const router = useRouter();
+  const { openPremium } = usePremiumOverlay();
+  const { isPremium } = useSubscription();
   // Look up original post by ID
   const originalPost = originalPostId ? allPosts.find(p => p.id === originalPostId) : undefined;
   // Load state from sessionStorage on mount
@@ -99,7 +105,8 @@ export default function TweetComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const maxLength = 280;
+  const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
+  const exceedsFreeLimit = !isPremium && tweetText.length > FREE_CONTENT_MAX_LENGTH;
 
   // Use hooks
   const {
@@ -226,8 +233,8 @@ export default function TweetComposer({
 
     if (!hasText && !hasMedia && !hasGif && !hasPoll) return;
 
-    if (hasText && tweetText.length > maxLength) {
-      router.push('/plans');
+    if (hasText && exceedsFreeLimit) {
+      openPremium();
       return;
     }
 
@@ -331,49 +338,31 @@ export default function TweetComposer({
                   overlayRef.current.style.paddingLeft = computedStyle.paddingLeft;
                 }
               }}
-              placeholder={isOverLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : (originalPost ? "Add a comment..." : "What's happening?"))}
+              placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : (originalPost ? "Add a comment..." : "What's happening?"))}
               className={`w-full bg-transparent text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-none overflow-hidden relative z-10 ${
-                isOverLimit ? 'placeholder-red-400' : ''
+                exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
                 height: '48px', // Start with 2 lines
                 minHeight: '48px',
                 maxHeight: '360px', // Max 15 lines
-                paddingBottom: isOverLimit ? '40px' : '0', // Add padding for mobile upgrade button
                 caretColor: 'white',
                 color: 'transparent', // Make text transparent so overlay shows through
               }}
               rows={2}
               autoFocus={isModal}
             />
-            {/* Upgrade to Premium overlay message when over limit - Mobile only (inside textarea area) */}
-            {isOverLimit && (
-              <div className="absolute bottom-1 left-0 right-0 flex items-center justify-center pointer-events-none md:hidden" style={{ paddingBottom: '8px' }}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    router.push('/plans');
-                  }}
-                  className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
-                >
-                  Upgrade to Premium
-                </button>
-              </div>
-            )}
           </div>
-          {/* Upgrade to Premium message when over limit - Desktop/Tablet (below textarea) */}
-          {isOverLimit && (
-            <div className="hidden md:flex items-center justify-center mt-2 pointer-events-none">
+          {exceedsFreeLimit && (
+            <div className="flex items-center justify-center mt-2">
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  router.push('/plans');
+                  openPremium();
                 }}
-                className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
+                className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors shadow-lg"
               >
                 Upgrade to Premium
               </button>
@@ -580,9 +569,7 @@ export default function TweetComposer({
                 />
                 <span className="font-semibold text-white text-sm">{originalPost.author.displayName}</span>
                 <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
-                {originalPost.author.badge && (
-                  <UserBadge badge={originalPost.author.badge} size="sm" />
-                )}
+                <AuthorBadges subscriptionPlanId={originalPost.author.subscriptionPlanId} size="sm" />
                 <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
               </div>
               {/* Render content based on post type */}

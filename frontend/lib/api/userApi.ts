@@ -10,7 +10,7 @@ export interface ProfileByUsernameResponse {
   display_name: string;
   bio?: string | null;
   profile_picture_url?: string | null;
-  badge?: string | null;
+  subscription_plan_id?: string | null;
   follower_count: number;
   following_count: number;
   post_count: number;
@@ -113,6 +113,7 @@ export interface FollowerFollowingItem {
   username: string;
   display_name: string;
   profile_picture_url?: string | null;
+  subscription_plan_id?: string | null;
   is_following: boolean;
   followed_at: string;
 }
@@ -181,7 +182,7 @@ export interface OriginalPostInReplyResponse {
     username: string;
     display_name: string;
     profile_picture_url?: string | null;
-    badge?: string | null;
+    subscription_plan_id?: string | null;
   };
   content: string;
   media_urls?: string[] | null;
@@ -199,7 +200,7 @@ export interface UserReplyItem {
       username: string;
       display_name: string;
       profile_picture_url?: string | null;
-      badge?: string | null;
+      subscription_plan_id?: string | null;
     };
     content: string;
     media_urls?: string[] | null;
@@ -219,7 +220,7 @@ export interface UserReplyItem {
       username: string;
       display_name: string;
       profile_picture_url?: string | null;
-      badge?: string | null;
+      subscription_plan_id?: string | null;
     };
     created_at?: string | null;
     poll?: PollInReplyResponse | null;

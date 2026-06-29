@@ -10,11 +10,11 @@ import TickerImage from '@/components/app/ticker/TickerImage';
 import Skeleton from '@/components/app/common/Skeleton';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 
 interface RightRailProps {
   watchlist: WatchlistItem[];
   onManageWatchlist: () => void;
-  onUpgradeLabs: () => void;
   onUpdateWatchlist: (watchlist: WatchlistItem[]) => void;
   isLoading?: boolean;
 }
@@ -22,16 +22,16 @@ interface RightRailProps {
 export default function RightRail({
   watchlist,
   onManageWatchlist,
-  onUpgradeLabs,
   onUpdateWatchlist,
   isLoading = false,
 }: RightRailProps) {
   const router = useRouter();
   const isOnline = useOnlineStatus();
   const { setShowOfflineOverlay } = useOfflineOverlay();
+  const { openPremium } = usePremiumOverlay();
 
   const handleUpgradeClick = () => {
-    if (isOnline) onUpgradeLabs();
+    if (isOnline) openPremium();
     else setShowOfflineOverlay(true);
   };
 

@@ -9,7 +9,7 @@ export default function LabsPage() {
 
   return (
     <>
-      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <Topbar />
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-4 py-12 md:py-16 lg:py-20">
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">

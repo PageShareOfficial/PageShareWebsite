@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { User } from '@/types';
 import { getCurrentUser } from '@/utils/user/profileUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { parseSubscriptionPlanId } from '@/utils/user/mapApiAuthor';
 
 interface UseCurrentUserResult {
   currentUser: User;
@@ -16,14 +17,14 @@ function backendUserToUser(backendUser: {
   username: string;
   display_name: string;
   profile_picture_url?: string | null;
-  badge?: string | null;
+  subscription_plan_id?: string | null;
 }): User {
   return {
     id: backendUser.id,
     handle: backendUser.username,
     displayName: backendUser.display_name,
     avatar: backendUser.profile_picture_url ?? '',
-    badge: backendUser.badge === 'Verified' ? 'Verified' : backendUser.badge === 'Public' ? 'Public' : undefined,
+    subscriptionPlanId: parseSubscriptionPlanId(backendUser.subscription_plan_id),
   };
 }
 
@@ -55,4 +56,3 @@ export function useCurrentUser(): UseCurrentUserResult {
     refreshUser: backendUser ? refreshBackendUser : undefined,
   };
 }
-

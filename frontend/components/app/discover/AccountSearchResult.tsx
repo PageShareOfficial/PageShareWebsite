@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { User } from '@/types';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface AccountSearchResultProps {
@@ -44,9 +44,7 @@ export default function AccountSearchResult({
             <span className="font-semibold text-white truncate">
               {user.displayName}
             </span>
-            {user.badge && (
-              <UserBadge badge={user.badge} size="sm" />
-            )}
+            <AuthorBadges subscriptionPlanId={user.subscriptionPlanId} size="sm" />
           </div>
           <div className="text-sm text-gray-400 truncate">
             @{user.handle}

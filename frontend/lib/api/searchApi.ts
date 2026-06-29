@@ -4,6 +4,7 @@
  */
 import { apiGet, apiPost, apiDelete } from './client';
 import type { User } from '@/types';
+import { parseSubscriptionPlanId } from '@/utils/user/mapApiAuthor';
 
 /** Backend search response for users (GET /search?type=users). */
 export interface SearchUsersResponse {
@@ -13,6 +14,7 @@ export interface SearchUsersResponse {
       username: string;
       display_name: string;
       profile_picture_url?: string | null;
+      subscription_plan_id?: string | null;
     }>;
     tickers: unknown[];
   };
@@ -26,6 +28,7 @@ function toUser(item: SearchUsersResponse['data']['users'][0]): User {
     handle: item.username,
     displayName: item.display_name,
     avatar: item.profile_picture_url ?? '',
+    subscriptionPlanId: parseSubscriptionPlanId(item.subscription_plan_id),
   };
 }
 
