@@ -1,17 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import Topbar from '@/components/app/layout/Topbar';
 import PredictionsDashboard from '@/components/app/predictions/PredictionsDashboard';
 
 export default function PredictionsPage() {
-  const router = useRouter();
-
   return (
     <>
-      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <Topbar />
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
           <header className="mb-6 flex items-center justify-between gap-3">

@@ -47,7 +47,7 @@ export default function SubmitPredictionPage() {
         rightContent={predictionsLeftPill}
       />
       <div className="hidden md:block">
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
       </div>
 
       <div className="flex-1 flex pb-16 md:pb-0 min-h-0">
