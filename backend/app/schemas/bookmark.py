@@ -13,9 +13,11 @@ class BookmarkToggleResponse(BaseModel):
 class BookmarkedPostAuthor(BaseModel):
     """Author summary in bookmarked post list."""
 
+    id: str
     username: str
     display_name: str
     profile_picture_url: str | None = None
+    subscription_plan_id: Optional[str] = None
 
 class BookmarkedPostItem(BaseModel):
     """One bookmarked post in GET /bookmarks list."""

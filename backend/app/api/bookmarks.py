@@ -14,6 +14,7 @@ from app.schemas.bookmark import (
 from app.services.auth_service import CurrentUser
 from app.api.deps import get_post_or_404
 from app.services.bookmark_service import add_bookmark, list_bookmarks, remove_bookmark
+from app.utils.post_author import load_subscription_plan_map
 from app.utils.http import parse_uuid_or_404
 from app.utils.responses import paginated_response
 
@@ -60,13 +61,17 @@ def list_bookmarks_endpoint(
         page=page,
         per_page=per_page,
     )
+    author_ids = [author.id for _, author, _ in rows]
+    plan_map = load_subscription_plan_map(db, author_ids)
     data = [
         BookmarkedPostItem(
             id=str(post.id),
             author=BookmarkedPostAuthor(
+                id=str(author.id),
                 username=author.username,
                 display_name=author.display_name,
                 profile_picture_url=author.profile_picture_url,
+                subscription_plan_id=plan_map.get(author.id),
             ),
             content=post.content,
             created_at=post.created_at,

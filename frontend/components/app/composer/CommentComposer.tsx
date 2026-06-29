@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
 import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
 import dynamic from 'next/dynamic';
@@ -15,6 +14,12 @@ import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
+import {
+  FREE_CONTENT_MAX_LENGTH,
+  PREMIUM_CONTENT_MAX_LENGTH,
+} from '@/constants/contentLimits';
+import { useSubscription } from '@/hooks/billing/useSubscription';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -43,12 +48,14 @@ export default function CommentComposer({
   currentUser,
   onSubmit,
 }: CommentComposerProps) {
-  const router = useRouter();
+  const { openPremium } = usePremiumOverlay();
+  const { isPremium } = useSubscription();
   const [commentText, setCommentText] = useState('');
   const [showGifPicker, setShowGifPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const maxLength = 280;
+  const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
+  const exceedsFreeLimit = !isPremium && commentText.length > FREE_CONTENT_MAX_LENGTH;
 
   // Use hooks
   const {
@@ -121,9 +128,8 @@ export default function CommentComposer({
   };
 
   const handleCommentSubmit = async (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
-    if (text.length > maxLength) {
-      // Redirect to plans page
-      router.push('/plans');
+    if (!isPremium && text.length > FREE_CONTENT_MAX_LENGTH) {
+      openPremium();
       return;
     }
     
@@ -182,46 +188,28 @@ export default function CommentComposer({
                 const newHeight = Math.min(Math.max(minHeight, scrollHeight), maxHeight);
                 e.target.style.height = `${newHeight}px`;
               }}
-              placeholder={isOverLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
+              placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
               className={`w-full bg-transparent text-white placeholder-gray-500 text-[15px] resize-none focus:outline-none overflow-hidden ${
-                isOverLimit ? 'placeholder-red-400' : ''
+                exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
                 height: '48px', // Start with 2 lines
                 minHeight: '48px',
                 maxHeight: '360px', // Max 15 lines
-                paddingBottom: isOverLimit ? '40px' : '0' // Add padding for mobile upgrade button
               }}
               rows={2}
             />
-            {/* Upgrade to Premium overlay message when over limit - Mobile only (inside textarea area) */}
-            {isOverLimit && (
-              <div className="absolute bottom-1 left-0 right-0 flex items-center justify-center pointer-events-none md:hidden" style={{ paddingBottom: '8px' }}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    router.push('/plans');
-                  }}
-                  className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
-                >
-                  Upgrade to Premium
-                </button>
-              </div>
-            )}
           </div>
-          {/* Upgrade to Premium message when over limit - Desktop/Tablet (below textarea) */}
-          {isOverLimit && (
-            <div className="hidden md:flex items-center justify-center mt-2 pointer-events-none">
+          {exceedsFreeLimit && (
+            <div className="flex items-center justify-center mt-2">
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  router.push('/plans');
+                  openPremium();
                 }}
-                className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors pointer-events-auto shadow-lg"
+                className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors shadow-lg"
               >
                 Upgrade to Premium
               </button>

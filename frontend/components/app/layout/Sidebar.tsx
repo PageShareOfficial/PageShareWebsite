@@ -9,8 +9,10 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import Skeleton from '@/components/app/common/Skeleton';
 import { LuChartCandlestick } from 'react-icons/lu';
 
@@ -21,6 +23,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { currentUser } = useCurrentUser();
   const { signOut, loading: authLoading } = useAuth();
+  const { isOpen: isPremiumOpen, openPremium } = usePremiumOverlay();
   const [activeNav, setActiveNav] = useState('Home');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
@@ -92,7 +95,6 @@ export default function Sidebar() {
     { name: 'Home', icon: Home, href: '/home', prefetch: true },
     { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
-    { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
     { name: 'More', icon: MoreHorizontal, href: '#', isMore: true, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
@@ -104,7 +106,56 @@ export default function Sidebar() {
   // Determine active nav based on current pathname
   const getActiveNav = (href: string) => {
     if (href === '#') return false;
+    if (href === '/settings') {
+      return pathname === '/settings' || pathname.startsWith('/settings/');
+    }
     return pathname === href || (href === '/home' && pathname === '/');
+  };
+
+  const renderNavItem = (item: (typeof allNavItems)[0]) => {
+    const Icon = item.icon;
+    const isPremium = item.name === 'Premium';
+    const isProfile = item.name === 'Profile';
+    const isActive = isPremium ? isPremiumOpen : getActiveNav(item.href);
+    const itemClassName = `flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
+      isActive ? 'bg-white/10 text-white font-medium' : 'text-gray-300 hover:bg-white/5'
+    }`;
+
+    if (isPremium) {
+      return (
+        <button
+          key={item.name}
+          type="button"
+          onClick={() => {
+            openPremium();
+            setActiveNav(item.name);
+          }}
+          className={`w-full ${itemClassName}`}
+          aria-expanded={isPremiumOpen}
+          title={item.name}
+        >
+          <Icon className="w-5 h-5 flex-shrink-0" />
+          <span className="hidden lg:inline">{item.name}</span>
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        prefetch={item.prefetch !== false}
+        onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+        onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+        onClick={() => setActiveNav(item.name)}
+        className={itemClassName}
+        aria-current={isActive ? 'page' : undefined}
+        title={item.name}
+      >
+        <Icon className="w-5 h-5 flex-shrink-0" />
+        <span className="hidden lg:inline">{item.name}</span>
+      </Link>
+    );
   };
 
   return (
@@ -128,58 +179,10 @@ export default function Sidebar() {
         <nav className="flex-1 px-1 lg:px-4 py-2 space-y-1" aria-label="Main navigation">
           {/* Tablet (md-lg): Show nav items without watchlist (watchlist is floating button) */}
           <div className="lg:hidden">
-            {tabletNavItems.map((item: typeof allNavItems[0]) => {
-              const Icon = item.icon;
-              const isActive = getActiveNav(item.href);
-              const isProfile = item.name === 'Profile';
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  prefetch={item.prefetch !== false}
-                  onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-                  onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-                  onClick={() => setActiveNav(item.name)}
-                  className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
-                    isActive
-                      ? 'bg-white/10 text-white font-medium'
-                      : 'text-gray-300 hover:bg-white/5'
-                  }`}
-                  aria-current={isActive ? 'page' : undefined}
-                  title={item.name}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="hidden lg:inline">{item.name}</span>
-                </Link>
-              );
-            })}
+            {tabletNavItems.map((item) => renderNavItem(item))}
           </div>
           <div className="hidden lg:block">
-            {desktopNavItems.map((item: typeof allNavItems[0]) => {
-              const Icon = item.icon;
-              const isActive = getActiveNav(item.href);
-              const isProfile = item.name === 'Profile';
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  prefetch={item.prefetch !== false}
-                  onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-                  onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-                  onClick={() => setActiveNav(item.name)}
-                  className={`flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group ${
-                    isActive
-                      ? 'bg-white/10 text-white font-medium'
-                      : 'text-gray-300 hover:bg-white/5'
-                  }`}
-                  aria-current={isActive ? 'page' : undefined}
-                  title={item.name}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="hidden lg:inline">{item.name}</span>
-                </Link>
-              );
-            })}
+            {desktopNavItems.map((item) => renderNavItem(item))}
           </div>
           
           {/* Post Button - Desktop & Tablet */}
@@ -217,8 +220,11 @@ export default function Sidebar() {
                   className="flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0 text-left hidden lg:block">
-                  <div className="font-semibold text-white text-sm truncate">
-                    {currentUser.displayName}
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="font-semibold text-white text-sm truncate">
+                      {currentUser.displayName}
+                    </span>
+                    <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
                   </div>
                   <div className="text-gray-400 text-xs truncate">
                     @{currentUser.handle}
@@ -232,6 +238,17 @@ export default function Sidebar() {
           {/* Dropdown Menu */}
           {isProfileMenuOpen && (
             <div className="absolute bottom-full left-0 lg:left-4 lg:right-4 right-0 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[200px] lg:min-w-0">
+              <div className="px-4 py-3 border-b border-white/10 lg:hidden">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="font-semibold text-white text-sm truncate">
+                    {currentUser.displayName}
+                  </span>
+                  <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
+                </div>
+                <div className="text-gray-400 text-xs truncate">
+                  @{currentUser.handle}
+                </div>
+              </div>
               <Link
                 href="/settings?action=delete"
                 onClick={() => setIsProfileMenuOpen(false)}
@@ -289,19 +306,47 @@ export default function Sidebar() {
                   {isMoreMenuOpen && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
                       <Link
+                        href="/labs"
+                        prefetch={true}
+                        onClick={() => {
+                          setIsMoreMenuOpen(false);
+                          setActiveNav('Labs');
+                        }}
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                          getActiveNav('/labs') ? 'bg-white/10 text-white' : 'text-white'
+                        }`}
+                      >
+                        <FlaskConical className="w-4 h-4" />
+                        <span className="text-sm">Labs</span>
+                      </Link>
+                      <Link
                         href="/bookmarks"
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Bookmarks');
                         }}
-                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
                           getActiveNav('/bookmarks') ? 'bg-white/10 text-white' : 'text-white'
                         }`}
                       >
                         <Bookmark className="w-4 h-4" />
                         <span className="text-sm">Bookmarks</span>
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMoreMenuOpen(false);
+                          setActiveNav('Premium');
+                          openPremium();
+                        }}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 text-left ${
+                          isPremiumOpen ? 'bg-white/10 text-white' : 'text-white'
+                        }`}
+                      >
+                        <MdOutlineWorkspacePremium className="w-4 h-4" />
+                        <span className="text-sm">Premium</span>
+                      </button>
                       <Link
                         href="/settings"
                         prefetch={true}

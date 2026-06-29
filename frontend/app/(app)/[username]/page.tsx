@@ -39,6 +39,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mapPostResponseToPost, votePoll } from '@/lib/api/postApi';
 import LoadingState from '@/components/app/common/LoadingState';
 import { formatRelativeTime } from '@/utils/core/dateUtils';
+import { mapApiAuthorToUser } from '@/utils/user/mapApiAuthor';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -181,7 +182,13 @@ export default function ProfilePage() {
         displayName: backendProfile.display_name,
         handle: backendProfile.username,
         avatar: backendProfile.profile_picture_url ?? '',
-        badge: backendProfile.badge === 'Verified' ? 'Verified' : backendProfile.badge === 'Public' ? 'Public' : undefined,
+        subscriptionPlanId: mapApiAuthorToUser({
+          id: backendProfile.id,
+          username: backendProfile.username,
+          display_name: backendProfile.display_name,
+          profile_picture_url: backendProfile.profile_picture_url,
+          subscription_plan_id: backendProfile.subscription_plan_id,
+        }).subscriptionPlanId,
         joinedDate: backendProfile.created_at,
         followers: backendProfile.follower_count,
         following: backendProfile.following_count,
@@ -357,13 +364,7 @@ export default function ProfilePage() {
   const replyComments: Comment[] = userReplies.map((item) => ({
     id: item.comment.id,
     postId: item.comment.post_id,
-    author: {
-      id: item.comment.author.id,
-      displayName: item.comment.author.display_name,
-      handle: item.comment.author.username,
-      avatar: item.comment.author.profile_picture_url ?? '',
-      badge: item.comment.author.badge === 'Verified' ? 'Verified' : item.comment.author.badge === 'Public' ? 'Public' : undefined,
-    },
+    author: mapApiAuthorToUser(item.comment.author),
     content: item.comment.content,
     createdAt: formatRelativeTime(new Date(item.comment.created_at)),
     likes: item.comment.likes,
@@ -374,13 +375,7 @@ export default function ProfilePage() {
   }));
   const repliesPostsForContext: Post[] = userReplies.map((item) => {
     const p = item.post;
-    const author: Post['author'] = {
-      id: p.author.id ?? '',
-      displayName: p.author.display_name,
-      handle: p.author.username,
-      avatar: p.author.profile_picture_url ?? '',
-      badge: p.author.badge === 'Verified' ? 'Verified' : p.author.badge === 'Public' ? 'Public' : undefined,
-    };
+    const author = mapApiAuthorToUser(p.author);
     const post: Post = {
       id: p.id,
       author,
@@ -399,13 +394,7 @@ export default function ProfilePage() {
       const op = p.original_post;
       post.quotedPost = {
         id: op.id,
-        author: {
-          id: op.author.id,
-          displayName: op.author.display_name,
-          handle: op.author.username,
-          avatar: op.author.profile_picture_url ?? '',
-          badge: (op.author.badge === 'Verified' || op.author.badge === 'Public') ? op.author.badge : undefined,
-        },
+        author: mapApiAuthorToUser(op.author),
         content: op.content,
         createdAt: op.created_at ? formatRelativeTime(new Date(op.created_at)) : '',
         media: op.media_urls && op.media_urls.length > 0 ? op.media_urls : undefined,
@@ -498,7 +487,7 @@ export default function ProfilePage() {
   if (profileNotFound) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="flex-1 flex pb-16 md:pb-0">
           <div className="w-full border-l border-r border-white/10 px-4 py-12 text-center flex items-center justify-center min-h-[60vh]">
             <div className="max-w-md mx-auto">
@@ -523,7 +512,7 @@ export default function ProfilePage() {
     <>
       <MobileHeader title={titleDisplay} />
           <div className="hidden md:block">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
+            <Topbar />
           </div>
           <DesktopHeader title={titleDisplay} subtitle={subtitleDisplay} withSideBorders={true} />
 

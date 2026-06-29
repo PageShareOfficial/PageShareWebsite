@@ -4,7 +4,7 @@ import { Repeat2 } from 'lucide-react';
 import { Post } from '@/types';
 import { isTweet } from '@/utils/content/postUtils';
 import ContentMenu from '@/components/app/common/ContentMenu';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 
 interface PostHeaderProps {
   post: Post;
@@ -61,9 +61,7 @@ export default function PostHeader({
                 {originalPost.author.displayName}
               </span>
               <span className="text-sm text-gray-400">@{originalPost.author.handle}</span>
-              {originalPost.author.badge && (
-                <UserBadge badge={originalPost.author.badge} size="md" />
-              )}
+              <AuthorBadges subscriptionPlanId={originalPost.author.subscriptionPlanId} size="md" />
             </>
           ) : (
             <>
@@ -74,9 +72,7 @@ export default function PostHeader({
                 {post.author.displayName}
               </span>
               <span className="text-sm text-gray-400">@{post.author.handle}</span>
-              {post.author.badge && (
-                <UserBadge badge={post.author.badge} size="md" />
-              )}
+              <AuthorBadges subscriptionPlanId={post.author.subscriptionPlanId} size="md" />
             </>
           )}
           <span className="text-sm text-gray-500">· {post.createdAt}</span>

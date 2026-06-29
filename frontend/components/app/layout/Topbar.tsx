@@ -6,23 +6,22 @@ import { LogOut, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 
-interface TopbarProps {
-  onUpgradeLabs: () => void;
-}
-
-export default function Topbar({ onUpgradeLabs }: TopbarProps) {
+export default function Topbar() {
   const { currentUser } = useCurrentUser();
   const { signOut } = useAuth();
   const isOnline = useOnlineStatus();
   const { setShowOfflineOverlay } = useOfflineOverlay();
+  const { openPremium } = usePremiumOverlay();
 
   const handleUpgradeClick = () => {
-    if (isOnline) onUpgradeLabs();
+    if (isOnline) openPremium();
     else setShowOfflineOverlay(true);
   };
 
@@ -62,7 +61,12 @@ export default function Topbar({ onUpgradeLabs }: TopbarProps) {
             {isProfileMenuOpen && (
               <div className="absolute top-full left-0 mt-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[200px]">
                 <div className="px-4 py-3 border-b border-white/10">
-                  <div className="font-semibold text-white text-sm">{currentUser.displayName}</div>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="font-semibold text-white text-sm truncate">
+                      {currentUser.displayName}
+                    </span>
+                    <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
+                  </div>
                   <div className="text-gray-400 text-xs">@{currentUser.handle}</div>
                 </div>
                 <Link

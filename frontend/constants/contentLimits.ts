@@ -1,0 +1,2 @@
+export const FREE_CONTENT_MAX_LENGTH = 280;
+export const PREMIUM_CONTENT_MAX_LENGTH = 10000;

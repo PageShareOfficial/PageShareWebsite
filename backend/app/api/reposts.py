@@ -26,6 +26,7 @@ from app.services.repost_service import (
     create_quote_repost,
     delete_repost,
 )
+from app.api.content_limit_http import enforce_content_length_for_user
 from app.utils.http import parse_uuid_or_404
 from app.api.feed import _post_response as build_post_in_feed_response
 
@@ -47,6 +48,8 @@ def create_repost_endpoint(
             detail="type must be 'normal' or 'quote'",
         )
     user_id = UUID(current_user.auth_user_id)
+    if body.type == "quote":
+        enforce_content_length_for_user(db, user_id, body.quote_content or "")
     try:
         if body.type == "normal":
             repost = create_normal_repost(db, user_id, pid)

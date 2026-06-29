@@ -25,10 +25,8 @@ class Settings:
 
         # Supabase project settings
         self.supabase_url: str = os.getenv("SUPABASE_URL", "")
-        self.supabase_anon_key: str = os.getenv("SUPABASE_ANON_KEY", "")
-        self.supabase_service_role_key: str = os.getenv(
-            "SUPABASE_SERVICE_ROLE_KEY", ""
-        )
+        self.supabase_publishable_key: str = os.getenv("SUPABASE_PUBLISHABLE_KEY", "")
+        self.supabase_secret_key: str = os.getenv("SUPABASE_SECRET_KEY", "")
         self.supabase_storage_bucket: str = os.getenv(
             "SUPABASE_STORAGE_BUCKET", "profile-pictures"
         )
@@ -45,6 +43,24 @@ class Settings:
         self.cron_secret: str = os.getenv("CRON_SECRET", "")
         # News (GNews API – optional, 100 req/day free tier)
         self.gnews_api_key: str = os.getenv("GNEWS_API_KEY", "")
+        # Stripe billing (optional until checkout is enabled)
+        self.stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+        self.stripe_webhook_secret: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+        self.stripe_price_id_analyst_monthly: str = os.getenv(
+            "STRIPE_PRICE_ID_ANALYST_MONTHLY", ""
+        )
+        self.stripe_price_id_analyst_yearly: str = os.getenv(
+            "STRIPE_PRICE_ID_ANALYST_YEARLY", ""
+        )
+        self.stripe_price_id_investor_monthly: str = os.getenv(
+            "STRIPE_PRICE_ID_INVESTOR_MONTHLY", ""
+        )
+        self.stripe_price_id_investor_yearly: str = os.getenv(
+            "STRIPE_PRICE_ID_INVESTOR_YEARLY", ""
+        )
+        self.stripe_customer_portal_return_url: str = os.getenv(
+            "STRIPE_CUSTOMER_PORTAL_RETURN_URL", ""
+        )
         # Basic safety check for critical vars in non-dev environments
         if self.app_env != "dev":
             missing = []
