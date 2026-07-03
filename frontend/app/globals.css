@@ -118,5 +118,28 @@
     background-color: #1a1a1a !important;
     color: #ffffff !important;
   }
+
+  .composer-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.85) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  .composer-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .composer-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .composer-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.85);
+    border-radius: 9999px;
+  }
+
+  .composer-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
