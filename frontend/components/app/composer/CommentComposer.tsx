@@ -12,7 +12,9 @@ import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
 import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
 import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
+import { resizeComposerTextarea } from '@/hooks/composer/composerTextareaResize';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import DetectedCashtagsRow from '@/components/app/composer/DetectedCashtagsRow';
 import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import {
   FREE_CONTENT_MAX_LENGTH,
@@ -164,32 +166,17 @@ export default function CommentComposer({
               ref={(textarea) => {
                 if (textarea) {
                   (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = textarea;
-                  // Auto-resize on mount and when value changes
-                  textarea.style.height = 'auto';
-                  const scrollHeight = textarea.scrollHeight;
-                  const lineHeight = 24;
-                  const minHeight = lineHeight * 2; // 2 lines minimum
-                  const maxHeight = lineHeight * 15; // 15 lines maximum
-                  const newHeight = Math.min(Math.max(minHeight, scrollHeight), maxHeight);
-                  textarea.style.height = `${newHeight}px`;
+                  resizeComposerTextarea(textarea);
                 }
               }}
               value={commentText}
               onChange={(e) => {
                 const newValue = e.target.value;
                 setCommentText(newValue);
-                
-                // Auto-resize textarea based on content
-                e.target.style.height = 'auto';
-                const scrollHeight = e.target.scrollHeight;
-                const lineHeight = 24;
-                const minHeight = lineHeight * 2; // Start with 2 lines
-                const maxHeight = lineHeight * 15; // Max 15 lines
-                const newHeight = Math.min(Math.max(minHeight, scrollHeight), maxHeight);
-                e.target.style.height = `${newHeight}px`;
+                resizeComposerTextarea(e.target);
               }}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
-              className={`w-full bg-transparent text-white placeholder-gray-500 text-[15px] resize-none focus:outline-none overflow-hidden ${
+              className={`composer-scrollbar w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
@@ -200,6 +187,7 @@ export default function CommentComposer({
               rows={2}
             />
           </div>
+          <DetectedCashtagsRow text={commentText} />
           {exceedsFreeLimit && (
             <div className="flex items-center justify-center mt-2">
               <button

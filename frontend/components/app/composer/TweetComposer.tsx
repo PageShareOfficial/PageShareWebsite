@@ -8,14 +8,15 @@ import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
 import { Post } from '@/types';
 import { isTweet } from '@/utils/content/postUtils';
-import { parseCashtags } from '@/utils/core/textFormatting';
 import { useMediaUpload, MEDIA_LIMITS_HINT } from '@/hooks/composer/useMediaUpload';
 import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
 import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
 import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
+import { resizeComposerTextarea } from '@/hooks/composer/composerTextareaResize';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
+import DetectedCashtagsRow from '@/components/app/composer/DetectedCashtagsRow';
 import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import {
   FREE_CONTENT_MAX_LENGTH,
@@ -105,7 +106,6 @@ export default function TweetComposer({
   const [showGifPicker, setShowGifPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
   const exceedsFreeLimit = !isPremium && tweetText.length > FREE_CONTENT_MAX_LENGTH;
 
@@ -181,33 +181,6 @@ export default function TweetComposer({
     }
   };
 
-  // Sync overlay padding with textarea
-  useEffect(() => {
-    if (textareaRef.current && overlayRef.current) {
-      const syncPadding = () => {
-        if (textareaRef.current && overlayRef.current) {
-          const computedStyle = window.getComputedStyle(textareaRef.current);
-          overlayRef.current.style.padding = computedStyle.padding;
-          overlayRef.current.style.paddingTop = computedStyle.paddingTop;
-          overlayRef.current.style.paddingRight = computedStyle.paddingRight;
-          overlayRef.current.style.paddingBottom = computedStyle.paddingBottom;
-          overlayRef.current.style.paddingLeft = computedStyle.paddingLeft;
-        }
-      };
-      
-      syncPadding();
-      // Sync on resize
-      const resizeObserver = new ResizeObserver(syncPadding);
-      if (textareaRef.current) {
-        resizeObserver.observe(textareaRef.current);
-      }
-      
-      return () => {
-        resizeObserver.disconnect();
-      };
-    }
-  }, [tweetText]);
-
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -274,73 +247,21 @@ export default function TweetComposer({
         {/* Text Area */}
         <div className="flex-1 min-w-0 relative">
           <div className="relative">
-            {/* Overlay div for cashtag highlighting */}
-            <div
-              ref={overlayRef}
-              className="absolute inset-0 pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
-              style={{
-                fontFamily: 'inherit',
-                fontSize: 'inherit',
-                lineHeight: 'inherit',
-                color: 'transparent',
-                zIndex: 1,
-              }}
-              aria-hidden="true"
-            >
-              <div className="text-white text-base md:text-lg lg:text-xl">
-                {parseCashtags(tweetText, false)}
-              </div>
-            </div>
             <textarea
               ref={(textarea) => {
                 if (textarea) {
                   (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = textarea;
-                  // Auto-resize on mount and when value changes
-                  textarea.style.height = 'auto';
-                  const scrollHeight = textarea.scrollHeight;
-                  const lineHeight = 24;
-                  const minHeight = lineHeight * 2; // 2 lines minimum
-                  const maxHeight = lineHeight * 15; // 15 lines maximum
-                  const newHeight = Math.min(Math.max(minHeight, scrollHeight), maxHeight);
-                  textarea.style.height = `${newHeight}px`;
-                  
-                  // Sync overlay padding with textarea
-                  if (overlayRef.current) {
-                    const computedStyle = window.getComputedStyle(textarea);
-                    overlayRef.current.style.padding = computedStyle.padding;
-                    overlayRef.current.style.paddingTop = computedStyle.paddingTop;
-                    overlayRef.current.style.paddingRight = computedStyle.paddingRight;
-                    overlayRef.current.style.paddingBottom = computedStyle.paddingBottom;
-                    overlayRef.current.style.paddingLeft = computedStyle.paddingLeft;
-                  }
+                  resizeComposerTextarea(textarea);
                 }
               }}
               value={tweetText}
               onChange={(e) => {
                 const newValue = e.target.value;
                 setTweetText(newValue);
-                
-                // Auto-resize textarea based on content
-                e.target.style.height = 'auto';
-                const scrollHeight = e.target.scrollHeight;
-                const lineHeight = 24;
-                const minHeight = lineHeight * 2; // Start with 2 lines
-                const maxHeight = lineHeight * 15; // Max 15 lines
-                const newHeight = Math.min(Math.max(minHeight, scrollHeight), maxHeight);
-                e.target.style.height = `${newHeight}px`;
-                
-                // Sync overlay padding with textarea
-                if (overlayRef.current) {
-                  const computedStyle = window.getComputedStyle(e.target);
-                  overlayRef.current.style.padding = computedStyle.padding;
-                  overlayRef.current.style.paddingTop = computedStyle.paddingTop;
-                  overlayRef.current.style.paddingRight = computedStyle.paddingRight;
-                  overlayRef.current.style.paddingBottom = computedStyle.paddingBottom;
-                  overlayRef.current.style.paddingLeft = computedStyle.paddingLeft;
-                }
+                resizeComposerTextarea(e.target);
               }}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : (originalPost ? "Add a comment..." : "What's happening?"))}
-              className={`w-full bg-transparent text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-none overflow-hidden relative z-10 ${
+              className={`composer-scrollbar w-full bg-transparent pr-3 text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
@@ -348,12 +269,12 @@ export default function TweetComposer({
                 minHeight: '48px',
                 maxHeight: '360px', // Max 15 lines
                 caretColor: 'white',
-                color: 'transparent', // Make text transparent so overlay shows through
               }}
               rows={2}
               autoFocus={isModal}
             />
           </div>
+          <DetectedCashtagsRow text={tweetText} />
           {exceedsFreeLimit && (
             <div className="flex items-center justify-center mt-2">
               <button

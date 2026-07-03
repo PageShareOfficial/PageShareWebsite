@@ -7,11 +7,11 @@ import { isTweet } from '@/utils/content/postUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
+import PostAuthorMeta from './PostAuthorMeta';
 import PostActions from './PostActions';
 import PostMedia from './PostMedia';
 import PollComponent from './PollComponent';
 import ImageViewerModal from '../modals/ImageViewerModal';
-import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '../common/AvatarWithFallback';
 
 interface PostCardProps {
@@ -211,9 +211,9 @@ export default function PostCard({
                   className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
                   onClick={(e) => handleQuotedPostClick(e, originalPost)}
                 >
-                  <div className="flex items-center space-x-2 mb-2">
+                  <div className="mb-2 flex min-w-0 items-center gap-2">
                     <div
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleProfileClick(e, originalPost.author.handle);
@@ -226,18 +226,17 @@ export default function PostCard({
                         className="w-5 h-5"
                       />
                     </div>
-                    <span 
-                      className="font-semibold text-white text-sm cursor-pointer hover:underline"
-                      onClick={(e) => {
+                    <PostAuthorMeta
+                      displayName={originalPost.author.displayName}
+                      handle={originalPost.author.handle}
+                      subscriptionPlanId={originalPost.author.subscriptionPlanId}
+                      createdAt={originalPost.createdAt}
+                      size="sm"
+                      onDisplayNameClick={(e) => {
                         e.stopPropagation();
                         handleProfileClick(e, originalPost.author.handle);
                       }}
-                    >
-                      {originalPost.author.displayName}
-                    </span>
-                    <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
-                    <AuthorBadges subscriptionPlanId={originalPost.author.subscriptionPlanId} size="sm" />
-                    <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
+                    />
                   </div>
                   {originalPost && isTweet(originalPost) && (
                     <>

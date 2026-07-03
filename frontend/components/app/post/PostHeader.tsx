@@ -4,7 +4,7 @@ import { Repeat2 } from 'lucide-react';
 import { Post } from '@/types';
 import { isTweet } from '@/utils/content/postUtils';
 import ContentMenu from '@/components/app/common/ContentMenu';
-import AuthorBadges from '@/components/app/common/AuthorBadges';
+import PostAuthorMeta from '@/components/app/post/PostAuthorMeta';
 
 interface PostHeaderProps {
   post: Post;
@@ -50,36 +50,30 @@ export default function PostHeader({
         </div>
       )}
       
-        <div className="flex items-center justify-between mb-1 w-full">
-        <div className="flex items-center space-x-2">
-          {isTweet(post) && post.repostType === 'normal' && originalPost ? (
-            <>
-              <span 
-                className="font-semibold text-white cursor-pointer hover:underline"
-                onClick={(e) => onProfileClick && onProfileClick(e, originalPost.author.handle)}
-              >
-                {originalPost.author.displayName}
-              </span>
-              <span className="text-sm text-gray-400">@{originalPost.author.handle}</span>
-              <AuthorBadges subscriptionPlanId={originalPost.author.subscriptionPlanId} size="md" />
-            </>
-          ) : (
-            <>
-              <span 
-                className="font-semibold text-white cursor-pointer hover:underline"
-                onClick={(e) => onProfileClick && onProfileClick(e, post.author.handle)}
-              >
-                {post.author.displayName}
-              </span>
-              <span className="text-sm text-gray-400">@{post.author.handle}</span>
-              <AuthorBadges subscriptionPlanId={post.author.subscriptionPlanId} size="md" />
-            </>
-          )}
-          <span className="text-sm text-gray-500">· {post.createdAt}</span>
-        </div>
-        
+        <div className="flex items-center justify-between gap-2 mb-1 w-full min-w-0">
+        {isTweet(post) && post.repostType === 'normal' && originalPost ? (
+          <PostAuthorMeta
+            displayName={originalPost.author.displayName}
+            handle={originalPost.author.handle}
+            subscriptionPlanId={originalPost.author.subscriptionPlanId}
+            createdAt={post.createdAt}
+            onDisplayNameClick={(e) =>
+              onProfileClick?.(e, originalPost.author.handle)
+            }
+          />
+        ) : (
+          <PostAuthorMeta
+            displayName={post.author.displayName}
+            handle={post.author.handle}
+            subscriptionPlanId={post.author.subscriptionPlanId}
+            createdAt={post.createdAt}
+            onDisplayNameClick={(e) => onProfileClick?.(e, post.author.handle)}
+          />
+        )}
+
         {/* 3-dot Menu Button - hidden when readOnly (e.g. unauthenticated view) */}
         {!readOnly && (
+          <div className="shrink-0">
           <ContentMenu
             type="post"
             authorId={post.author.id}
@@ -91,6 +85,7 @@ export default function PostHeader({
             onDelete={onDelete ? () => onDelete(post.id) : undefined}
             onReportClick={onReportClick}
           />
+          </div>
         )}
       </div>
     </>
