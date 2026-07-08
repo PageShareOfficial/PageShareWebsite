@@ -1,11 +1,21 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
+import { MdLeaderboard } from 'react-icons/md';
 import Topbar from '@/components/app/layout/Topbar';
 import PredictionsDashboard from '@/components/app/predictions/PredictionsDashboard';
+import PredictionSubmitUpgradeModal from '@/components/app/modals/PredictionSubmitUpgradeModal';
+import { usePredictionsPageHeader } from '@/hooks/predictions/usePredictionsView';
 
 export default function PredictionsPage() {
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const header = usePredictionsPageHeader();
+
+  const submitButtonClass =
+    'inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-gray-100';
+
   return (
     <>
       <Topbar />
@@ -13,20 +23,38 @@ export default function PredictionsPage() {
         <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
           <header className="mb-6 flex items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+              <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
+                {header.showLeaderboardIcon && (
+                  <MdLeaderboard className="h-6 w-6 text-amber-400/90" aria-hidden />
+                )}
+                {header.title}
+              </h1>
             </div>
-            <Link
-              href="/submit-prediction"
-              prefetch={true}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-gray-100"
-            >
-              <Plus className="w-4 h-4" aria-hidden />
-              Submit
-            </Link>
+            {header.showSubmit &&
+              (header.submitAsLink ? (
+                <Link href="/submit-prediction" prefetch className={submitButtonClass}>
+                  <Plus className="w-4 h-4" aria-hidden />
+                  Submit
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className={submitButtonClass}
+                >
+                  <Plus className="w-4 h-4" aria-hidden />
+                  Submit
+                </button>
+              ))}
           </header>
           <PredictionsDashboard />
         </div>
       </div>
+
+      <PredictionSubmitUpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
     </>
   );
 }

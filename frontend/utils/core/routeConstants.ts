@@ -10,6 +10,7 @@
 export const RESERVED_ROUTES = new Set<string>([
   // Current routes
   'api',
+  'analytics',
   'bookmarks',
   'cookies',
   'home',
@@ -22,6 +23,7 @@ export const RESERVED_ROUTES = new Set<string>([
   'settings',
   'terms',
   'watchlist',
+  'myanalysts',
   'offline',
 
   // Future routes (reserve them now to prevent username conflicts)
@@ -57,6 +59,8 @@ export const AUTH_PROTECTED_ROUTES = new Set<string>([
   'home',
   'predictions',
   'submit-prediction',
+  'analytics',
+  'myanalysts',
   'onboarding',
   'settings',
   'bookmarks',

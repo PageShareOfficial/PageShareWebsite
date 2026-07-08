@@ -1,0 +1,77 @@
+import type { AnalystScoreSummary, LeaderboardEntry } from '@/types/predictions';
+
+/** Temporary sample data until predictions API is wired up. */
+export const SAMPLE_LEADERBOARD: LeaderboardEntry[] = [
+  {
+    rank: 1,
+    displayName: 'Maya Chen',
+    handle: 'mayacrypto',
+    score: 972,
+    winRatePercent: 78,
+    predictionsCount: 142,
+    verifiedCount: 111,
+    avatar: '',
+    subscriptionPlanId: 'analyst',
+  },
+  {
+    rank: 2,
+    displayName: 'Alex Rivera',
+    handle: 'ariv_defi',
+    score: 914,
+    winRatePercent: 72,
+    predictionsCount: 98,
+    verifiedCount: 71,
+    avatar: '',
+    subscriptionPlanId: 'analyst',
+  },
+  {
+    rank: 3,
+    displayName: 'Jordan Okonkwo',
+    handle: 'jokonkwo',
+    score: 889,
+    winRatePercent: 69,
+    predictionsCount: 201,
+    verifiedCount: 138,
+    avatar: '',
+    subscriptionPlanId: 'analyst',
+  },
+  {
+    rank: 4,
+    displayName: 'Samir Patel',
+    handle: 'samir_onchain',
+    score: 841,
+    winRatePercent: 65,
+    predictionsCount: 88,
+    verifiedCount: 57,
+    avatar: '',
+    subscriptionPlanId: 'analyst',
+  },
+  {
+    rank: 5,
+    displayName: 'Elena Voss',
+    handle: 'evoss_trades',
+    score: 805,
+    winRatePercent: 64,
+    predictionsCount: 124,
+    verifiedCount: 79,
+    avatar: '',
+    subscriptionPlanId: 'analyst',
+  },
+  {
+    rank: 6,
+    displayName: 'Chris Park',
+    handle: 'cpark_btc',
+    score: 762,
+    winRatePercent: 61,
+    predictionsCount: 55,
+    verifiedCount: 34,
+    avatar: '',
+    subscriptionPlanId: 'analyst',
+  },
+];
+
+export const SAMPLE_ANALYST_SCORE: AnalystScoreSummary = {
+  rank: 24,
+  winRatePercent: 52,
+  totalPredictions: 41,
+};

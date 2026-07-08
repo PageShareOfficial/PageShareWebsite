@@ -2,7 +2,7 @@
  * Client-side rules for prediction validation (must be mirrored in backend).
  */
 
-export const LOCK_DURATION_MS = 2 * 60 * 1000;
+export const LOCK_DURATION_MS = 3 * 60 * 1000;
 export const MIN_EXPIRY_OFFSET_MS = 30 * 60 * 1000;
 export const MAX_EXPIRY_OFFSET_MS = 2 * 24 * 60 * 60 * 1000;
 export const MIN_RISK_REWARD = 1.2;
