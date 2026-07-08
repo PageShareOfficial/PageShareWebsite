@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { MdLeaderboard } from 'react-icons/md';
-import SaveAnalystUpgradeModal from '@/components/app/modals/SaveAnalystUpgradeModal';
+import ViewAnalystAnalyticsUpgradeModal from '@/components/app/modals/ViewAnalystAnalyticsUpgradeModal';
 import LeaderboardDesktopTable from '@/components/app/predictions/leaderboard/LeaderboardDesktopTable';
 import LeaderboardFooter from '@/components/app/predictions/leaderboard/LeaderboardFooter';
 import LeaderboardMobileRow from '@/components/app/predictions/leaderboard/LeaderboardMobileRow';
@@ -59,7 +59,7 @@ export default function LeaderboardSection({
         <LeaderboardFooter />
       </div>
 
-      <SaveAnalystUpgradeModal
+      <ViewAnalystAnalyticsUpgradeModal
         isOpen={isAnalyticsUpgradeOpen}
         onClose={closeAnalyticsUpgrade}
       />

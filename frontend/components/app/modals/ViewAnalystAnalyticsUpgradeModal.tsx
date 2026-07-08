@@ -6,33 +6,36 @@ import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 
-interface SaveAnalystUpgradeModalProps {
+interface ViewAnalystAnalyticsUpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 const INVESTOR_PERKS = [
   {
-    icon: Bookmark,
-    title: 'Save analysts from the leaderboard',
-    description: 'Bookmark top performers and build a personal list you can revisit anytime.',
+    icon: BarChart3,
+    title: 'Unlock analyst analytics',
+    description:
+      'View prediction scorecards, outcomes, and performance metrics before deciding who to follow.',
   },
   {
-    icon: BarChart3,
-    title: 'Track verified performance',
-    description: 'Follow prediction history, outcomes, and scorecards in one place.',
+    icon: Bookmark,
+    title: 'Save analysts you want to revisit',
+    description:
+      'Build a shortlist of traders from the leaderboard and come back to them anytime.',
   },
   {
     icon: Users,
-    title: 'Invest with real signal',
-    description: 'Discover credible analysts and focus on traders with a proven track record.',
+    title: 'Focus on proven signal',
+    description:
+      'Compare analysts with real performance context instead of guessing from a single number.',
   },
 ] as const;
 
-export default function SaveAnalystUpgradeModal({
+export default function ViewAnalystAnalyticsUpgradeModal({
   isOpen,
   onClose,
-}: SaveAnalystUpgradeModalProps) {
+}: ViewAnalystAnalyticsUpgradeModalProps) {
   const { openPremium } = usePremiumOverlay();
 
   const handleUpgrade = () => {
@@ -46,7 +49,7 @@ export default function SaveAnalystUpgradeModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Save analysts"
+      title="View analyst analytics"
       maxWidth="md"
       contentClassName="p-4 sm:p-6"
     >
@@ -57,7 +60,7 @@ export default function SaveAnalystUpgradeModal({
             <span className="text-sm font-semibold text-emerald-300">Investor plan</span>
           </div>
           <p className="text-sm text-gray-300">
-            Discover real signal. Track performance. Invest smarter.
+            Unlock detailed analyst performance and invest with more confidence.
           </p>
         </div>
 

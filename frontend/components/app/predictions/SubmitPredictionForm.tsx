@@ -648,7 +648,7 @@ export default function SubmitPredictionForm() {
               rows={4}
               maxLength={MAX_THESIS_LENGTH}
               {...form.register('thesis')}
-              placeholder="Write your analysis and here..."
+              placeholder="Write your analysis here..."
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 resize-y min-h-[100px]"
             />
             <p className="mt-1 text-right text-xs text-gray-500">
