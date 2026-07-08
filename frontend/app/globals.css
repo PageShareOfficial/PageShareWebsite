@@ -141,5 +141,14 @@
   .composer-scrollbar::-webkit-scrollbar-corner {
     background: transparent;
   }
+
+  .saved-analysts-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .saved-analysts-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 

@@ -37,7 +37,7 @@ export const PLANS: PlanDefinition[] = [
       yearly: { original: 5999, discounted: 3599 },
     },
     features: [
-      'Publish Unlimited Predictions',
+      'Publish Your Predictions',
       'Extended posts & comments — up to 10,000 characters',
       'Advanced Prediction Analytics',
       'Performance Scorecard & History',

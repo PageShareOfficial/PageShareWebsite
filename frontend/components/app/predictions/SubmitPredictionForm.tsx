@@ -456,7 +456,10 @@ export default function SubmitPredictionForm() {
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  <p className="text-sm text-white truncate">Current price is locked for 2:00 minutes</p>
+                  <p className="text-sm text-white truncate">
+                    Current price is locked for{' '}
+                    {Math.floor(LOCK_DURATION_MS / 60_000)}:00 minutes
+                  </p>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs tabular-nums text-gray-300">
                   <Clock className="w-3.5 h-3.5" />
@@ -645,7 +648,7 @@ export default function SubmitPredictionForm() {
               rows={4}
               maxLength={MAX_THESIS_LENGTH}
               {...form.register('thesis')}
-              placeholder="Write your analysis and trade setup here..."
+              placeholder="Write your analysis and here..."
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 resize-y min-h-[100px]"
             />
             <p className="mt-1 text-right text-xs text-gray-500">
