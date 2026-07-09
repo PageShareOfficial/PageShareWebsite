@@ -1,5 +1,6 @@
 'use client';
 
+import { forwardRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { ReactNode } from 'react';
@@ -10,7 +11,10 @@ interface MobileHeaderProps {
   rightContent?: ReactNode;
 }
 
-export default function MobileHeader({ title, onBack, rightContent }: MobileHeaderProps) {
+const MobileHeader = forwardRef<HTMLDivElement, MobileHeaderProps>(function MobileHeader(
+  { title, onBack, rightContent },
+  ref,
+) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -22,7 +26,10 @@ export default function MobileHeader({ title, onBack, rightContent }: MobileHead
   };
 
   return (
-    <div className="md:hidden sticky top-0 z-50 bg-black border-b border-white/10">
+    <div
+      ref={ref}
+      className="md:hidden sticky top-0 z-50 bg-black border-b border-white/10"
+    >
       <div className="flex items-center gap-3 px-4 py-3">
         <button
           onClick={handleBack}
@@ -36,5 +43,7 @@ export default function MobileHeader({ title, onBack, rightContent }: MobileHead
       </div>
     </div>
   );
-}
+});
+
+export default MobileHeader;
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { forwardRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { ReactNode } from 'react';
@@ -16,13 +17,10 @@ interface DesktopHeaderProps {
  * Reusable desktop header component with back button
  * Used on profile pages, ticker pages, etc.
  */
-export default function DesktopHeader({
-  title,
-  subtitle,
-  onBack,
-  withSideBorders = true,
-  rightContent,
-}: DesktopHeaderProps) {
+const DesktopHeader = forwardRef<HTMLDivElement, DesktopHeaderProps>(function DesktopHeader(
+  { title, subtitle, onBack, withSideBorders = true, rightContent },
+  ref,
+) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -35,6 +33,7 @@ export default function DesktopHeader({
 
   return (
     <div
+      ref={ref}
       className={`hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10 ${
         withSideBorders ? 'border-l border-r border-white/10' : ''
       }`}
@@ -61,4 +60,6 @@ export default function DesktopHeader({
       </div>
     </div>
   );
-}
+});
+
+export default DesktopHeader;

@@ -67,3 +67,6 @@ backend/tests/__pycache__/
 
 # OS
 Thumbs.db
+
+#helper documents
+.newfeature/

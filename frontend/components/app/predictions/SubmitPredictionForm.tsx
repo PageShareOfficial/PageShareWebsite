@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { type Ref, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Search, Loader2, Lock, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Calendar, WifiOff } from 'lucide-react';
 import { fetchCryptoData, type SearchSuggestion, type StockData } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -13,6 +13,7 @@ import ImageWithFallback from '@/components/app/common/ImageWithFallback';
 import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
+import { PrimaryButton } from '@/components/app/common/Button';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
@@ -31,14 +32,20 @@ import {
   validateRiskReward,
   THESIS_IMAGE_ACCEPT,
 } from '@/utils/predictions/predictionRules';
-import {
-  canSubmitPredictionToday,
-  getPredictionsSubmittedToday,
-  incrementPredictionsSubmittedToday,
-} from '@/utils/predictions/dailyPredictionLimit';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiUploadMedia } from '@/lib/api/client';
+import { createPrediction } from '@/lib/api/predictionApi';
+import type { PredictionSubmissionQuota } from '@/hooks/predictions/usePredictionSubmissionQuota';
 import { parseDatetimeLocal, toDatetimeLocalValue } from '@/utils/predictions/datetimeLocal';
 import PredictionFormSection from '@/components/app/predictions/PredictionFormSection';
+import PriceLockBanner from '@/components/app/predictions/PriceLockBanner';
 import PredictionSummaryConfirmModal from '@/components/app/modals/PredictionSummaryConfirmModal';
+
+export interface PredictionPriceLockState {
+  isVisible: boolean;
+  lockExpired: boolean;
+  lockRemainingSec: number;
+}
 
 const formSchema = z.object({
   position: z.enum(['long', 'short']),
@@ -56,9 +63,26 @@ function formatPercent(value: number): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
-export default function SubmitPredictionForm() {
+interface SubmitPredictionFormProps {
+  quota: PredictionSubmissionQuota | null;
+  canSubmit: boolean;
+  quotaLoading?: boolean;
+  refreshQuota: () => Promise<void>;
+  lockBannerRef?: Ref<HTMLDivElement>;
+  onLockStateChange?: (state: PredictionPriceLockState) => void;
+}
+
+export default function SubmitPredictionForm({
+  quota,
+  canSubmit,
+  quotaLoading = false,
+  refreshQuota,
+  lockBannerRef,
+  onLockStateChange,
+}: SubmitPredictionFormProps) {
   const router = useRouter();
   const isOnline = useOnlineStatus();
+  const { session } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const expiryInputRef = useRef<HTMLInputElement>(null);
@@ -87,6 +111,7 @@ export default function SubmitPredictionForm() {
   });
   const {
     mediaPreviews,
+    mediaFiles,
     mediaError,
     handleImageUpload,
     handleRemoveMedia,
@@ -140,7 +165,24 @@ export default function SubmitPredictionForm() {
     return () => window.clearInterval(id);
   }, [lockEndsMs]);
 
+  const hasActiveLock = Boolean(selectedTicker && lockStartMs !== null);
+
+  useEffect(() => {
+    onLockStateChange?.({
+      isVisible: hasActiveLock,
+      lockExpired,
+      lockRemainingSec,
+    });
+  }, [hasActiveLock, lockExpired, lockRemainingSec, onLockStateChange]);
+
+  const formFieldsDisabled =
+    !selectedTicker || isFetchingTicker || lockExpired || !isOnline;
+  const offlineTitle = 'Connect to the internet to continue';
+
   const applyAssetLock = async (tickerSymbol: string) => {
+    if (!isOnline) {
+      return;
+    }
     setIsFetchingTicker(true);
     setTickerError('');
     try {
@@ -238,9 +280,9 @@ export default function SubmitPredictionForm() {
       setSubmitError('Price lock expired. Search the asset again to refresh.');
       return;
     }
-    if (!canSubmitPredictionToday()) {
+    if (!canSubmit) {
       setSubmitError(
-        `Daily limit reached (${getPredictionsSubmittedToday()} / ${MAX_PREDICTIONS_PER_DAY} predictions submitted today).`
+        `Daily limit reached (${quota?.used ?? 0} / ${MAX_PREDICTIONS_PER_DAY} predictions submitted today).`
       );
       return;
     }
@@ -249,8 +291,9 @@ export default function SubmitPredictionForm() {
       setSubmitError('Choose a valid expiry time.');
       return;
     }
-    const minExp = new Date(lockStartMs + MIN_EXPIRY_OFFSET_MS);
-    const maxExp = new Date(lockStartMs + MAX_EXPIRY_OFFSET_MS);
+    const submittedAt = Date.now();
+    const minExp = new Date(submittedAt + MIN_EXPIRY_OFFSET_MS);
+    const maxExp = new Date(submittedAt + MAX_EXPIRY_OFFSET_MS);
     if (expiryDate.getTime() < minExp.getTime() || expiryDate.getTime() > maxExp.getTime()) {
       setSubmitError(
         `Expiry must be between ${minExp.toLocaleString()} and ${maxExp.toLocaleString()}.`
@@ -283,30 +326,57 @@ export default function SubmitPredictionForm() {
   });
 
   const confirmSubmission = async () => {
-    try {
-      if (lockExpired) {
-        setSubmitError('Price lock expired while confirming. Search the asset again to refresh.');
-        return;
-      }
-      if (!canSubmitPredictionToday()) {
-        setSubmitError(
-          `Daily limit reached (${getPredictionsSubmittedToday()} / ${MAX_PREDICTIONS_PER_DAY} predictions submitted today).`
-        );
-        return;
-      }
-      incrementPredictionsSubmittedToday();
-      setIsConfirmModalOpen(false);
-      // Backend submission would go here with FormData including mediaFiles
-      router.push('/predictions');
-    } catch (err) {
-      setSubmitError(getErrorMessage(err, 'Something went wrong'));
+    const values = form.getValues();
+    if (lockExpired) {
+      throw new Error('Price lock expired while confirming. Search the asset again to refresh.');
     }
+    if (!canSubmit) {
+      throw new Error(
+        `Daily limit reached (${quota?.used ?? 0} / ${MAX_PREDICTIONS_PER_DAY} predictions submitted today).`
+      );
+    }
+    if (!session?.access_token) {
+      throw new Error('Sign in to submit a prediction.');
+    }
+    if (!selectedTicker || lockStartMs === null) {
+      throw new Error('Select an asset and lock a price first.');
+    }
+    const expiryDate = parseDatetimeLocal(expiryValue);
+    if (!expiryDate) {
+      throw new Error('Choose a valid expiry time.');
+    }
+
+    let thesisImageUrl: string | undefined;
+    if (mediaFiles.length > 0) {
+      const { uploads } = await apiUploadMedia(mediaFiles, session.access_token);
+      thesisImageUrl = uploads[0]?.url;
+    }
+
+    await createPrediction(
+      {
+        asset: selectedTicker,
+        asset_name: selectedName || undefined,
+        position: values.position,
+        entry_price: values.entryPrice,
+        target_price: values.targetPrice,
+        stop_loss: values.stopLoss,
+        lock_started_at: new Date(lockStartMs).toISOString(),
+        expiry_at: expiryDate.toISOString(),
+        confidence: values.confidence,
+        thesis: values.thesis,
+        thesis_image_url: thesisImageUrl,
+      },
+      session.access_token
+    );
+
+    await refreshQuota();
+    router.push('/predictions');
   };
 
   const inputRowClass =
     'h-11 min-h-[2.75rem] text-sm w-full pl-10 pr-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
-  const predictionsUsed = getPredictionsSubmittedToday();
+  const predictionsUsed = quota?.used ?? 0;
   const riskReward = computeRiskReward(entryValue || 0, targetValue || 0, stopLossValue || 0);
   const riskRewardText = Number.isNaN(riskReward) ? '-' : riskReward.toFixed(2);
   const potentialUpside =
@@ -317,17 +387,33 @@ export default function SubmitPredictionForm() {
     ? `${new Date(expiryValue).toLocaleDateString()} ${new Date(expiryValue).toLocaleTimeString()}`
     : '-';
   const assetLabel = selectedTicker ? `${selectedTicker} · ${selectedName}` : 'No asset selected';
-  const modalConfirmDisabled = lockExpired || !canSubmitPredictionToday();
-  const modalConfirmDisabledMessage = lockExpired
+  const modalConfirmDisabled = lockExpired || !canSubmit || !isOnline || quotaLoading;
+  const modalConfirmDisabledMessage = !isOnline
+    ? 'You are offline. Reconnect to submit your prediction.'
+    : lockExpired
     ? 'Price lock expired. Search and lock the asset price again before submitting.'
-    : !canSubmitPredictionToday()
+    : !canSubmit
       ? `Daily limit reached (${predictionsUsed} / ${MAX_PREDICTIONS_PER_DAY}). Try again tomorrow.`
       : undefined;
+  const submitDisabled =
+    !canSubmit ||
+    !selectedTicker ||
+    lockExpired ||
+    !isOnline ||
+    isFetchingTicker ||
+    quotaLoading;
 
   return (
     <>
     <form onSubmit={onSubmit} className="mx-auto max-w-3xl">
-      {!canSubmitPredictionToday() && (
+      {!isOnline ? (
+        <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          <WifiOff className="mt-0.5 h-5 w-5 flex-shrink-0" />
+          <span>You&apos;re offline. Reconnect to search assets and submit predictions.</span>
+        </div>
+      ) : null}
+
+      {!canSubmit && !quotaLoading && quota !== null && (
         <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span>
@@ -364,13 +450,22 @@ export default function SubmitPredictionForm() {
                     }}
                     placeholder="BTC, ETH, SOL..."
                     disabled={isFetchingTicker || !isOnline}
+                    title={!isOnline ? offlineTitle : undefined}
                     className={inputRowClass}
                   />
                   {isFetchingTicker && (
                     <Loader2 className="absolute right-3 top-0 bottom-0 my-auto w-4 h-4 animate-spin text-gray-400" />
                   )}
                 </div>
-                {selectedTicker ? (
+                {isFetchingTicker ? (
+                  <div className="flex h-11 min-w-0 items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3 py-0 sm:w-1/2 sm:flex-none">
+                    <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <Skeleton variant="text" width="70%" height={14} />
+                      <Skeleton variant="text" width="40%" height={12} />
+                    </div>
+                  </div>
+                ) : selectedTicker ? (
                   <div className="flex min-w-0 h-11 items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3 py-0 sm:w-1/2 sm:flex-none">
                     <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-white/10">
                       <ImageWithFallback
@@ -417,6 +512,7 @@ export default function SubmitPredictionForm() {
                       <button
                         key={`${suggestion.ticker}-${index}`}
                         type="button"
+                        disabled={!isOnline || isFetchingTicker}
                         onClick={() => void handleSelectSuggestion(suggestion)}
                         className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 ${
                           index > 0 ? 'border-t border-white/5' : ''
@@ -445,42 +541,29 @@ export default function SubmitPredictionForm() {
             </div>
 
             {tickerError ? <p className="text-sm text-red-400 mt-2">{tickerError}</p> : null}
-
-            {selectedTicker && lockStartMs !== null ? (
-              <div
-                className={`mt-3 rounded-lg border px-3 py-2.5 flex items-center justify-between gap-3 ${
-                  lockExpired
-                    ? 'border-red-500/40 bg-red-500/10'
-                    : 'border-cyan-500/40 bg-cyan-500/10'
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  <p className="text-sm text-white truncate">
-                    Current price is locked for{' '}
-                    {Math.floor(LOCK_DURATION_MS / 60_000)}:00 minutes
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs tabular-nums text-gray-300">
-                  <Clock className="w-3.5 h-3.5" />
-                  {lockExpired
-                    ? 'Expired'
-                    : `${Math.floor(lockRemainingSec / 60)}:${String(lockRemainingSec % 60).padStart(2, '0')}`}
-                </div>
-              </div>
-            ) : null}
           </PredictionFormSection>
 
+          {hasActiveLock ? (
+            <div ref={lockBannerRef} className="mb-4">
+              <PriceLockBanner
+                lockExpired={lockExpired}
+                lockRemainingSec={lockRemainingSec}
+              />
+            </div>
+          ) : null}
+
           <PredictionFormSection step={2} title="Position">
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid grid-cols-2 gap-3 ${formFieldsDisabled ? 'opacity-60' : ''}`}>
               {(['long', 'short'] as const).map((p) => {
                 const active = positionValue === p;
                 return (
                   <button
                     key={p}
                     type="button"
+                    disabled={formFieldsDisabled}
+                    title={!isOnline ? offlineTitle : !selectedTicker ? 'Select an asset first' : undefined}
                     onClick={() => form.setValue('position', p)}
-                    className={`rounded-lg border-2 px-3 py-3 text-sm font-semibold uppercase transition-colors ${
+                    className={`rounded-lg border-2 px-3 py-3 text-sm font-semibold uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                       active
                         ? 'border-sky-400/70 bg-sky-500/10 text-sky-200'
                         : 'border-white/10 bg-transparent text-gray-400 hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-sky-100'
@@ -497,7 +580,7 @@ export default function SubmitPredictionForm() {
             step={3}
             title="Trade Levels"
           >
-            <div className="space-y-3">
+            <div className={`space-y-3 ${formFieldsDisabled ? 'opacity-60' : ''}`}>
               <div>
                 <label htmlFor="entryPrice" className="block text-sm font-medium text-gray-300 mb-1">
                   Entry Price (USD)
@@ -531,8 +614,9 @@ export default function SubmitPredictionForm() {
                     id="targetPrice"
                     type="number"
                     step="any"
+                    disabled={formFieldsDisabled}
                     {...form.register('targetPrice', { valueAsNumber: true })}
-                    className="w-full h-11 px-3 bg-white/5 border border-white/10 rounded-lg text-white"
+                    className="w-full h-11 px-3 bg-white/5 border border-white/10 rounded-lg text-white disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
                 <div>
@@ -543,8 +627,9 @@ export default function SubmitPredictionForm() {
                     id="stopLoss"
                     type="number"
                     step="any"
+                    disabled={formFieldsDisabled}
                     {...form.register('stopLoss', { valueAsNumber: true })}
-                    className="w-full h-11 px-3 bg-white/5 border border-white/10 rounded-lg text-white"
+                    className="w-full h-11 px-3 bg-white/5 border border-white/10 rounded-lg text-white disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -570,7 +655,7 @@ export default function SubmitPredictionForm() {
           </PredictionFormSection>
 
           <PredictionFormSection step={4} title="Expiry Time">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${formFieldsDisabled ? 'opacity-60' : ''}`}>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Start Time (locked)</label>
                 <input
@@ -592,13 +677,13 @@ export default function SubmitPredictionForm() {
                   min={expiryMinMax.min}
                   max={expiryMinMax.max}
                   onChange={(e) => setExpiryValue(e.target.value)}
-                  disabled={!lockStartMs}
-                  className="w-full h-11 px-3 pr-10 bg-white/5 border border-white/10 rounded-lg text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 disabled:opacity-50"
+                  disabled={!lockStartMs || formFieldsDisabled}
+                  className="w-full h-11 px-3 pr-10 bg-white/5 border border-white/10 rounded-lg text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={openExpiryPicker}
-                  disabled={!lockStartMs}
+                  disabled={!lockStartMs || formFieldsDisabled}
                   className="absolute right-2.5 top-[2.02rem] inline-flex h-6 w-6 items-center justify-center rounded text-white/90 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Open expiry calendar"
                 >
@@ -612,6 +697,7 @@ export default function SubmitPredictionForm() {
           </PredictionFormSection>
 
           <PredictionFormSection step={5} title="Confidence">
+            <div className={formFieldsDisabled ? 'opacity-60' : ''}>
             <Controller
               name="confidence"
               control={form.control}
@@ -626,6 +712,7 @@ export default function SubmitPredictionForm() {
                       max={MAX_CONFIDENCE}
                       step={0.05}
                       value={field.value}
+                      disabled={formFieldsDisabled}
                       onChange={(e) => field.onChange(parseFloat(e.target.value))}
                       onBlur={field.onBlur}
                       name={field.name}
@@ -640,6 +727,7 @@ export default function SubmitPredictionForm() {
                 </div>
               )}
             />
+            </div>
           </PredictionFormSection>
 
           <PredictionFormSection step={6} title="Thesis / Analysis">
@@ -647,9 +735,10 @@ export default function SubmitPredictionForm() {
               id="thesis"
               rows={4}
               maxLength={MAX_THESIS_LENGTH}
+              disabled={formFieldsDisabled}
               {...form.register('thesis')}
               placeholder="Write your analysis here..."
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 resize-y min-h-[100px]"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 resize-y min-h-[100px] disabled:cursor-not-allowed disabled:opacity-50"
             />
             <p className="mt-1 text-right text-xs text-gray-500">
               {thesisValue.length} / {MAX_THESIS_LENGTH}
@@ -662,11 +751,12 @@ export default function SubmitPredictionForm() {
                 id="thesis-images"
                 type="file"
                 accept={THESIS_IMAGE_ACCEPT}
+                disabled={formFieldsDisabled}
                 onChange={(e) => {
                   clearMediaError();
                   handleImageUpload(e);
                 }}
-                className="text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white"
+                className="text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white disabled:cursor-not-allowed disabled:opacity-50"
               />
               {mediaError ? <p className="mt-2 text-xs text-amber-400">{mediaError}</p> : null}
               {mediaPreviews.length > 0 ? (
@@ -691,19 +781,20 @@ export default function SubmitPredictionForm() {
           )}
 
           <div className="space-y-3">
-            <button
+            <PrimaryButton
               type="submit"
-              disabled={
-                !canSubmitPredictionToday() ||
-                !selectedTicker ||
-                lockExpired ||
-                !isOnline ||
-                isFetchingTicker
+              disabled={submitDisabled}
+              title={
+                !isOnline
+                  ? offlineTitle
+                  : quotaLoading
+                    ? 'Loading submission quota'
+                    : undefined
               }
-              className="w-full px-6 py-3 rounded-lg bg-white text-black font-semibold hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Submit Prediction
-            </button>
+            </PrimaryButton>
           </div>
       </div>
     </form>

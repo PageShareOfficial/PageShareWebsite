@@ -36,6 +36,8 @@ export default function ImageWithFallback({
         fill
         sizes={sizes}
         className="object-cover"
+        // Load CDN logos in the browser; Next.js optimizer times out on CoinGecko hosts.
+        unoptimized
         onError={() => setImageError(true)}
       />
     </div>

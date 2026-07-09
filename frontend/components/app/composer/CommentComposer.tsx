@@ -176,7 +176,7 @@ export default function CommentComposer({
                 resizeComposerTextarea(e.target);
               }}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
-              className={`composer-scrollbar w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
+              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
