@@ -10,7 +10,6 @@ import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
-import TickerTypeBadge from '@/components/app/common/TickerTypeBadge';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 
 interface SearchAutocompleteProps {
@@ -375,7 +374,6 @@ export default function SearchAutocomplete({
                                 <span className="font-medium text-white">
                                   {suggestion.ticker}
                                 </span>
-                                <TickerTypeBadge type={suggestion.type} size="sm" />
                               </div>
                               <div className="text-sm text-gray-400 truncate mt-0.5">
                                 {suggestion.name}

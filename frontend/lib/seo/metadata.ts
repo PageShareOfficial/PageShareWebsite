@@ -5,7 +5,7 @@
 export const siteConfig = {
   name: 'PageShare',
   description:
-    "A social platform built exclusively for crypto traders and investors. Track tokens, follow narratives, uncover early signals, and explore AI-powered crypto tools.",
+    "PageShare turns market ideas into structured predictions, measurable track records, and actionable intelligence for traders, analysts, investors, and institutions. Verified Predictions • Analyst Credibility • AI Powered Research • Early Narratives",
   url: process.env.NEXT_PUBLIC_APP_URL || 'https://pageshare.io',
   ogImage: '/pageshare_final.png',
 } as const;
