@@ -53,7 +53,7 @@ const formSchema = z.object({
   targetPrice: z.number().positive(),
   stopLoss: z.number().positive(),
   confidence: z.number().min(MIN_CONFIDENCE).max(MAX_CONFIDENCE),
-  thesis: z.string().min(1, 'Add your thesis.').max(MAX_THESIS_LENGTH),
+  thesis: z.string().trim().min(1, 'Add your thesis.').max(MAX_THESIS_LENGTH),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -736,13 +736,23 @@ export default function SubmitPredictionForm({
               rows={4}
               maxLength={MAX_THESIS_LENGTH}
               disabled={formFieldsDisabled}
+              aria-invalid={Boolean(form.formState.errors.thesis)}
               {...form.register('thesis')}
               placeholder="Write your analysis here..."
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 resize-y min-h-[100px] disabled:cursor-not-allowed disabled:opacity-50"
+              className={`w-full px-3 py-2 bg-white/5 border rounded-lg text-white placeholder-gray-500 resize-y min-h-[100px] disabled:cursor-not-allowed disabled:opacity-50 ${
+                form.formState.errors.thesis ? 'border-red-500/60' : 'border-white/10'
+              }`}
             />
-            <p className="mt-1 text-right text-xs text-gray-500">
-              {thesisValue.length} / {MAX_THESIS_LENGTH}
-            </p>
+            <div className="mt-1 flex items-start justify-between gap-3">
+              {form.formState.errors.thesis ? (
+                <p className="text-xs text-red-400">{form.formState.errors.thesis.message}</p>
+              ) : (
+                <span />
+              )}
+              <p className="shrink-0 text-xs text-gray-500">
+                {thesisValue.length} / {MAX_THESIS_LENGTH}
+              </p>
+            </div>
             <div className="mt-4">
               <label htmlFor="thesis-images" className="block text-sm font-medium text-gray-300 mb-1">
                 Optional chart (JPG, PNG, or WEBP)
