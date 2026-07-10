@@ -119,36 +119,41 @@
     color: #ffffff !important;
   }
 
-  .composer-scrollbar {
+  /* Thin dark scrollbar for overflow areas (panels, forms, modals). */
+  .thin-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(156, 163, 175, 0.85) transparent;
-    scrollbar-gutter: stable;
   }
 
-  .composer-scrollbar::-webkit-scrollbar {
+  .thin-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
 
-  .composer-scrollbar::-webkit-scrollbar-track {
+  .thin-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .composer-scrollbar::-webkit-scrollbar-thumb {
+  .thin-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(156, 163, 175, 0.85);
     border-radius: 9999px;
   }
 
-  .composer-scrollbar::-webkit-scrollbar-corner {
+  .thin-scrollbar::-webkit-scrollbar-corner {
     background: transparent;
   }
 
-  .saved-analysts-scrollbar {
+  /* Reserve gutter so textarea layout does not shift when scrollbar appears. */
+  .thin-scrollbar-gutter {
+    scrollbar-gutter: stable;
+  }
+
+  /* Hide scrollbar while keeping scroll (e.g. horizontal carousels). */
+  .scrollbar-hidden {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .saved-analysts-scrollbar::-webkit-scrollbar {
+  .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
 }
-

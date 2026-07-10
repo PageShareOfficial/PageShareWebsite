@@ -91,7 +91,6 @@ export default function SearchResultsContainer({
               <TickerSearchResult
                 key={result.data.ticker}
                 tickerData={result.data}
-                type="stock"
                 watchlist={watchlist}
                 onAddToWatchlist={handleAddToWatchlist}
                 onTickerClick={handleTickerClick}
@@ -112,7 +111,6 @@ export default function SearchResultsContainer({
               <TickerSearchResult
                 key={result.data.ticker}
                 tickerData={result.data}
-                type="crypto"
                 watchlist={watchlist}
                 onAddToWatchlist={handleAddToWatchlist}
                 onTickerClick={handleTickerClick}

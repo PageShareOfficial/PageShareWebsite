@@ -119,7 +119,7 @@ export default function TickerDetailPage() {
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               {/* Ticker Header */}
-              <TickerHeader data={data} type={type} />
+              <TickerHeader data={data} />
 
               {/* Actions */}
               <TickerActions

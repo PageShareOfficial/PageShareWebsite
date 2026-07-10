@@ -1,69 +1,91 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
-import SubmitPredictionForm from '@/components/app/predictions/SubmitPredictionForm';
-import { getPredictionsSubmittedToday } from '@/utils/predictions/dailyPredictionLimit';
+import SubmitPredictionForm, {
+  type PredictionPriceLockState,
+} from '@/components/app/predictions/SubmitPredictionForm';
+import FloatingPriceLockOverlay from '@/components/app/predictions/FloatingPriceLockOverlay';
+import Skeleton from '@/components/app/common/Skeleton';
+import { usePredictionSubmissionQuota } from '@/hooks/predictions/usePredictionSubmissionQuota';
+import { useScrollPastAnchor } from '@/hooks/predictions/useScrollPastAnchor';
 import { MAX_PREDICTIONS_PER_DAY } from '@/utils/predictions/predictionRules';
+
+const INITIAL_LOCK_STATE: PredictionPriceLockState = {
+  isVisible: false,
+  lockExpired: false,
+  lockRemainingSec: 0,
+};
 
 export default function SubmitPredictionPage() {
   const router = useRouter();
-  const [predictionsLeft, setPredictionsLeft] = useState(MAX_PREDICTIONS_PER_DAY);
-
-  useEffect(() => {
-    const updateCount = () => {
-      const used = getPredictionsSubmittedToday();
-      setPredictionsLeft(Math.max(0, MAX_PREDICTIONS_PER_DAY - used));
-    };
-    updateCount();
-    window.addEventListener('focus', updateCount);
-    window.addEventListener('storage', updateCount);
-    return () => {
-      window.removeEventListener('focus', updateCount);
-      window.removeEventListener('storage', updateCount);
-    };
-  }, []);
+  const columnRef = useRef<HTMLDivElement>(null);
+  const mobilePinRef = useRef<HTMLDivElement>(null);
+  const desktopPinRef = useRef<HTMLDivElement>(null);
+  const lockBannerRef = useRef<HTMLDivElement>(null);
+  const [lockState, setLockState] = useState<PredictionPriceLockState>(INITIAL_LOCK_STATE);
+  const { isPastAnchor: showFloatingLock, containerRect } = useScrollPastAnchor(
+    lockBannerRef,
+    lockState.isVisible,
+    columnRef,
+    mobilePinRef,
+    desktopPinRef,
+  );
+  const { quota, canSubmit, refresh, isLoading } = usePredictionSubmissionQuota();
 
   const goToPredictions = () => {
     router.push('/predictions');
   };
-  const predictionsLeftPill = (
+  const showQuotaPill = !isLoading && quota !== null;
+  const predictionsLeftPill = showQuotaPill ? (
     <div className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">
       Predictions Left Today:{' '}
       <span className="font-semibold text-white">
-        {predictionsLeft} / {MAX_PREDICTIONS_PER_DAY}
+        {quota.remaining} / {MAX_PREDICTIONS_PER_DAY}
       </span>
     </div>
+  ) : (
+    <Skeleton variant="text" width={96} height={16} rounded={true} />
   );
 
   return (
     <>
       <MobileHeader
+        ref={mobilePinRef}
         title="Submit Prediction"
         onBack={goToPredictions}
         rightContent={predictionsLeftPill}
       />
-      <div className="hidden md:block">
-        <Topbar />
-      </div>
+      <DesktopHeader
+        ref={desktopPinRef}
+        title="Submit Prediction"
+        onBack={goToPredictions}
+        rightContent={predictionsLeftPill}
+      />
 
-      <div className="flex-1 flex pb-16 md:pb-0 min-h-0">
-        <div className="w-full border-l border-r border-white/10 flex flex-col min-h-0">
-          <DesktopHeader
-            title="Submit Prediction"
-            onBack={goToPredictions}
-            rightContent={predictionsLeftPill}
-          />
-          <div className="flex-1 overflow-y-auto">
-            <div className="relative min-h-full px-3 py-5 sm:px-4 md:px-5 md:py-6 pb-8 bg-black">
-              <SubmitPredictionForm />
-            </div>
+      <div ref={columnRef} className="flex flex-1 flex-col pb-16 md:pb-0">
+        <div className="w-full border-l border-r border-white/10">
+          <div className="bg-black px-3 py-5 pb-8 sm:px-4 md:px-5 md:py-6">
+            <SubmitPredictionForm
+              quota={quota}
+              canSubmit={canSubmit}
+              quotaLoading={isLoading}
+              refreshQuota={refresh}
+              lockBannerRef={lockBannerRef}
+              onLockStateChange={setLockState}
+            />
           </div>
         </div>
       </div>
+
+      <FloatingPriceLockOverlay
+        visible={lockState.isVisible && showFloatingLock}
+        containerRect={containerRect}
+        lockExpired={lockState.lockExpired}
+        lockRemainingSec={lockState.lockRemainingSec}
+      />
     </>
   );
 }

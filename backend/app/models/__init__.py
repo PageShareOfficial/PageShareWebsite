@@ -27,5 +27,6 @@ from . import (  # noqa: E402,F401
     error_log,
     user_session,
     user_entitlement,
+    prediction,
 )
 

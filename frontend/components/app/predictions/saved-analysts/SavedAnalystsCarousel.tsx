@@ -30,7 +30,7 @@ export default function SavedAnalystsCarousel({ analysts }: SavedAnalystsCarouse
 
       <div
         ref={scrollRef}
-        className="saved-analysts-scrollbar min-w-0 flex-1 overflow-x-auto scroll-smooth snap-x snap-mandatory"
+        className="scrollbar-hidden min-w-0 flex-1 overflow-x-auto scroll-smooth snap-x snap-mandatory"
       >
         <div className="flex gap-3">
           {analysts.map((analyst) => (

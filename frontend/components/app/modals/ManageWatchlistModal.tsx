@@ -10,7 +10,6 @@ import { useClickOutside } from '@/hooks/common/useClickOutside';
 import Modal from '@/components/app/common/Modal';
 import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
-import TickerTypeBadge from '@/components/app/common/TickerTypeBadge';
 import EmptyState from '@/components/app/common/EmptyState';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
@@ -274,7 +273,6 @@ export default function ManageWatchlistModal({
                               <span className="font-medium text-white">
                                 {suggestion.ticker}
                               </span>
-                              <TickerTypeBadge type={suggestion.type} size="sm" />
                             </div>
                             <div className="text-sm text-gray-400 truncate mt-0.5">
                               {suggestion.name}

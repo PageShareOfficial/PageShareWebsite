@@ -1,11 +1,36 @@
+'use client';
+
+import { useState } from 'react';
 import Modal from '@/components/app/common/Modal';
 import ImageWithFallback from '@/components/app/common/ImageWithFallback';
+import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
+import FormErrorMessage from '@/components/app/common/FormErrorMessage';
+import LoadingState from '@/components/app/common/LoadingState';
 import { getInitials } from '@/utils/core/textFormatting';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
+
+const MAX_TRADE_PRICE_DECIMALS = 8;
+
+function formatPredictionUsdPrice(value: number): string {
+  if (!Number.isFinite(value)) {
+    return '-';
+  }
+
+  const trimmed = value
+    .toFixed(MAX_TRADE_PRICE_DECIMALS)
+    .replace(/\.?0+$/, '');
+  const [wholePart, fractionPart] = trimmed.split('.');
+  const formattedWhole = Number(wholePart).toLocaleString('en-US');
+
+  return fractionPart
+    ? `$${formattedWhole}.${fractionPart}`
+    : `$${formattedWhole}`;
+}
 
 interface PredictionSummaryConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   confirmDisabled?: boolean;
   confirmDisabledMessage?: string;
   assetLabel: string;
@@ -26,7 +51,7 @@ function Row({ label, value, valueClass = 'text-white' }: { label: string; value
   return (
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-sm text-gray-400">{label}</span>
-      <span className={`text-sm font-medium ${valueClass}`}>{value}</span>
+      <span className={`text-sm font-medium tabular-nums ${valueClass}`}>{value}</span>
     </div>
   );
 }
@@ -50,17 +75,50 @@ export default function PredictionSummaryConfirmModal({
   expiryText,
   confidence,
 }: PredictionSummaryConfirmModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const positionLabel = position === 'long' ? 'LONG' : 'SHORT';
   const positionClass =
     position === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300';
 
+  const handleClose = () => {
+    if (!isSubmitting) {
+      setError(null);
+      onClose();
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (confirmDisabled || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await onConfirm();
+      handleClose();
+    } catch (err) {
+      setError(getErrorMessage(err, 'Something went wrong'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) {
+    return null;
+  }
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Prediction Summary"
       maxWidth="md"
       contentClassName="p-4 sm:p-6"
+      closeOnOverlayClick={!isSubmitting}
     >
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
         <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/30 px-3 py-2">
@@ -84,9 +142,9 @@ export default function PredictionSummaryConfirmModal({
           </span>
         </div>
         <div className="mt-3 divide-y divide-white/10">
-          <Row label="Entry Price" value={`$${entryPrice.toLocaleString()}`} />
-          <Row label="Target Price" value={`$${targetPrice.toLocaleString()}`} valueClass="text-emerald-300" />
-          <Row label="Stop Loss" value={`$${stopLoss.toLocaleString()}`} valueClass="text-red-300" />
+          <Row label="Entry Price" value={formatPredictionUsdPrice(entryPrice)} />
+          <Row label="Target Price" value={formatPredictionUsdPrice(targetPrice)} valueClass="text-emerald-300" />
+          <Row label="Stop Loss" value={formatPredictionUsdPrice(stopLoss)} valueClass="text-red-300" />
           <Row label="Risk-Reward (RR)" value={riskRewardText} />
           <Row label="Potential Upside" value={potentialUpsideText} valueClass="text-emerald-300" />
           <Row label="Potential Downside" value={potentialDownsideText} valueClass="text-red-300" />
@@ -99,22 +157,29 @@ export default function PredictionSummaryConfirmModal({
         <p className="mt-3 text-sm text-amber-300">{confirmDisabledMessage}</p>
       ) : null}
 
+      <FormErrorMessage message={error ?? undefined} className="mt-3" />
+
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <button
+        <SecondaryButton
           type="button"
-          onClick={onClose}
-          className="w-full sm:w-auto rounded-lg border border-white/20 px-5 py-2.5 text-white hover:bg-white/5"
+          onClick={handleClose}
+          disabled={isSubmitting}
+          className="w-full sm:w-auto px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Cancel
-        </button>
-        <button
+        </SecondaryButton>
+        <PrimaryButton
           type="button"
-          onClick={onConfirm}
-          disabled={confirmDisabled}
-          className="w-full sm:w-auto rounded-lg bg-white px-5 py-2.5 font-semibold text-black hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => void handleConfirm()}
+          disabled={confirmDisabled || isSubmitting}
+          className="w-full sm:w-auto px-5 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Submit Prediction
-        </button>
+          {isSubmitting ? (
+            <LoadingState text="Submitting..." size="sm" inline className="text-black" />
+          ) : (
+            'Submit Prediction'
+          )}
+        </PrimaryButton>
       </div>
     </Modal>
   );

@@ -261,7 +261,7 @@ export default function TweetComposer({
                 resizeComposerTextarea(e.target);
               }}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : (originalPost ? "Add a comment..." : "What's happening?"))}
-              className={`composer-scrollbar w-full bg-transparent pr-3 text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
+              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
