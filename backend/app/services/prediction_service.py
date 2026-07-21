@@ -16,12 +16,20 @@ from app.services.prediction_validation_service import (
     validate_submission_payload,
 )
 from app.services.subscription_service import get_user_plan_id
+from app.services.coinbase_market_service import (
+    CoinbaseUnavailableError,
+    UnsupportedAssetError,
+    get_live_price,
+)
 
 class AnalystRequiredError(Exception):
     """User does not have an active analyst subscription."""
 
 class DailyLimitExceededError(Exception):
     """User has reached the daily prediction submission cap."""
+
+class MarketPriceError(Exception):
+    """Could not fetch authoritative entry price from Coinbase."""
 
 def is_analyst_user(db: Session, user_id: UUID) -> bool:
     return get_user_plan_id(db, user_id) == "analyst"
@@ -67,6 +75,17 @@ def get_submission_quota(
         "remaining": remaining,
     }
 
+def fetch_live_price_for_asset(asset: str) -> tuple[str, float]:
+    """Return normalized base asset and Coinbase live price."""
+    try:
+        price = get_live_price(asset)
+    except UnsupportedAssetError as exc:
+        raise MarketPriceError(str(exc)) from exc
+    except CoinbaseUnavailableError as exc:
+        raise MarketPriceError(str(exc)) from exc
+    normalized = asset.strip().upper()
+    return normalized, price
+
 def create_prediction(
     db: Session,
     *,
@@ -94,6 +113,8 @@ def create_prediction(
         raise DailyLimitExceededError(
             f"Daily limit reached ({MAX_PREDICTIONS_PER_DAY} predictions per day)."
         )
+
+    _, entry_price = fetch_live_price_for_asset(asset)
 
     submitted_at = datetime.now(timezone.utc)
     validate_submission_payload(
@@ -129,3 +150,36 @@ def create_prediction(
     db.commit()
     db.refresh(prediction)
     return prediction
+
+def list_predictions_for_user(
+    db: Session,
+    user_id: UUID,
+    *,
+    page: int,
+    per_page: int,
+) -> tuple[list[Prediction], int]:
+    """Paginated predictions for the owner, newest first."""
+    base = db.query(Prediction).filter(Prediction.user_id == user_id)
+    total = base.count()
+    rows = (
+        base.order_by(Prediction.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+    return rows, total
+
+def get_prediction_for_user(
+    db: Session,
+    user_id: UUID,
+    prediction_id: UUID,
+) -> Optional[Prediction]:
+    """Return a prediction when it belongs to the user."""
+    return (
+        db.query(Prediction)
+        .filter(
+            Prediction.id == prediction_id,
+            Prediction.user_id == user_id,
+        )
+        .first()
+    )

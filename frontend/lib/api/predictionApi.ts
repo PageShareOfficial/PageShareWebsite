@@ -9,6 +9,12 @@ export interface PredictionSubmissionQuota {
   remaining: number;
 }
 
+export interface PredictionLivePrice {
+  asset: string;
+  product_id: string;
+  price: number;
+}
+
 export interface CreatePredictionPayload {
   asset: string;
   asset_name?: string;
@@ -39,6 +45,13 @@ export interface PredictionResponse {
   thesis: string;
   thesis_image_url?: string | null;
   status: string;
+  outcome?: 'win' | 'loss' | 'expired' | null;
+  resolved_at?: string | null;
+  hit_price?: number | null;
+  hit_at?: string | null;
+  return_pct?: number | null;
+  resolution_source?: string | null;
+  resolution_note?: string | null;
   created_at: string;
 }
 
@@ -71,6 +84,19 @@ async function parseJsonResponse<T>(res: Response, fallback: string): Promise<T>
     throw new Error(message);
   }
   return res.json() as Promise<T>;
+}
+
+export async function getPredictionLivePrice(
+  asset: string,
+  accessToken: string
+): Promise<PredictionLivePrice> {
+  const params = new URLSearchParams({ asset: asset.trim().toUpperCase() });
+  const res = await apiFetch(`/predictions/live-price?${params.toString()}`, {
+    method: 'GET',
+    accessToken,
+    headers: predictionRequestHeaders(),
+  });
+  return parseJsonResponse(res, 'Failed to load live price');
 }
 
 export async function getPredictionSubmissionQuota(

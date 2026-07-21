@@ -6,7 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Search, Loader2, AlertCircle, Calendar, WifiOff } from 'lucide-react';
-import { fetchCryptoData, type SearchSuggestion, type StockData } from '@/utils/api/stockApi';
+import { type SearchSuggestion } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import ImageWithFallback from '@/components/app/common/ImageWithFallback';
@@ -24,9 +24,9 @@ import {
   MAX_THESIS_LENGTH,
   MIN_RISK_REWARD,
   MIN_CONFIDENCE,
-  MIN_EXPIRY_OFFSET_MS,
-  MAX_EXPIRY_OFFSET_MS,
+  buildExpiryWindowFromStart,
   computeRiskReward,
+  validateExpiryAgainstStart,
   validatePositionSides,
   validatePriceDistance,
   validateRiskReward,
@@ -34,7 +34,7 @@ import {
 } from '@/utils/predictions/predictionRules';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiUploadMedia } from '@/lib/api/client';
-import { createPrediction } from '@/lib/api/predictionApi';
+import { createPrediction, getPredictionLivePrice } from '@/lib/api/predictionApi';
 import type { PredictionSubmissionQuota } from '@/hooks/predictions/usePredictionSubmissionQuota';
 import { parseDatetimeLocal, toDatetimeLocalValue } from '@/utils/predictions/datetimeLocal';
 import PredictionFormSection from '@/components/app/predictions/PredictionFormSection';
@@ -61,6 +61,14 @@ type FormValues = z.infer<typeof formSchema>;
 function formatPercent(value: number): string {
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
+}
+
+function formatAssetPriceError(error: unknown): string {
+  const message = getErrorMessage(error, 'Failed to load live price');
+  if (message === 'NotFound') {
+    return 'Asset not found';
+  }
+  return message;
 }
 
 interface SubmitPredictionFormProps {
@@ -165,6 +173,22 @@ export default function SubmitPredictionForm({
     return () => window.clearInterval(id);
   }, [lockEndsMs]);
 
+  useEffect(() => {
+    if (!lockStartMs || lockExpired) {
+      return;
+    }
+    const syncBounds = () => {
+      const { min, max } = buildExpiryWindowFromStart(Date.now());
+      setExpiryMinMax({
+        min: toDatetimeLocalValue(min),
+        max: toDatetimeLocalValue(max),
+      });
+    };
+    syncBounds();
+    const id = window.setInterval(syncBounds, 30_000);
+    return () => window.clearInterval(id);
+  }, [lockStartMs, lockExpired]);
+
   const hasActiveLock = Boolean(selectedTicker && lockStartMs !== null);
 
   useEffect(() => {
@@ -177,58 +201,65 @@ export default function SubmitPredictionForm({
 
   const formFieldsDisabled =
     !selectedTicker || isFetchingTicker || lockExpired || !isOnline;
+  const assetSearchDisabled =
+    isFetchingTicker || !isOnline || (hasActiveLock && !lockExpired);
   const offlineTitle = 'Connect to the internet to continue';
+  const assetSearchDisabledTitle = !isOnline
+    ? offlineTitle
+    : hasActiveLock && !lockExpired
+      ? 'Price lock in progress. Search again after the lock expires to change asset.'
+      : undefined;
 
-  const applyAssetLock = async (tickerSymbol: string) => {
+  const applyAssetLock = async (
+    tickerSymbol: string,
+    meta?: Pick<SearchSuggestion, 'name' | 'image'>
+  ) => {
     if (!isOnline) {
+      return;
+    }
+    if (!session?.access_token) {
+      setTickerError('Sign in to lock a price.');
       return;
     }
     setIsFetchingTicker(true);
     setTickerError('');
     try {
-      const data: StockData | null = await fetchCryptoData(tickerSymbol);
-      if (!data) {
-        setTickerError(`Could not load price for ${tickerSymbol}.`);
-        return;
-      }
+      const live = await getPredictionLivePrice(tickerSymbol, session.access_token);
       const now = Date.now();
-      setSelectedTicker(data.ticker);
-      setSelectedName(data.name);
-      setSelectedTickerImage(data.image?.trim() ? data.image : '');
+      setSelectedTicker(live.asset);
+      setSelectedName(meta?.name?.trim() || live.asset);
+      setSelectedTickerImage(meta?.image?.trim() ? meta.image : '');
       setLockStartMs(now);
       setLockEndsMs(now + LOCK_DURATION_MS);
       setLockExpired(false);
       setLockRemainingSec(Math.ceil(LOCK_DURATION_MS / 1000));
-      form.setValue('entryPrice', Number(data.price.toFixed(8)));
+      form.setValue('entryPrice', Number(live.price.toFixed(8)));
       form.setValue('targetPrice', 0);
       form.setValue('stopLoss', 0);
-      const minD = new Date(now + MIN_EXPIRY_OFFSET_MS);
-      const maxD = new Date(now + MAX_EXPIRY_OFFSET_MS);
-      const defaultExpiry = new Date(now + 24 * 60 * 60 * 1000);
-      const clamped =
-        defaultExpiry < minD ? minD : defaultExpiry > maxD ? maxD : defaultExpiry;
-      setExpiryMinMax({
-        min: toDatetimeLocalValue(minD),
-        max: toDatetimeLocalValue(maxD),
-      });
-      setExpiryValue(toDatetimeLocalValue(clamped));
-      tickerSearch.setQuery(data.ticker);
+      refreshExpiryPickerBounds(now);
+      tickerSearch.setQuery(live.asset);
       tickerSearch.setShowSuggestions(false);
     } catch (e) {
-      setTickerError(getErrorMessage(e, 'Failed to load ticker'));
+      setTickerError(formatAssetPriceError(e));
     } finally {
       setIsFetchingTicker(false);
     }
   };
 
   const handleSelectSuggestion = async (suggestion: SearchSuggestion) => {
-    if (!isOnline) {
+    if (!isOnline || assetSearchDisabled) {
       return;
     }
-    await applyAssetLock(suggestion.ticker);
+    await applyAssetLock(suggestion.ticker, {
+      name: suggestion.name,
+      image: suggestion.image,
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (assetSearchDisabled) {
+      return;
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
       const selectedSuggestion =
@@ -257,10 +288,39 @@ export default function SubmitPredictionForm({
     }
   };
 
+  const syncExpiryBoundsOnly = (submitMs: number) => {
+    const { min, max } = buildExpiryWindowFromStart(submitMs);
+    setExpiryMinMax({
+      min: toDatetimeLocalValue(min),
+      max: toDatetimeLocalValue(max),
+    });
+  };
+
+  const refreshExpiryPickerBounds = (submitMs: number, currentExpiry?: string) => {
+    const { min, max, defaultExpiry } = buildExpiryWindowFromStart(submitMs);
+    setExpiryMinMax({
+      min: toDatetimeLocalValue(min),
+      max: toDatetimeLocalValue(max),
+    });
+    const parsed = currentExpiry ? parseDatetimeLocal(currentExpiry) : null;
+    if (!parsed) {
+      setExpiryValue(toDatetimeLocalValue(defaultExpiry));
+      return;
+    }
+    const clamped =
+      parsed.getTime() < min.getTime()
+        ? min
+        : parsed.getTime() > max.getTime()
+          ? max
+          : parsed;
+    setExpiryValue(toDatetimeLocalValue(clamped));
+  };
+
   const openExpiryPicker = () => {
     if (!lockStartMs || !expiryInputRef.current) {
       return;
     }
+    refreshExpiryPickerBounds(Date.now(), expiryValue);
     const input = expiryInputRef.current;
     const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
     if (typeof pickerInput.showPicker === 'function') {
@@ -286,18 +346,16 @@ export default function SubmitPredictionForm({
       );
       return;
     }
+    const submittedAt = Date.now();
+    syncExpiryBoundsOnly(submittedAt);
     const expiryDate = parseDatetimeLocal(expiryValue);
     if (!expiryDate) {
       setSubmitError('Choose a valid expiry time.');
       return;
     }
-    const submittedAt = Date.now();
-    const minExp = new Date(submittedAt + MIN_EXPIRY_OFFSET_MS);
-    const maxExp = new Date(submittedAt + MAX_EXPIRY_OFFSET_MS);
-    if (expiryDate.getTime() < minExp.getTime() || expiryDate.getTime() > maxExp.getTime()) {
-      setSubmitError(
-        `Expiry must be between ${minExp.toLocaleString()} and ${maxExp.toLocaleString()}.`
-      );
+    const expiryErr = validateExpiryAgainstStart(submittedAt, expiryDate);
+    if (expiryErr) {
+      setSubmitError(expiryErr);
       return;
     }
 
@@ -341,9 +399,15 @@ export default function SubmitPredictionForm({
     if (!selectedTicker || lockStartMs === null) {
       throw new Error('Select an asset and lock a price first.');
     }
+    const submittedAt = Date.now();
+    syncExpiryBoundsOnly(submittedAt);
     const expiryDate = parseDatetimeLocal(expiryValue);
     if (!expiryDate) {
       throw new Error('Choose a valid expiry time.');
+    }
+    const expiryErr = validateExpiryAgainstStart(submittedAt, expiryDate);
+    if (expiryErr) {
+      throw new Error(expiryErr);
     }
 
     let thesisImageUrl: string | undefined;
@@ -444,13 +508,16 @@ export default function SubmitPredictionForm({
                     }}
                     onKeyDown={handleKeyPress}
                     onFocus={() => {
+                      if (assetSearchDisabled) {
+                        return;
+                      }
                       if (tickerSearch.suggestions.length > 0) {
                         tickerSearch.setShowSuggestions(true);
                       }
                     }}
                     placeholder="BTC, ETH, SOL..."
-                    disabled={isFetchingTicker || !isOnline}
-                    title={!isOnline ? offlineTitle : undefined}
+                    disabled={assetSearchDisabled}
+                    title={assetSearchDisabledTitle}
                     className={inputRowClass}
                   />
                   {isFetchingTicker && (
@@ -487,7 +554,8 @@ export default function SubmitPredictionForm({
                 ) : null}
               </div>
 
-              {tickerSearch.showSuggestions &&
+              {!assetSearchDisabled &&
+                tickerSearch.showSuggestions &&
                 (tickerSearch.suggestions.length > 0 || tickerSearch.isSearching) && (
                   <div
                     ref={suggestionsRef}
@@ -512,7 +580,7 @@ export default function SubmitPredictionForm({
                       <button
                         key={`${suggestion.ticker}-${index}`}
                         type="button"
-                        disabled={!isOnline || isFetchingTicker}
+                        disabled={assetSearchDisabled}
                         onClick={() => void handleSelectSuggestion(suggestion)}
                         className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 ${
                           index > 0 ? 'border-t border-white/5' : ''
@@ -657,13 +725,16 @@ export default function SubmitPredictionForm({
           <PredictionFormSection step={4} title="Expiry Time">
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${formFieldsDisabled ? 'opacity-60' : ''}`}>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Start Time (locked)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Price locked at</label>
                 <input
                   type="text"
                   value={lockStartMs ? new Date(lockStartMs).toLocaleString() : '-'}
                   disabled
                   className="w-full h-11 px-3 bg-white/5 border border-white/10 rounded-lg text-gray-400"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Prediction start is set when you submit.
+                </p>
               </div>
               <div className="relative">
                 <label htmlFor="expiry" className="block text-sm font-medium text-gray-300 mb-1">
@@ -692,7 +763,7 @@ export default function SubmitPredictionForm({
               </div>
             </div>
             {expiryMinMax.min ? (
-              <p className="text-xs text-gray-500 mt-2">Min: 30 mins from start · Max: 2 days from start</p>
+              <p className="text-xs text-gray-500 mt-2"> Min: 30 mins from submit · Max: 2 days from submit</p>
             ) : null}
           </PredictionFormSection>
 
