@@ -3,6 +3,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Index,
     Numeric,
     String,
     Text,
@@ -40,6 +41,14 @@ class Prediction(Base):
     thesis = Column(Text, nullable=False)
     thesis_image_url = Column(Text)
     status = Column(String(20), nullable=False, server_default="active")
+    # Evaluate / settle fields (null until resolved once)
+    outcome = Column(String(20), nullable=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    hit_price = Column(Numeric(24, 8), nullable=True)
+    hit_at = Column(DateTime(timezone=True), nullable=True)
+    return_pct = Column(Numeric(18, 8), nullable=True)
+    resolution_source = Column(String(40), nullable=True)
+    resolution_note = Column(Text, nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -57,7 +66,17 @@ class Prediction(Base):
             name="predictions_status_check",
         ),
         CheckConstraint(
+            "outcome IS NULL OR outcome IN ('win', 'loss', 'expired')",
+            name="predictions_outcome_check",
+        ),
+        CheckConstraint(
             f"char_length(thesis) <= {300}",
             name="predictions_thesis_max_length",
+        ),
+        Index(
+            "ix_predictions_user_status_expiry",
+            "user_id",
+            "status",
+            "expiry_at",
         ),
     )

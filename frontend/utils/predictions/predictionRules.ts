@@ -5,6 +5,38 @@
 export const LOCK_DURATION_MS = 3 * 60 * 1000;
 export const MIN_EXPIRY_OFFSET_MS = 30 * 60 * 1000;
 export const MAX_EXPIRY_OFFSET_MS = 2 * 24 * 60 * 60 * 1000;
+export const DEFAULT_EXPIRY_OFFSET_MS = 24 * 60 * 60 * 1000;
+
+export interface ExpiryWindow {
+  min: Date;
+  max: Date;
+  defaultExpiry: Date;
+}
+
+/** Expiry bounds anchored to prediction start (server submit time). */
+export function buildExpiryWindowFromStart(startMs: number): ExpiryWindow {
+  const min = new Date(startMs + MIN_EXPIRY_OFFSET_MS);
+  const max = new Date(startMs + MAX_EXPIRY_OFFSET_MS);
+  const preferred = new Date(startMs + DEFAULT_EXPIRY_OFFSET_MS);
+  const defaultExpiry =
+    preferred < min ? min : preferred > max ? max : preferred;
+  return { min, max, defaultExpiry };
+}
+
+export function validateExpiryAgainstStart(
+  startMs: number,
+  expiryDate: Date
+): string | null {
+  const { min, max } = buildExpiryWindowFromStart(startMs);
+  const expiryMs = expiryDate.getTime();
+  if (expiryMs < min.getTime() || expiryMs > max.getTime()) {
+    return (
+      `Expiry must be between ${min.toLocaleString()} and ${max.toLocaleString()} ` +
+      '(30 min – 2 days from submit).'
+    );
+  }
+  return null;
+}
 export const MIN_RISK_REWARD = 1.2;
 export const MIN_TARGET_MOVE_PCT = 0.01;
 export const MIN_STOP_MOVE_PCT = 0.005;

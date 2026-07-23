@@ -36,9 +36,21 @@ class PredictionResponse(BaseModel):
     thesis: str
     thesis_image_url: Optional[str] = None
     status: str
+    outcome: Optional[Literal["win", "loss", "expired"]] = None
+    resolved_at: Optional[datetime] = None
+    hit_price: Optional[float] = None
+    hit_at: Optional[datetime] = None
+    return_pct: Optional[float] = None
+    resolution_source: Optional[str] = None
+    resolution_note: Optional[str] = None
     created_at: datetime
 
 class PredictionSubmissionQuotaResponse(BaseModel):
     used: int
     max: int
     remaining: int
+
+class PredictionLivePriceResponse(BaseModel):
+    asset: str
+    product_id: str
+    price: float
