@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { BarChart3 } from 'lucide-react';
+import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';
 
 interface SeeAnalystAnalyticsButtonProps {
@@ -20,9 +21,13 @@ export default function SeeAnalystAnalyticsButton({
   onUpgradeRequired,
 }: SeeAnalystAnalyticsButtonProps) {
   const router = useRouter();
+  const isOnline = useOnlineStatus();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
+    if (!isOnline) {
+      return;
+    }
     if (requiresUpgrade) {
       onUpgradeRequired?.();
       return;
@@ -34,15 +39,22 @@ export default function SeeAnalystAnalyticsButton({
     <button
       type="button"
       onClick={handleClick}
+      disabled={!isOnline}
       aria-label={
-        requiresUpgrade
-          ? `Upgrade to view ${displayName}'s analytics`
-          : `View ${displayName}'s analytics`
+        !isOnline
+          ? 'Connect to the internet to view analytics'
+          : requiresUpgrade
+            ? `Upgrade to view ${displayName}'s analytics`
+            : `View ${displayName}'s analytics`
       }
       title={
-        requiresUpgrade ? 'Upgrade to view analyst analytics' : 'See analytics'
+        !isOnline
+          ? 'Connect to the internet to continue'
+          : requiresUpgrade
+            ? 'Upgrade to view analyst analytics'
+            : 'See analytics'
       }
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-gray-300 transition-colors hover:border-white/25 hover:bg-white/15 hover:text-emerald-300 ${className}`}
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-gray-300 transition-colors hover:border-white/25 hover:bg-white/15 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none ${className}`}
     >
       <BarChart3 className="h-5 w-5" aria-hidden />
     </button>

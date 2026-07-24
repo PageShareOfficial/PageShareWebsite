@@ -1,9 +1,12 @@
 import SeeAnalystAnalyticsButton from '@/components/app/predictions/SeeAnalystAnalyticsButton';
+import SaveAnalystButton from '@/components/app/predictions/SaveAnalystButton';
+import { leaderboardEntryToSavedAnalyst } from '@/utils/predictions/leaderboardToSavedAnalyst';
 import type { LeaderboardEntry } from '@/types/predictions';
 
 interface LeaderboardAccuracyActionsProps {
   entry: LeaderboardEntry;
   showAnalytics: boolean;
+  showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
   onAnalyticsUpgradeRequired: () => void;
   layout?: 'mobile' | 'desktop';
@@ -12,6 +15,7 @@ interface LeaderboardAccuracyActionsProps {
 export default function LeaderboardAccuracyActions({
   entry,
   showAnalytics,
+  showSaveAnalyst,
   analyticsRequiresUpgrade,
   onAnalyticsUpgradeRequired,
   layout = 'mobile',
@@ -45,6 +49,12 @@ export default function LeaderboardAccuracyActions({
           className="shrink-0"
           requiresUpgrade={analyticsRequiresUpgrade}
           onUpgradeRequired={onAnalyticsUpgradeRequired}
+        />
+      )}
+      {showSaveAnalyst && (
+        <SaveAnalystButton
+          analyst={leaderboardEntryToSavedAnalyst(entry)}
+          className="shrink-0"
         />
       )}
     </div>

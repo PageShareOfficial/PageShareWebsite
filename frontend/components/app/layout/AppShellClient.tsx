@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { PremiumOverlayProvider } from '@/contexts/PremiumOverlayContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
-import { SavedAnalystsProvider } from '@/contexts/SavedAnalystsContext';
+import { SavedAnalystsProvider } from '@/hooks/predictions/useSavedAnalysts';
 import PremiumOverlay from '@/components/app/plans/PremiumOverlay';
 import CheckoutReturnBanner from '@/components/app/billing/CheckoutReturnBanner';
 import Sidebar from '@/components/app/layout/Sidebar';

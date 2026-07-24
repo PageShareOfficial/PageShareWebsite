@@ -12,6 +12,7 @@ interface LeaderboardSectionProps {
   entries: LeaderboardEntry[];
   showHeading: boolean;
   showAnalytics: boolean;
+  showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function LeaderboardSection({
   entries,
   showHeading,
   showAnalytics,
+  showSaveAnalyst,
   analyticsRequiresUpgrade,
 }: LeaderboardSectionProps) {
   const [isAnalyticsUpgradeOpen, setIsAnalyticsUpgradeOpen] = useState(false);
@@ -44,6 +46,7 @@ export default function LeaderboardSection({
               key={`mobile-${entry.handle}`}
               entry={entry}
               showAnalytics={showAnalytics}
+              showSaveAnalyst={showSaveAnalyst}
               analyticsRequiresUpgrade={analyticsRequiresUpgrade}
               onAnalyticsUpgradeRequired={openAnalyticsUpgrade}
             />
@@ -53,6 +56,7 @@ export default function LeaderboardSection({
         <LeaderboardDesktopTable
           entries={entries}
           showAnalytics={showAnalytics}
+          showSaveAnalyst={showSaveAnalyst}
           analyticsRequiresUpgrade={analyticsRequiresUpgrade}
           onAnalyticsUpgradeRequired={openAnalyticsUpgrade}
         />
