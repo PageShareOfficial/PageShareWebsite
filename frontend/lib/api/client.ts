@@ -12,6 +12,9 @@ export function getBaseUrl(): string {
   return url.replace(/\/$/, '');
 }
 
+/** User-facing message when the API base URL is missing or the request cannot complete. */
+const API_UNAVAILABLE_MESSAGE = 'Unable to reach the server. Please try again later.';
+
 /** Extract user-facing message from backend error response. */
 function parseErrorDetail(text: string, fallback: string): string {
   try {
@@ -53,10 +56,18 @@ export async function apiFetch(
     headers.set('Content-Type', 'application/json');
   }
 
-  return fetch(url, {
-    ...fetchOptions,
-    headers,
-  });
+  if (!path.startsWith('http') && !base) {
+    throw new Error(API_UNAVAILABLE_MESSAGE);
+  }
+
+  try {
+    return await fetch(url, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch {
+    throw new Error(API_UNAVAILABLE_MESSAGE);
+  }
 }
 
 /**

@@ -24,6 +24,7 @@ export default function PredictionsDashboard() {
         entries={SAMPLE_LEADERBOARD}
         showHeading={flags.showLeaderboardHeading}
         showAnalytics={flags.showLeaderboardAnalytics}
+        showSaveAnalyst={flags.showLeaderboardSaveAnalyst}
         analyticsRequiresUpgrade={flags.analyticsRequiresUpgrade}
       />
     </div>

@@ -12,6 +12,7 @@ import type { LeaderboardEntry } from '@/types/predictions';
 interface LeaderboardMobileRowProps {
   entry: LeaderboardEntry;
   showAnalytics: boolean;
+  showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
   onAnalyticsUpgradeRequired: () => void;
 }
@@ -28,6 +29,7 @@ function StatBox({ label, value }: { label: string; value: number }) {
 export default function LeaderboardMobileRow({
   entry,
   showAnalytics,
+  showSaveAnalyst,
   analyticsRequiresUpgrade,
   onAnalyticsUpgradeRequired,
 }: LeaderboardMobileRowProps) {
@@ -59,6 +61,7 @@ export default function LeaderboardMobileRow({
         <LeaderboardAccuracyActions
           entry={entry}
           showAnalytics={showAnalytics}
+          showSaveAnalyst={showSaveAnalyst}
           analyticsRequiresUpgrade={analyticsRequiresUpgrade}
           onAnalyticsUpgradeRequired={onAnalyticsUpgradeRequired}
           layout="mobile"

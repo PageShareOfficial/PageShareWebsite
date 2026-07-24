@@ -12,6 +12,7 @@ import type { LeaderboardEntry } from '@/types/predictions';
 interface LeaderboardDesktopTableProps {
   entries: LeaderboardEntry[];
   showAnalytics: boolean;
+  showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
   onAnalyticsUpgradeRequired: () => void;
 }
@@ -19,6 +20,7 @@ interface LeaderboardDesktopTableProps {
 export default function LeaderboardDesktopTable({
   entries,
   showAnalytics,
+  showSaveAnalyst,
   analyticsRequiresUpgrade,
   onAnalyticsUpgradeRequired,
 }: LeaderboardDesktopTableProps) {
@@ -32,7 +34,7 @@ export default function LeaderboardDesktopTable({
           <col />
           <col className="w-[6.5rem]" />
           <col className="w-[5.5rem]" />
-          <col className={showAnalytics ? 'w-[7.5rem]' : 'w-[5.5rem]'} />
+          <col className={showAnalytics || showSaveAnalyst ? 'w-[9rem]' : 'w-[5.5rem]'} />
         </colgroup>
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.04] text-xs uppercase tracking-wide text-gray-400">
@@ -104,6 +106,7 @@ export default function LeaderboardDesktopTable({
                 <LeaderboardAccuracyActions
                   entry={entry}
                   showAnalytics={showAnalytics}
+                  showSaveAnalyst={showSaveAnalyst}
                   analyticsRequiresUpgrade={analyticsRequiresUpgrade}
                   onAnalyticsUpgradeRequired={onAnalyticsUpgradeRequired}
                   layout="desktop"
