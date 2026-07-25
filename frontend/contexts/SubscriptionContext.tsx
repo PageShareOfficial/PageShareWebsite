@@ -14,6 +14,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getBillingStatus, type BillingStatus } from '@/lib/api/billingApi';
 import { getBaseUrl } from '@/lib/api/client';
 import type { PlanId } from '@/types/billing';
+import {
+  clearSubscriptionPlanHint,
+  writeSubscriptionPlanHint,
+} from '@/utils/billing/subscriptionPlanHint';
 
 interface SubscriptionContextValue {
   billingStatus: BillingStatus | null;
@@ -54,6 +58,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setBillingStatus(null);
       setError(null);
       setIsLoading(false);
+      clearSubscriptionPlanHint();
       return;
     }
 
@@ -65,8 +70,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     try {
       const status = await getBillingStatus(accessToken);
       setBillingStatus(status);
+      writeSubscriptionPlanHint(
+        status.is_premium ? (status.plan_id as PlanId | null) : null
+      );
     } catch {
       setBillingStatus(DEFAULT_STATUS);
+      writeSubscriptionPlanHint(null);
       setError(null);
     } finally {
       setIsLoading(false);

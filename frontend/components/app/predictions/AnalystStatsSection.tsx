@@ -4,11 +4,13 @@ import { FaMedal } from 'react-icons/fa';
 import type { AnalystScoreSummary } from '@/types/predictions';
 import ShowAllButton from '@/components/app/common/ShowAllButton';
 import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';
+import { formatAnalystRank } from '@/utils/predictions/mapPredictionsDashboard';
+import AnalystStatsSectionSkeleton from '@/components/app/predictions/AnalystStatsSectionSkeleton';
 
 interface AnalystStatsSectionProps {
-  score: AnalystScoreSummary;
+  score?: AnalystScoreSummary;
+  isLoading?: boolean;
 }
-
 function StatCard({
   label,
   value,
@@ -39,13 +41,19 @@ function StatCard({
   );
 }
 
-export default function AnalystStatsSection({ score }: AnalystStatsSectionProps) {
+export default function AnalystStatsSection({
+  score,
+  isLoading = false,
+}: AnalystStatsSectionProps) {
+  if (isLoading || !score) {
+    return <AnalystStatsSectionSkeleton />;
+  }
   return (
     <section className="space-y-4">
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <StatCard
           label="Rank"
-          value={`#${score.rank}`}
+          value={formatAnalystRank(score.rank)}
           icon={<FaMedal className="h-3.5 w-3.5" aria-hidden />}
           accentClass="text-amber-400/90"
           gradientClass="bg-gradient-to-br from-amber-500/10 to-transparent"

@@ -6,6 +6,7 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
 import { clearFeedCache } from '@/lib/feedCache';
+import { clearSubscriptionPlanHint } from '@/utils/billing/subscriptionPlanHint';
 
 export interface BackendUser {
   id: string;
@@ -195,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     await supabase.auth.signOut();
+    clearSubscriptionPlanHint();
     setUser(null);
     setSession(null);
     setBackendUser(null);

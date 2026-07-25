@@ -6,6 +6,7 @@ import ViewAnalystAnalyticsUpgradeModal from '@/components/app/modals/ViewAnalys
 import LeaderboardDesktopTable from '@/components/app/predictions/leaderboard/LeaderboardDesktopTable';
 import LeaderboardFooter from '@/components/app/predictions/leaderboard/LeaderboardFooter';
 import LeaderboardMobileRow from '@/components/app/predictions/leaderboard/LeaderboardMobileRow';
+import LeaderboardSectionSkeleton from '@/components/app/predictions/leaderboard/LeaderboardSectionSkeleton';
 import type { LeaderboardEntry } from '@/types/predictions';
 
 interface LeaderboardSectionProps {
@@ -14,6 +15,20 @@ interface LeaderboardSectionProps {
   showAnalytics: boolean;
   showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
+  isLoading?: boolean;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
+  loadMoreDisabled?: boolean;
+}
+
+function LeaderboardEmptyState() {
+  return (
+    <p className="px-3 py-8 text-center text-sm text-gray-400">
+      No ranked analysts yet. Analyst subscribers will appear here once they submit
+      predictions.
+    </p>
+  );
 }
 
 export default function LeaderboardSection({
@@ -22,6 +37,11 @@ export default function LeaderboardSection({
   showAnalytics,
   showSaveAnalyst,
   analyticsRequiresUpgrade,
+  isLoading = false,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
+  loadMoreDisabled = false,
 }: LeaderboardSectionProps) {
   const [isAnalyticsUpgradeOpen, setIsAnalyticsUpgradeOpen] = useState(false);
 
@@ -40,6 +60,12 @@ export default function LeaderboardSection({
       )}
 
       <div className="overflow-hidden rounded-xl border border-white/10">
+        {isLoading ? (
+          <LeaderboardSectionSkeleton />
+        ) : entries.length === 0 ? (
+          <LeaderboardEmptyState />
+        ) : (
+          <>
         <div className="space-y-2.5 px-3 py-3 lg:hidden">
           {entries.map((entry) => (
             <LeaderboardMobileRow
@@ -60,7 +86,14 @@ export default function LeaderboardSection({
           analyticsRequiresUpgrade={analyticsRequiresUpgrade}
           onAnalyticsUpgradeRequired={openAnalyticsUpgrade}
         />
-        <LeaderboardFooter />
+        <LeaderboardFooter
+          hasMore={hasMore && !isLoading}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={onLoadMore}
+          loadMoreDisabled={loadMoreDisabled}
+        />
+          </>
+        )}
       </div>
 
       <ViewAnalystAnalyticsUpgradeModal

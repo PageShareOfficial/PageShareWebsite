@@ -1,5 +1,6 @@
 """Prediction endpoints: submit and submission quota."""
 
+from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -8,7 +9,7 @@ from app.api.prediction_api_constants import (
     LIVE_PRICE_RATE_LIMIT_PER_MINUTE,
 )
 from app.database import get_db
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, get_optional_user
 from app.schemas.prediction import (
     CreatePredictionRequest,
     PredictionAnalyticsDashboardResponse,
@@ -16,9 +17,11 @@ from app.schemas.prediction import (
     PredictionAnalyticsSubject,
     PredictionIndexItemResponse,
     PredictionIndexListResponse,
+    PredictionLeaderboardEntryResponse,
     PredictionLivePriceResponse,
     PredictionResponse,
     PredictionSubmissionQuotaResponse,
+    PredictionAnalyticsSummaryResponse,
 )
 from app.services.auth_service import CurrentUser
 from app.services.coinbase_assets import coinbase_product_id
@@ -34,7 +37,14 @@ from app.services.prediction_service import (
 )
 from app.services.prediction_analytics_service import (
     get_analyst_dashboard_for_investor,
+    get_own_analytics,
     get_own_analytics_dashboard,
+)
+from app.services.prediction_leaderboard_service import (
+    DEFAULT_LEADERBOARD_PER_PAGE,
+    list_prediction_leaderboard,
+    load_leaderboard_users,
+    plan_ids_for_leaderboard,
 )
 from app.services.prediction_analytics_predictions_service import (
     get_analyst_prediction_detail_for_investor,
@@ -205,6 +215,37 @@ def prediction_submission_quota(
         **get_submission_quota(db, user_id, client_timezone=client_timezone)
     )
 
+@router.get("/leaderboard", response_model=dict)
+def prediction_leaderboard(
+    db: Session = Depends(get_db),
+    current_user: Optional[CurrentUser] = Depends(get_optional_user),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(DEFAULT_LEADERBOARD_PER_PAGE, ge=1, le=50),
+):
+    """Analyst rankings by 30d Net RR. Available to all visitors (optional auth)."""
+    del current_user
+    rows, total = list_prediction_leaderboard(db, page=page, per_page=per_page)
+    users = load_leaderboard_users(db, rows)
+    plan_map = plan_ids_for_leaderboard(db, rows)
+    data = []
+    for row in rows:
+        user = users.get(row.user_id)
+        if user is None:
+            continue
+        entry = PredictionLeaderboardEntryResponse(
+            rank=row.rank,
+            username=user.username,
+            display_name=user.display_name,
+            profile_picture_url=user.profile_picture_url,
+            subscription_plan_id=plan_map.get(row.user_id),
+            net_rr_30d=row.net_rr_30d,
+            win_rate_percent=row.win_rate_percent,
+            predictions_count=row.predictions_count,
+            wins=row.wins,
+        )
+        data.append(entry.model_dump())
+    return paginated_response(data, page, per_page, total)
+
 @router.get("/analytics/me", response_model=PredictionAnalyticsDashboardResponse)
 def prediction_analytics_me(
     db: Session = Depends(get_db),
@@ -220,6 +261,29 @@ def prediction_analytics_me(
             detail=str(exc),
         ) from exc
     return _dashboard_response(user, dashboard)
+
+@router.get("/analytics/me/summary", response_model=PredictionAnalyticsSummaryResponse)
+def prediction_analytics_me_summary(
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Compact analyst stats for the predictions dashboard."""
+    user_id = UUID(current_user.auth_user_id)
+    try:
+        user, summary = get_own_analytics(db, user_id)
+    except AnalystRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    return PredictionAnalyticsSummaryResponse(
+        subject=_analytics_subject(user),
+        total_predictions=summary.total_predictions,
+        wins=summary.wins,
+        losses=summary.losses,
+        win_rate_percent=summary.win_rate_percent,
+        rank=summary.rank,
+    )
 
 @router.get(
     "/analytics/users/{username}",
