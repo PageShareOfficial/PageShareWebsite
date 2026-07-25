@@ -70,11 +70,19 @@ function BarGroupSkeleton({ rows = 3 }: { rows?: number }) {
   );
 }
 
-export default function AnalyticsDashboardSkeleton() {
+export default function AnalyticsDashboardSkeleton({
+  isOwnAnalytics = true,
+}: {
+  isOwnAnalytics?: boolean;
+}) {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading analytics dashboard">
       <section className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/5 via-transparent to-emerald-500/5 p-4 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div
+          className={`flex flex-col gap-4 ${
+            isOwnAnalytics ? '' : 'lg:flex-row lg:items-center lg:justify-between'
+          }`}
+        >
           <div className="flex items-start gap-3">
             <AvatarSkeleton size={56} />
             <div className="min-w-0 flex-1 space-y-2">
@@ -83,11 +91,16 @@ export default function AnalyticsDashboardSkeleton() {
               <Skeleton variant="text" width={220} height={14} />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Skeleton variant="rectangular" width={120} height={28} rounded="rounded-full" />
-            <Skeleton variant="rectangular" width={88} height={28} rounded="rounded-full" />
-            <Skeleton variant="rectangular" width={130} height={28} rounded="rounded-full" />
-          </div>
+          {!isOwnAnalytics ? (
+            <div className="flex shrink-0 justify-start lg:justify-end">
+              <Skeleton
+                variant="rectangular"
+                width={44}
+                height={44}
+                rounded="rounded-xl"
+              />
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -138,15 +151,6 @@ export default function AnalyticsDashboardSkeleton() {
           <ChartBlockSkeleton height={100} />
         </div>
       </SectionShell>
-
-      <section className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <Skeleton variant="text" width="70%" height={14} className="max-w-md" />
-        <div className="flex flex-wrap gap-2">
-          <Skeleton variant="rectangular" width={140} height={40} rounded="rounded-xl" />
-          <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-xl" />
-          <Skeleton variant="rectangular" width={88} height={40} rounded="rounded-xl" />
-        </div>
-      </section>
     </div>
   );
 }
@@ -178,8 +182,8 @@ export function AnalyticsPredictionsTabSkeleton() {
 export function AnalyticsTabBarSkeleton() {
   return (
     <div className="mb-6 flex border-b border-white/10">
-      <Skeleton variant="rectangular" width="50%" height={48} rounded={false} />
-      <Skeleton variant="rectangular" width="50%" height={48} rounded={false} />
+      <Skeleton variant="rectangular" width="50%" height={56} rounded={false} />
+      <Skeleton variant="rectangular" width="50%" height={56} rounded={false} />
     </div>
   );
 }

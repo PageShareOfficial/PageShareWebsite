@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -44,16 +45,21 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const billingStatusRef = useRef(billingStatus);
+  billingStatusRef.current = billingStatus;
 
   const refreshBillingStatus = useCallback(async () => {
     const accessToken = session?.access_token;
     if (!accessToken || !getBaseUrl()) {
       setBillingStatus(null);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (billingStatusRef.current === null) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {

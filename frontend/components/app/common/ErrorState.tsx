@@ -7,6 +7,7 @@ interface ErrorStateProps {
   title?: string;
   message?: string;
   onRetry?: () => void;
+  retryDisabled?: boolean;
   className?: string;
 }
 
@@ -17,6 +18,7 @@ export default function ErrorState({
   title = 'Something went wrong',
   message = 'Please try again in a moment.',
   onRetry,
+  retryDisabled = false,
   className = '',
 }: ErrorStateProps) {
   return (
@@ -26,8 +28,10 @@ export default function ErrorState({
       <p className="text-sm text-gray-400 mb-4 text-center max-w-md">{message}</p>
       {onRetry && (
         <button
+          type="button"
           onClick={onRetry}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+          disabled={retryDisabled}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>

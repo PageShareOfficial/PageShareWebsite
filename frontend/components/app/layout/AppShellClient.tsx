@@ -2,7 +2,6 @@
 
 import { Suspense } from 'react';
 import { PremiumOverlayProvider } from '@/contexts/PremiumOverlayContext';
-import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { SavedAnalystsProvider } from '@/hooks/predictions/useSavedAnalysts';
 import PremiumOverlay from '@/components/app/plans/PremiumOverlay';
 import CheckoutReturnBanner from '@/components/app/billing/CheckoutReturnBanner';
@@ -15,8 +14,7 @@ export default function AppShellClient({
   children: React.ReactNode;
 }>) {
   return (
-    <SubscriptionProvider>
-      <SavedAnalystsProvider>
+    <SavedAnalystsProvider>
       <PremiumOverlayProvider>
         <div className="min-h-screen bg-black">
           <div className="flex justify-center">
@@ -30,7 +28,6 @@ export default function AppShellClient({
         </Suspense>
         <PremiumOverlay />
       </PremiumOverlayProvider>
-      </SavedAnalystsProvider>
-    </SubscriptionProvider>
+    </SavedAnalystsProvider>
   );
 }

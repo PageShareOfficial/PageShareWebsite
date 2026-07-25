@@ -4,11 +4,13 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
+import Loading from '@/components/app/common/Loading';
 import SubmitPredictionForm, {
   type PredictionPriceLockState,
 } from '@/components/app/predictions/SubmitPredictionForm';
 import FloatingPriceLockOverlay from '@/components/app/predictions/FloatingPriceLockOverlay';
 import Skeleton from '@/components/app/common/Skeleton';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePredictionSubmissionQuota } from '@/hooks/predictions/usePredictionSubmissionQuota';
 import { useScrollPastAnchor } from '@/hooks/predictions/useScrollPastAnchor';
 import { MAX_PREDICTIONS_PER_DAY } from '@/utils/predictions/predictionRules';
@@ -21,6 +23,7 @@ const INITIAL_LOCK_STATE: PredictionPriceLockState = {
 
 export default function SubmitPredictionPage() {
   const router = useRouter();
+  const { loading: authLoading } = useAuth();
   const columnRef = useRef<HTMLDivElement>(null);
   const mobilePinRef = useRef<HTMLDivElement>(null);
   const desktopPinRef = useRef<HTMLDivElement>(null);
@@ -38,6 +41,19 @@ export default function SubmitPredictionPage() {
   const goToPredictions = () => {
     router.push('/predictions');
   };
+
+  if (authLoading) {
+    return (
+      <>
+        <MobileHeader title="Submit Prediction" onBack={goToPredictions} />
+        <DesktopHeader title="Submit Prediction" onBack={goToPredictions} />
+        <div className="flex flex-1 items-center justify-center min-h-[50vh] pb-16 md:pb-0">
+          <Loading />
+        </div>
+      </>
+    );
+  }
+
   const showQuotaPill = !isLoading && quota !== null;
   const predictionsLeftPill = showQuotaPill ? (
     <div className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">

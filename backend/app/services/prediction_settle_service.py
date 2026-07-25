@@ -50,6 +50,20 @@ def fetch_due_predictions(
         .all()
     )
 
+def settle_prediction_if_due(db: Session, prediction: Prediction) -> bool:
+    """Evaluate a single row when active and past expiry; no-op otherwise."""
+    if prediction.outcome is not None or prediction.status != PREDICTION_STATUS_ACTIVE:
+        return True
+
+    now = datetime.now(timezone.utc)
+    expiry = prediction.expiry_at
+    if expiry.tzinfo is None:
+        expiry = expiry.replace(tzinfo=timezone.utc)
+    if expiry > now:
+        return True
+
+    return _try_settle_prediction(db, prediction)
+
 def settle_due_predictions_for_user(
     db: Session,
     user_id: UUID,

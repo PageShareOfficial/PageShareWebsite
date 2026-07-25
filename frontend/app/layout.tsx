@@ -5,6 +5,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import OfflineOverlay from "@/components/OfflineOverlay";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { OfflineOverlayProvider } from "@/contexts/OfflineOverlayContext";
 import { BookmarkProvider } from "@/contexts/BookmarkContext";
 import { ContentFiltersProvider } from "@/contexts/ContentFiltersContext";
@@ -90,13 +91,15 @@ export default function RootLayout({
           <OfflineOverlayProvider>
             <OfflineOverlay />
             <AuthProvider>
-              <BookmarkProvider>
-                <ContentFiltersProvider>
-                  <WatchlistProvider>
-                    {children}
-                  </WatchlistProvider>
-                </ContentFiltersProvider>
-              </BookmarkProvider>
+              <SubscriptionProvider>
+                <BookmarkProvider>
+                  <ContentFiltersProvider>
+                    <WatchlistProvider>
+                      {children}
+                    </WatchlistProvider>
+                  </ContentFiltersProvider>
+                </BookmarkProvider>
+              </SubscriptionProvider>
             </AuthProvider>
           </OfflineOverlayProvider>
         </ErrorBoundaryWrapper>

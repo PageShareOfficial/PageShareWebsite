@@ -9,6 +9,8 @@ interface ImageWithFallbackProps {
   fallback: React.ReactNode;
   className?: string;
   sizes?: string;
+  /** How the image fills its positioned parent (requires explicit parent size). */
+  fit?: 'cover' | 'contain';
 }
 
 /**
@@ -21,8 +23,10 @@ export default function ImageWithFallback({
   fallback,
   className = '',
   sizes = '40px',
+  fit = 'cover',
 }: ImageWithFallbackProps) {
   const [imageError, setImageError] = useState(false);
+  const objectClass = fit === 'contain' ? 'object-contain' : 'object-cover';
 
   if (!src || imageError) {
     return <div className={className}>{fallback}</div>;
@@ -35,7 +39,7 @@ export default function ImageWithFallback({
         alt={alt}
         fill
         sizes={sizes}
-        className="object-cover"
+        className={objectClass}
         // Load CDN logos in the browser; Next.js optimizer times out on CoinGecko hosts.
         unoptimized
         onError={() => setImageError(true)}
