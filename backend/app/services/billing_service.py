@@ -7,7 +7,13 @@ import stripe
 from sqlalchemy.orm import Session
 from app.config import Settings
 from app.schemas.billing import CheckoutSessionBody
-from app.services.billing_constants import resolve_stripe_price_id
+from app.services.billing_constants import (
+    INTERVAL_MONTHLY,
+    INTERVAL_YEARLY,
+    PLAN_ID_ANALYST,
+    PLAN_ID_INVESTOR,
+    resolve_stripe_price_id,
+)
 from app.services.subscription_service import (
     entitlement_matches_checkout,
     get_entitlement,
@@ -39,10 +45,10 @@ def _require_stripe_config(settings: Settings) -> None:
 
 def build_price_map(settings: Settings) -> dict[tuple[str, str], str]:
     return {
-        ("analyst", "monthly"): settings.stripe_price_id_analyst_monthly,
-        ("analyst", "yearly"): settings.stripe_price_id_analyst_yearly,
-        ("investor", "monthly"): settings.stripe_price_id_investor_monthly,
-        ("investor", "yearly"): settings.stripe_price_id_investor_yearly,
+        (PLAN_ID_ANALYST, INTERVAL_MONTHLY): settings.stripe_price_id_analyst_monthly,
+        (PLAN_ID_ANALYST, INTERVAL_YEARLY): settings.stripe_price_id_analyst_yearly,
+        (PLAN_ID_INVESTOR, INTERVAL_MONTHLY): settings.stripe_price_id_investor_monthly,
+        (PLAN_ID_INVESTOR, INTERVAL_YEARLY): settings.stripe_price_id_investor_yearly,
     }
 
 def _configure_stripe(settings: Settings) -> None:

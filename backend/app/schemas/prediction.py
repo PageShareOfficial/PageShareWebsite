@@ -54,3 +54,62 @@ class PredictionLivePriceResponse(BaseModel):
     asset: str
     product_id: str
     price: float
+
+class PredictionAnalyticsSubject(BaseModel):
+    id: str
+    username: str
+    display_name: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+
+class PredictionAnalyticsSummaryResponse(BaseModel):
+    subject: PredictionAnalyticsSubject
+    total_predictions: int
+    wins: int
+    losses: int
+    win_rate_percent: Optional[float] = None
+    rank: Optional[int] = None
+
+class NetRrSeriesPointResponse(BaseModel):
+    resolved_at: datetime
+    cumulative_net_rr: float
+
+class AnalyticsPeriodStatsResponse(BaseModel):
+    net_rr: float
+    win_rate_percent: Optional[float] = None
+    resolved_count: int
+    wins: int
+    losses: int
+    expired: int
+
+class AnalyticsLifetimeStatsResponse(BaseModel):
+    total_predictions: int
+    active_count: int
+    resolved_count: int
+    wins: int
+    losses: int
+    expired: int
+    win_rate_percent: Optional[float] = None
+    average_return_percent: Optional[float] = None
+
+class AssetCountResponse(BaseModel):
+    asset: str
+    count: int
+
+class AnalyticsTradingStyleResponse(BaseModel):
+    long_count: int = 0
+    short_count: int = 0
+    long_percent: Optional[float] = None
+    short_percent: Optional[float] = None
+    top_assets: list[AssetCountResponse] = Field(default_factory=list)
+    average_confidence: Optional[float] = None
+    average_setup_rr: Optional[float] = None
+
+class PredictionAnalyticsDashboardResponse(BaseModel):
+    subject: PredictionAnalyticsSubject
+    rank: Optional[int] = None
+    rank_total: int = 0
+    net_rr_30d: float = 0.0
+    recent_30d: AnalyticsPeriodStatsResponse
+    net_rr_series_30d: list[NetRrSeriesPointResponse] = Field(default_factory=list)
+    lifetime: AnalyticsLifetimeStatsResponse
+    style: AnalyticsTradingStyleResponse

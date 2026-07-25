@@ -3,10 +3,16 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from app.api.prediction_api_constants import (
+    CLIENT_TIMEZONE_HEADER,
+    LIVE_PRICE_RATE_LIMIT_PER_MINUTE,
+)
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.schemas.prediction import (
     CreatePredictionRequest,
+    PredictionAnalyticsDashboardResponse,
+    PredictionAnalyticsSubject,
     PredictionLivePriceResponse,
     PredictionResponse,
     PredictionSubmissionQuotaResponse,
@@ -23,7 +29,15 @@ from app.services.prediction_service import (
     get_submission_quota,
     list_predictions_for_user,
 )
+from app.services.prediction_analytics_service import (
+    get_analyst_dashboard_for_investor,
+    get_own_analytics_dashboard,
+)
 from app.services.prediction_settle_service import settle_due_predictions_for_user
+from app.services.saved_analyst_service import (
+    AnalystTargetRequiredError,
+    InvestorRequiredError,
+)
 from app.services.prediction_validation_service import PredictionValidationError
 from app.services.user_service import get_or_create_user_for_auth
 from app.utils.http import parse_uuid_or_404
@@ -32,11 +46,61 @@ from app.utils.responses import paginated_response
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
 
-CLIENT_TIMEZONE_HEADER = "X-Client-Timezone"
-LIVE_PRICE_RATE_LIMIT = 30
-
 def _optional_float(value) -> float | None:
     return float(value) if value is not None else None
+
+def _analytics_subject(user) -> PredictionAnalyticsSubject:
+    return PredictionAnalyticsSubject(
+        id=str(user.id),
+        username=user.username,
+        display_name=user.display_name,
+        profile_picture_url=user.profile_picture_url,
+    )
+
+def _dashboard_response(user, dashboard) -> PredictionAnalyticsDashboardResponse:
+    return PredictionAnalyticsDashboardResponse(
+        subject=_analytics_subject(user),
+        rank=dashboard.rank,
+        rank_total=dashboard.rank_total,
+        net_rr_30d=dashboard.net_rr_30d,
+        recent_30d={
+            "net_rr": dashboard.recent_30d.net_rr,
+            "win_rate_percent": dashboard.recent_30d.win_rate_percent,
+            "resolved_count": dashboard.recent_30d.resolved_count,
+            "wins": dashboard.recent_30d.wins,
+            "losses": dashboard.recent_30d.losses,
+            "expired": dashboard.recent_30d.expired,
+        },
+        net_rr_series_30d=[
+            {
+                "resolved_at": point.resolved_at,
+                "cumulative_net_rr": point.cumulative_net_rr,
+            }
+            for point in dashboard.net_rr_series_30d
+        ],
+        lifetime={
+            "total_predictions": dashboard.lifetime.total_predictions,
+            "active_count": dashboard.lifetime.active_count,
+            "resolved_count": dashboard.lifetime.resolved_count,
+            "wins": dashboard.lifetime.wins,
+            "losses": dashboard.lifetime.losses,
+            "expired": dashboard.lifetime.expired,
+            "win_rate_percent": dashboard.lifetime.win_rate_percent,
+            "average_return_percent": dashboard.lifetime.average_return_percent,
+        },
+        style={
+            "long_count": dashboard.style.long_count,
+            "short_count": dashboard.style.short_count,
+            "long_percent": dashboard.style.long_percent,
+            "short_percent": dashboard.style.short_percent,
+            "top_assets": [
+                {"asset": item.asset, "count": item.count}
+                for item in dashboard.style.top_assets
+            ],
+            "average_confidence": dashboard.style.average_confidence,
+            "average_setup_rr": dashboard.style.average_setup_rr,
+        },
+    )
 
 def _to_response(prediction) -> PredictionResponse:
     return PredictionResponse(
@@ -75,7 +139,7 @@ def prediction_live_price(
     user_id = UUID(current_user.auth_user_id)
     if is_rate_limited(
         f"predictions:live-price:{user_id}",
-        max_requests=LIVE_PRICE_RATE_LIMIT,
+        max_requests=LIVE_PRICE_RATE_LIMIT_PER_MINUTE,
     ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -110,6 +174,54 @@ def prediction_submission_quota(
     return PredictionSubmissionQuotaResponse(
         **get_submission_quota(db, user_id, client_timezone=client_timezone)
     )
+
+@router.get("/analytics/me", response_model=PredictionAnalyticsDashboardResponse)
+def prediction_analytics_me(
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Analyst-only dashboard for the signed-in user."""
+    user_id = UUID(current_user.auth_user_id)
+    try:
+        user, dashboard = get_own_analytics_dashboard(db, user_id)
+    except AnalystRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    return _dashboard_response(user, dashboard)
+
+@router.get(
+    "/analytics/users/{username}",
+    response_model=PredictionAnalyticsDashboardResponse,
+)
+def prediction_analytics_for_user(
+    username: str,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Investor-only dashboard for an analyst profile."""
+    investor_id = UUID(current_user.auth_user_id)
+    try:
+        user, dashboard = get_analyst_dashboard_for_investor(
+            db, investor_id, username
+        )
+    except InvestorRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    except AnalystTargetRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    return _dashboard_response(user, dashboard)
 
 @router.get("", response_model=dict)
 def list_my_predictions(

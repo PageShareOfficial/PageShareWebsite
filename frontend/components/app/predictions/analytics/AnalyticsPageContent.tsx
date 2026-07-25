@@ -1,78 +1,122 @@
 'use client';
 
-import Link from 'next/link';
-import { BarChart3, Target, TrendingUp } from 'lucide-react';
-import { FaMedal } from 'react-icons/fa';
-import Topbar from '@/components/app/layout/Topbar';
-
-/** Placeholder metrics — same layout for self-view and investor viewing an analyst. */
-const ANALYTICS_METRIC_PLACEHOLDERS = [
-  { label: 'Rank', value: '—', icon: FaMedal, accentClass: 'text-amber-400/90' },
-  { label: 'Win rate', value: '—', icon: TrendingUp, accentClass: 'text-emerald-400/90' },
-  { label: 'Total predictions', value: '—', icon: Target, accentClass: 'text-sky-400/90' },
-] as const;
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import MobileHeader from '@/components/app/layout/MobileHeader';
+import DesktopHeader from '@/components/app/layout/DesktopHeader';
+import ErrorState from '@/components/app/common/ErrorState';
+import AnalyticsAccessGate from '@/components/app/predictions/analytics/AnalyticsAccessGate';
+import AnalyticsDashboardTab from '@/components/app/predictions/analytics/AnalyticsDashboardTab';
+import AnalyticsDashboardSkeleton, {
+  AnalyticsPredictionsTabSkeleton,
+} from '@/components/app/predictions/analytics/AnalyticsDashboardSkeleton';
+import AnalyticsPredictionsTab from '@/components/app/predictions/analytics/AnalyticsPredictionsTab';
+import AnalyticsTabBar, {
+  type AnalyticsTabId,
+} from '@/components/app/predictions/analytics/AnalyticsTabBar';
+import type { PredictionAnalyticsDashboard } from '@/lib/api/predictionApi';
 
 interface AnalyticsPageContentProps {
-  /** When omitted, the page shows the signed-in user's own analytics. */
   subjectUsername?: string;
+}
+
+function AnalyticsPageBody({
+  subjectUsername,
+  dashboard,
+  isLoading,
+  isNotFound,
+  errorMessage,
+  onRetry,
+}: {
+  subjectUsername?: string;
+  dashboard: PredictionAnalyticsDashboard | null;
+  isLoading: boolean;
+  isNotFound: boolean;
+  errorMessage: string | null;
+  onRetry: () => void;
+}) {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<AnalyticsTabId>('dashboard');
+  const isOwnAnalytics = !subjectUsername?.trim();
+  const displayUsername =
+    dashboard?.subject.username ?? subjectUsername?.trim() ?? '';
+  const headerTitle = isOwnAnalytics ? 'Analytics' : `@${displayUsername}`;
+  const subtitle = isOwnAnalytics
+    ? 'Your prediction performance scorecard.'
+    : `Prediction performance for @${displayUsername}.`;
+
+  const goToPredictions = () => {
+    router.push('/predictions');
+  };
+
+  const showDashboardSkeleton = isLoading || dashboard == null;
+
+  return (
+    <>
+      <MobileHeader title={headerTitle} onBack={goToPredictions} />
+      <DesktopHeader
+        title={headerTitle}
+        subtitle={subtitle}
+        onBack={goToPredictions}
+        withSideBorders={false}
+      />
+
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 pb-10 sm:px-6 lg:px-8">
+        {isNotFound ? (
+          <ErrorState
+            title="Analyst not found"
+            message="This profile does not have analyst analytics available."
+            onRetry={goToPredictions}
+          />
+        ) : errorMessage ? (
+          <ErrorState
+            title="Could not load analytics"
+            message={errorMessage}
+            onRetry={onRetry}
+          />
+        ) : (
+          <>
+            <AnalyticsTabBar
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+            {activeTab === 'dashboard' ? (
+              showDashboardSkeleton ? (
+                <AnalyticsDashboardSkeleton />
+              ) : (
+                <AnalyticsDashboardTab
+                  dashboard={dashboard!}
+                  isOwnAnalytics={isOwnAnalytics}
+                  onOpenPredictionsTab={() => setActiveTab('predictions')}
+                />
+              )
+            ) : showDashboardSkeleton ? (
+              <AnalyticsPredictionsTabSkeleton />
+            ) : (
+              <AnalyticsPredictionsTab />
+            )}
+          </>
+        )}
+      </main>
+    </>
+  );
 }
 
 export default function AnalyticsPageContent({
   subjectUsername,
 }: AnalyticsPageContentProps) {
-  const isOwnAnalytics = !subjectUsername;
-  const subtitle = isOwnAnalytics
-    ? 'Your prediction performance scorecard.'
-    : `Prediction performance for @${subjectUsername}.`;
-
   return (
-    <>
-      <Topbar />
-      <div className="flex-1 flex pb-16 md:pb-0">
-        <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
-          <header className="mb-6">
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-              <BarChart3 className="h-6 w-6 text-blue-400/90" aria-hidden />
-              Analytics
-            </h1>
-            <p className="mt-2 text-sm text-gray-400">{subtitle}</p>
-          </header>
-
-          <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
-            {ANALYTICS_METRIC_PLACEHOLDERS.map((metric) => {
-              const Icon = metric.icon;
-              return (
-                <div
-                  key={metric.label}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
-                >
-                  <div
-                    className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wide ${metric.accentClass}`}
-                  >
-                    <Icon className="h-3.5 w-3.5" aria-hidden />
-                    {metric.label}
-                  </div>
-                  <p className="mt-1 text-2xl font-bold tabular-nums text-white">
-                    {metric.value}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-12 text-center">
-            <p className="mb-4 text-sm text-gray-400">
-              Detailed prediction history and outcome charts will appear here.
-            </p>
-            <Link
-              href="/predictions"
-              className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-gray-100"
-            >
-              Back to predictions
-            </Link>
-          </div>
-        </div>
-      </div>
-    </>
+    <AnalyticsAccessGate subjectUsername={subjectUsername}>
+      {({ accessState, dashboard, errorMessage, retry }) => (
+        <AnalyticsPageBody
+          subjectUsername={subjectUsername}
+          dashboard={dashboard}
+          isLoading={accessState === 'loading'}
+          isNotFound={accessState === 'not_found'}
+          errorMessage={accessState === 'error' ? errorMessage : null}
+          onRetry={retry}
+        />
+      )}
+    </AnalyticsAccessGate>
   );
 }
