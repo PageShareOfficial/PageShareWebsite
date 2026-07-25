@@ -21,8 +21,9 @@ export function formatPercent(value: number | null | undefined): string {
 
 export function formatSignedPercent(value: number | null | undefined): string {
   if (value == null) return '—';
-  const prefix = value > 0 ? '+' : '';
-  return `${prefix}${value}%`;
+  const rounded = Math.round(value * 100) / 100;
+  const prefix = rounded > 0 ? '+' : '';
+  return `${prefix}${rounded}%`;
 }
 
 export function buildRecentFormInsight(

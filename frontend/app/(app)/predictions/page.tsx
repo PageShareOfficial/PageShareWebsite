@@ -5,16 +5,30 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { MdLeaderboard } from 'react-icons/md';
 import Topbar from '@/components/app/layout/Topbar';
+import Loading from '@/components/app/common/Loading';
 import PredictionsDashboard from '@/components/app/predictions/PredictionsDashboard';
 import PredictionSubmitUpgradeModal from '@/components/app/modals/PredictionSubmitUpgradeModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePredictionsPageHeader } from '@/hooks/predictions/usePredictionsView';
 
 export default function PredictionsPage() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const { loading: authLoading } = useAuth();
   const header = usePredictionsPageHeader();
 
   const submitButtonClass =
     'inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-gray-100';
+
+  if (authLoading) {
+    return (
+      <>
+        <Topbar />
+        <div className="flex flex-1 items-center justify-center pb-16 md:pb-0 min-h-[50vh]">
+          <Loading />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

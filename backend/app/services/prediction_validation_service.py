@@ -13,15 +13,10 @@ from app.services.prediction_constants import (
     MIN_STOP_MOVE_PCT,
     MIN_TARGET_MOVE_PCT,
 )
+from app.services.prediction_rr_utils import setup_risk_reward
 
 class PredictionValidationError(ValueError):
     """Raised when prediction input fails business rules."""
-
-def compute_risk_reward(entry: float, target: float, stop: float) -> float:
-    denom = entry - stop
-    if abs(denom) < 1e-12:
-        return float("nan")
-    return (target - entry) / denom
 
 def validate_position_sides(
     position: Literal["long", "short"],
@@ -54,8 +49,8 @@ def validate_price_distance(entry: float, target: float, stop: float) -> None:
         )
 
 def validate_risk_reward(entry: float, target: float, stop: float) -> None:
-    risk_reward = compute_risk_reward(entry, target, stop)
-    if risk_reward != risk_reward:  # NaN check
+    risk_reward = setup_risk_reward(entry, target, stop)
+    if risk_reward == 0.0:
         raise PredictionValidationError("Entry and stop loss cannot be equal.")
     if risk_reward < MIN_RISK_REWARD:
         raise PredictionValidationError(

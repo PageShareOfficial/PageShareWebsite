@@ -199,3 +199,77 @@ export async function getPredictionAnalyticsForUser(
   });
   return parseJsonResponse(res, 'Failed to load analyst analytics');
 }
+
+export interface PredictionIndexItem {
+  id: string;
+  number: number;
+  asset: string;
+  status: string;
+  outcome?: 'win' | 'loss' | 'expired' | null;
+  created_at: string;
+}
+
+export interface PredictionIndexList {
+  items: PredictionIndexItem[];
+  total: number;
+}
+
+export interface PredictionAnalyticsDetail {
+  number: number;
+  prediction: PredictionResponse;
+}
+
+export async function getMyAnalyticsPredictionIndex(
+  accessToken: string
+): Promise<PredictionIndexList> {
+  const res = await apiFetch('/predictions/analytics/me/predictions', {
+    method: 'GET',
+    accessToken,
+  });
+  return parseJsonResponse(res, 'Failed to load predictions');
+}
+
+export async function getMyAnalyticsPredictionDetail(
+  predictionId: string,
+  accessToken: string
+): Promise<PredictionAnalyticsDetail> {
+  const res = await apiFetch(
+    `/predictions/analytics/me/predictions/${encodeURIComponent(predictionId)}`,
+    {
+      method: 'GET',
+      accessToken,
+    }
+  );
+  return parseJsonResponse(res, 'Failed to load prediction');
+}
+
+export async function getAnalyticsPredictionIndexForUser(
+  username: string,
+  accessToken: string
+): Promise<PredictionIndexList> {
+  const encoded = encodeURIComponent(username.trim());
+  const res = await apiFetch(
+    `/predictions/analytics/users/${encoded}/predictions`,
+    {
+      method: 'GET',
+      accessToken,
+    }
+  );
+  return parseJsonResponse(res, 'Failed to load predictions');
+}
+
+export async function getAnalyticsPredictionDetailForUser(
+  username: string,
+  predictionId: string,
+  accessToken: string
+): Promise<PredictionAnalyticsDetail> {
+  const encoded = encodeURIComponent(username.trim());
+  const res = await apiFetch(
+    `/predictions/analytics/users/${encoded}/predictions/${encodeURIComponent(predictionId)}`,
+    {
+      method: 'GET',
+      accessToken,
+    }
+  );
+  return parseJsonResponse(res, 'Failed to load prediction');
+}

@@ -12,7 +12,10 @@ from app.middleware.auth import get_current_user
 from app.schemas.prediction import (
     CreatePredictionRequest,
     PredictionAnalyticsDashboardResponse,
+    PredictionAnalyticsDetailResponse,
     PredictionAnalyticsSubject,
+    PredictionIndexItemResponse,
+    PredictionIndexListResponse,
     PredictionLivePriceResponse,
     PredictionResponse,
     PredictionSubmissionQuotaResponse,
@@ -32,6 +35,12 @@ from app.services.prediction_service import (
 from app.services.prediction_analytics_service import (
     get_analyst_dashboard_for_investor,
     get_own_analytics_dashboard,
+)
+from app.services.prediction_analytics_predictions_service import (
+    get_analyst_prediction_detail_for_investor,
+    get_own_prediction_detail,
+    list_analyst_prediction_index_for_investor,
+    list_own_prediction_index,
 )
 from app.services.prediction_settle_service import settle_due_predictions_for_user
 from app.services.saved_analyst_service import (
@@ -129,6 +138,27 @@ def _to_response(prediction) -> PredictionResponse:
         created_at=prediction.created_at,
     )
 
+def _index_list_response(items) -> PredictionIndexListResponse:
+    return PredictionIndexListResponse(
+        items=[
+            PredictionIndexItemResponse(
+                id=str(item.id),
+                number=item.number,
+                asset=item.asset,
+                status=item.status,
+                outcome=item.outcome,
+                created_at=item.created_at,
+            )
+            for item in items
+        ],
+        total=len(items),
+    )
+
+def _detail_response(number: int, prediction) -> PredictionAnalyticsDetailResponse:
+    return PredictionAnalyticsDetailResponse(
+        number=number,
+        prediction=_to_response(prediction),
+    )
 
 @router.get("/live-price", response_model=PredictionLivePriceResponse)
 def prediction_live_price(
@@ -222,6 +252,118 @@ def prediction_analytics_for_user(
             detail=str(exc),
         ) from exc
     return _dashboard_response(user, dashboard)
+
+
+@router.get("/analytics/me/predictions", response_model=PredictionIndexListResponse)
+def prediction_analytics_me_index(
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Analyst prediction index for analytics tab (no batch settle)."""
+    user_id = UUID(current_user.auth_user_id)
+    try:
+        items = list_own_prediction_index(db, user_id)
+    except AnalystRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    return _index_list_response(items)
+
+
+@router.get(
+    "/analytics/me/predictions/{prediction_id}",
+    response_model=PredictionAnalyticsDetailResponse,
+)
+def prediction_analytics_me_detail(
+    prediction_id: str,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Single prediction detail; settles this row only if due."""
+    pid = parse_uuid_or_404(prediction_id, "Prediction not found")
+    user_id = UUID(current_user.auth_user_id)
+    try:
+        number, prediction = get_own_prediction_detail(db, user_id, pid)
+    except AnalystRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    return _detail_response(number, prediction)
+
+
+@router.get(
+    "/analytics/users/{username}/predictions",
+    response_model=PredictionIndexListResponse,
+)
+def prediction_analytics_user_index(
+    username: str,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Investor view of an analyst's prediction index (no settle)."""
+    investor_id = UUID(current_user.auth_user_id)
+    try:
+        _, items = list_analyst_prediction_index_for_investor(
+            db, investor_id, username
+        )
+    except InvestorRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    except AnalystTargetRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    return _index_list_response(items)
+
+
+@router.get(
+    "/analytics/users/{username}/predictions/{prediction_id}",
+    response_model=PredictionAnalyticsDetailResponse,
+)
+def prediction_analytics_user_detail(
+    username: str,
+    prediction_id: str,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Investor detail; lazy-settles this prediction if due (analyst cohort)."""
+    pid = parse_uuid_or_404(prediction_id, "Prediction not found")
+    investor_id = UUID(current_user.auth_user_id)
+    try:
+        _, number, prediction = get_analyst_prediction_detail_for_investor(
+            db, investor_id, username, pid
+        )
+    except InvestorRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    except AnalystTargetRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    return _detail_response(number, prediction)
 
 @router.get("", response_model=dict)
 def list_my_predictions(

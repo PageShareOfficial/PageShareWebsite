@@ -113,3 +113,19 @@ class PredictionAnalyticsDashboardResponse(BaseModel):
     net_rr_series_30d: list[NetRrSeriesPointResponse] = Field(default_factory=list)
     lifetime: AnalyticsLifetimeStatsResponse
     style: AnalyticsTradingStyleResponse
+
+class PredictionIndexItemResponse(BaseModel):
+    id: str
+    number: int
+    asset: str
+    status: str
+    outcome: Optional[Literal["win", "loss", "expired"]] = None
+    created_at: datetime
+
+class PredictionIndexListResponse(BaseModel):
+    items: list[PredictionIndexItemResponse] = Field(default_factory=list)
+    total: int = 0
+
+class PredictionAnalyticsDetailResponse(BaseModel):
+    number: int
+    prediction: PredictionResponse

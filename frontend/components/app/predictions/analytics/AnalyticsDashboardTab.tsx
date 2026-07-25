@@ -1,7 +1,6 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
@@ -21,12 +20,6 @@ import {
   formatSignedPercent,
 } from '@/utils/predictions/analyticsFormat';
 
-const TRUST_CHIPS = [
-  'Live entry at submit',
-  'Max 5 / day',
-  'No edits after lock',
-] as const;
-
 const OUTCOME_COLORS = {
   win: 'rgb(52 211 153 / 0.9)',
   loss: 'rgb(248 113 113 / 0.85)',
@@ -36,7 +29,6 @@ const OUTCOME_COLORS = {
 interface AnalyticsDashboardTabProps {
   dashboard: PredictionAnalyticsDashboard;
   isOwnAnalytics: boolean;
-  onOpenPredictionsTab: () => void;
 }
 
 function SectionCard({
@@ -62,7 +54,6 @@ function SectionCard({
 export default function AnalyticsDashboardTab({
   dashboard,
   isOwnAnalytics,
-  onOpenPredictionsTab,
 }: AnalyticsDashboardTabProps) {
   const [netRrHelpOpen, setNetRrHelpOpen] = useState(false);
   const { subject, lifetime, recent_30d: recent, style } = dashboard;
@@ -134,7 +125,11 @@ export default function AnalyticsDashboardTab({
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-transparent to-emerald-500/5 p-4 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div
+          className={`flex flex-col gap-4 ${
+            isOwnAnalytics ? '' : 'lg:flex-row lg:items-center lg:justify-between'
+          }`}
+        >
           <div className="flex items-start gap-3">
             <AvatarWithFallback
               src={subject.profile_picture_url ?? undefined}
@@ -157,16 +152,14 @@ export default function AnalyticsDashboardTab({
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 lg:max-w-xs lg:justify-end">
-            {TRUST_CHIPS.map((chip) => (
-              <span
-                key={chip}
-                className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-gray-400"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
+          {!isOwnAnalytics ? (
+            <div className="flex shrink-0 justify-start lg:justify-end">
+              <SaveAnalystButton
+                analyst={savedAnalyst}
+                className="rounded-xl border border-white/15 bg-white/10 px-3 py-2.5 hover:bg-white/15"
+              />
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -355,41 +348,6 @@ export default function AnalyticsDashboardTab({
           </div>
         </div>
       </SectionCard>
-
-      <section className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <p className="text-sm text-gray-400">
-          {dashboard.rank != null && dashboard.rank_total > 0
-            ? `Ranked ${formatRank(dashboard.rank, dashboard.rank_total)} on PageShare predictions.`
-            : 'Submit and resolve more predictions to appear on the leaderboard.'}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={onOpenPredictionsTab}
-            className="rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15"
-          >
-            View predictions
-          </button>
-          {!isOwnAnalytics ? (
-            <>
-              <SaveAnalystButton analyst={savedAnalyst} />
-              <Link
-                href={`/${subject.username}`}
-                className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black hover:bg-gray-100"
-              >
-                Profile
-              </Link>
-            </>
-          ) : (
-            <Link
-              href="/predictions"
-              className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black hover:bg-gray-100"
-            >
-              Submit prediction
-            </Link>
-          )}
-        </div>
-      </section>
     </div>
   );
 }
