@@ -122,3 +122,80 @@ export async function createPrediction(
   });
   return parseJsonResponse(res, 'Failed to submit prediction');
 }
+
+export interface PredictionAnalyticsSubject {
+  id: string;
+  username: string;
+  display_name?: string | null;
+  profile_picture_url?: string | null;
+}
+
+export interface PredictionAnalyticsDashboard {
+  subject: PredictionAnalyticsSubject;
+  rank?: number | null;
+  rank_total: number;
+  net_rr_30d: number;
+  recent_30d: {
+    net_rr: number;
+    win_rate_percent?: number | null;
+    resolved_count: number;
+    wins: number;
+    losses: number;
+    expired: number;
+  };
+  net_rr_series_30d: Array<{
+    resolved_at: string;
+    cumulative_net_rr: number;
+  }>;
+  lifetime: {
+    total_predictions: number;
+    active_count: number;
+    resolved_count: number;
+    wins: number;
+    losses: number;
+    expired: number;
+    win_rate_percent?: number | null;
+    average_return_percent?: number | null;
+  };
+  style: {
+    long_count: number;
+    short_count: number;
+    long_percent?: number | null;
+    short_percent?: number | null;
+    top_assets: Array<{ asset: string; count: number }>;
+    average_confidence?: number | null;
+    average_setup_rr?: number | null;
+  };
+}
+
+/** @deprecated Use PredictionAnalyticsDashboard */
+export interface PredictionAnalyticsSummary {
+  subject: PredictionAnalyticsSubject;
+  total_predictions: number;
+  wins: number;
+  losses: number;
+  win_rate_percent?: number | null;
+  rank?: number | null;
+}
+
+export async function getMyPredictionAnalytics(
+  accessToken: string
+): Promise<PredictionAnalyticsDashboard> {
+  const res = await apiFetch('/predictions/analytics/me', {
+    method: 'GET',
+    accessToken,
+  });
+  return parseJsonResponse(res, 'Failed to load analytics');
+}
+
+export async function getPredictionAnalyticsForUser(
+  username: string,
+  accessToken: string
+): Promise<PredictionAnalyticsDashboard> {
+  const encoded = encodeURIComponent(username.trim());
+  const res = await apiFetch(`/predictions/analytics/users/${encoded}`, {
+    method: 'GET',
+    accessToken,
+  });
+  return parseJsonResponse(res, 'Failed to load analyst analytics');
+}

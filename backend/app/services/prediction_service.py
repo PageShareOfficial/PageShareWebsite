@@ -15,6 +15,7 @@ from app.services.prediction_validation_service import (
     PredictionValidationError,
     validate_submission_payload,
 )
+from app.services.billing_constants import PLAN_ID_ANALYST
 from app.services.subscription_service import get_user_plan_id
 from app.services.coinbase_market_service import (
     CoinbaseUnavailableError,
@@ -32,7 +33,7 @@ class MarketPriceError(Exception):
     """Could not fetch authoritative entry price from Coinbase."""
 
 def is_analyst_user(db: Session, user_id: UUID) -> bool:
-    return get_user_plan_id(db, user_id) == "analyst"
+    return get_user_plan_id(db, user_id) == PLAN_ID_ANALYST
 
 def count_predictions_submitted_today(
     db: Session,

@@ -6,6 +6,11 @@ from typing import Literal, Optional, Tuple
 PlanId = Literal["analyst", "investor"]
 BillingInterval = Literal["monthly", "yearly"]
 
+PLAN_ID_ANALYST = "analyst"
+PLAN_ID_INVESTOR = "investor"
+INTERVAL_MONTHLY = "monthly"
+INTERVAL_YEARLY = "yearly"
+
 PREMIUM_STATUSES = frozenset({"active", "trialing"})
 CANCELABLE_STATUSES = frozenset({"active", "trialing", "past_due"})
 STALE_SUBSCRIPTION_STATUSES = frozenset({
@@ -14,8 +19,8 @@ STALE_SUBSCRIPTION_STATUSES = frozenset({
     "incomplete_expired",
     "unpaid",
 })
-VALID_PLAN_IDS = frozenset({"analyst", "investor"})
-VALID_INTERVALS = frozenset({"monthly", "yearly"})
+VALID_PLAN_IDS = frozenset({PLAN_ID_ANALYST, PLAN_ID_INVESTOR})
+VALID_INTERVALS = frozenset({INTERVAL_MONTHLY, INTERVAL_YEARLY})
 PAST_DUE_GRACE_DAYS = 7
 
 def resolve_stripe_price_id(

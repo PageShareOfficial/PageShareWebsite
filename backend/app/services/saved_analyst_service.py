@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.saved_analyst import SavedAnalyst
 from app.models.user import User
+from app.services.billing_constants import PLAN_ID_ANALYST, PLAN_ID_INVESTOR
 from app.services.subscription_service import get_user_plan_id
 
 class InvestorRequiredError(Exception):
@@ -15,14 +16,14 @@ class AnalystTargetRequiredError(Exception):
     """Saved user must have an active analyst subscription."""
 
 def is_investor_user(db: Session, user_id: UUID) -> bool:
-    return get_user_plan_id(db, user_id) == "investor"
+    return get_user_plan_id(db, user_id) == PLAN_ID_INVESTOR
 
 def assert_investor_user(db: Session, user_id: UUID) -> None:
     if not is_investor_user(db, user_id):
         raise InvestorRequiredError("Investor subscription required to save analysts.")
 
 def assert_analyst_target(db: Session, analyst_id: UUID) -> None:
-    if get_user_plan_id(db, analyst_id) != "analyst":
+    if get_user_plan_id(db, analyst_id) != PLAN_ID_ANALYST:
         raise AnalystTargetRequiredError("Only analyst subscribers can be saved.")
 
 def add_saved_analyst(db: Session, investor_id: UUID, analyst_id: UUID) -> SavedAnalyst:
