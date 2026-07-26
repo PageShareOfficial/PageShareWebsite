@@ -168,8 +168,8 @@ export interface PredictionAnalyticsDashboard {
   };
 }
 
-/** @deprecated Use PredictionAnalyticsDashboard */
-export interface PredictionAnalyticsSummary {
+/** Compact analyst stats from GET /predictions/analytics/me/summary (predictions dashboard). */
+export interface MyPredictionAnalyticsSummary {
   subject: PredictionAnalyticsSubject;
   total_predictions: number;
   wins: number;
@@ -186,6 +186,55 @@ export async function getMyPredictionAnalytics(
     accessToken,
   });
   return parseJsonResponse(res, 'Failed to load analytics');
+}
+
+export async function getMyPredictionAnalyticsSummary(
+  accessToken: string
+): Promise<MyPredictionAnalyticsSummary> {
+  const res = await apiFetch('/predictions/analytics/me/summary', {
+    method: 'GET',
+    accessToken,
+  });
+  return parseJsonResponse(res, 'Failed to load your stats');
+}
+
+export interface PredictionLeaderboardEntry {
+  rank: number;
+  username: string;
+  display_name?: string | null;
+  profile_picture_url?: string | null;
+  subscription_plan_id?: string | null;
+  net_rr_30d: number;
+  win_rate_percent?: number | null;
+  predictions_count: number;
+  wins: number;
+}
+
+export interface ListPredictionLeaderboardResponse {
+  data: PredictionLeaderboardEntry[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total: number;
+    has_next: boolean;
+    has_prev?: boolean;
+  };
+}
+
+export const LEADERBOARD_PAGE_SIZE = 20;
+
+export async function getPredictionLeaderboard(
+  accessToken?: string | null,
+  params?: { page?: number; per_page?: number }
+): Promise<ListPredictionLeaderboardResponse> {
+  const search = new URLSearchParams();
+  search.set('page', String(params?.page ?? 1));
+  search.set('per_page', String(params?.per_page ?? LEADERBOARD_PAGE_SIZE));
+  const res = await apiFetch(`/predictions/leaderboard?${search.toString()}`, {
+    method: 'GET',
+    accessToken: accessToken ?? undefined,
+  });
+  return parseJsonResponse(res, 'Failed to load leaderboard');
 }
 
 export async function getPredictionAnalyticsForUser(

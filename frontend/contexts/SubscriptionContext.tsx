@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getBillingStatus, type BillingStatus } from '@/lib/api/billingApi';
 import { getBaseUrl } from '@/lib/api/client';
 import type { PlanId } from '@/types/billing';
+import { parseSubscriptionPlanId } from '@/utils/user/mapApiAuthor';
 
 interface SubscriptionContextValue {
   billingStatus: BillingStatus | null;
@@ -40,8 +41,43 @@ const DEFAULT_STATUS: BillingStatus = {
 
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
+function resolveEntitlementFlags(
+  billingStatus: BillingStatus | null,
+  isLoading: boolean,
+  bootstrapPlanId: PlanId | null
+): {
+  activePlanId: PlanId | null;
+  isPremium: boolean;
+  isResolving: boolean;
+} {
+  if (billingStatus !== null) {
+    const activePlanId = billingStatus.is_premium
+      ? parseSubscriptionPlanId(billingStatus.plan_id) ?? null
+      : null;
+    return {
+      activePlanId,
+      isPremium: billingStatus.is_premium,
+      isResolving: false,
+    };
+  }
+
+  if (bootstrapPlanId) {
+    return {
+      activePlanId: bootstrapPlanId,
+      isPremium: true,
+      isResolving: true,
+    };
+  }
+
+  return {
+    activePlanId: null,
+    isPremium: false,
+    isResolving: isLoading,
+  };
+}
+
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { session } = useAuth();
+  const { session, backendUser } = useAuth();
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,22 +113,34 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     void refreshBillingStatus();
   }, [refreshBillingStatus]);
 
-  const activePlanId = billingStatus?.is_premium
-    ? billingStatus.plan_id
-    : null;
+  const bootstrapPlanId =
+    parseSubscriptionPlanId(backendUser?.subscription_plan_id) ?? null;
+
+  const { activePlanId, isPremium, isResolving } = resolveEntitlementFlags(
+    billingStatus,
+    isLoading,
+    bootstrapPlanId
+  );
 
   const value = useMemo(
     () => ({
       billingStatus,
-      isPremium: billingStatus?.is_premium ?? false,
+      isPremium,
       activePlanId,
       isAnalystPlan: activePlanId === 'analyst',
       isInvestorPlan: activePlanId === 'investor',
-      isLoading,
+      isLoading: isResolving,
       error,
       refreshBillingStatus,
     }),
-    [activePlanId, billingStatus, isLoading, error, refreshBillingStatus]
+    [
+      activePlanId,
+      billingStatus,
+      error,
+      isPremium,
+      isResolving,
+      refreshBillingStatus,
+    ]
   );
 
   return (

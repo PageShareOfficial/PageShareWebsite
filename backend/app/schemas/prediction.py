@@ -129,3 +129,14 @@ class PredictionIndexListResponse(BaseModel):
 class PredictionAnalyticsDetailResponse(BaseModel):
     number: int
     prediction: PredictionResponse
+
+class PredictionLeaderboardEntryResponse(BaseModel):
+    rank: int
+    username: str
+    display_name: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+    subscription_plan_id: Optional[str] = None
+    net_rr_30d: float = 0.0
+    win_rate_percent: Optional[float] = None
+    predictions_count: int = 0
+    wins: int = 0
