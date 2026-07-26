@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import {
@@ -51,9 +51,13 @@ export function usePredictionsDashboardData(options: {
   const [analystScoreError, setAnalystScoreError] = useState<string | null>(null);
   const [leaderboardKey, setLeaderboardKey] = useState(0);
   const [analystScoreKey, setAnalystScoreKey] = useState(0);
+  const leaderboardRequestIdRef = useRef(0);
 
   const fetchLeaderboardPage = useCallback(
     async (pageToLoad: number, append: boolean) => {
+      const requestId = ++leaderboardRequestIdRef.current;
+      const isStale = () => requestId !== leaderboardRequestIdRef.current;
+
       if (append) {
         setIsLeaderboardLoadingMore(true);
       } else {
@@ -66,11 +70,17 @@ export function usePredictionsDashboardData(options: {
           page: pageToLoad,
           per_page: LEADERBOARD_PAGE_SIZE,
         });
+        if (isStale()) {
+          return;
+        }
         const mapped = response.data.map(mapLeaderboardEntry);
         setLeaderboard((prev) => (append ? [...prev, ...mapped] : mapped));
         setLeaderboardPage(pageToLoad);
         setHasMoreLeaderboard(response.pagination.has_next);
       } catch (err: unknown) {
+        if (isStale()) {
+          return;
+        }
         if (!append) {
           setLeaderboard([]);
         }
@@ -78,8 +88,10 @@ export function usePredictionsDashboardData(options: {
           getErrorMessage(err, 'Could not load the leaderboard.')
         );
       } finally {
-        setIsLeaderboardLoading(false);
-        setIsLeaderboardLoadingMore(false);
+        if (!isStale()) {
+          setIsLeaderboardLoading(false);
+          setIsLeaderboardLoadingMore(false);
+        }
       }
     },
     [accessToken]
@@ -120,15 +132,9 @@ export function usePredictionsDashboardData(options: {
   }, [accessToken, isOnline]);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      if (cancelled) {
-        return;
-      }
-      await fetchLeaderboardPage(1, false);
-    })();
+    void fetchLeaderboardPage(1, false);
     return () => {
-      cancelled = true;
+      leaderboardRequestIdRef.current += 1;
     };
   }, [accessToken, fetchLeaderboardPage, leaderboardKey]);
 

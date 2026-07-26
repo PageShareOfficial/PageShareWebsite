@@ -1,21 +1,18 @@
 import { useSubscription } from '@/hooks/billing/useSubscription';
-import { readSubscriptionPlanHint } from '@/utils/billing/subscriptionPlanHint';
 
 export type PredictionsViewVariant = 'free' | 'analyst' | 'investor';
 
 function resolveVariant(
-  isLoading: boolean,
+  isResolving: boolean,
   isAnalystPlan: boolean,
   isInvestorPlan: boolean,
   isPremium: boolean
 ): { variant: PredictionsViewVariant; isResolving: boolean } {
-  const planHint = readSubscriptionPlanHint();
-
-  if (isLoading) {
-    if (isAnalystPlan || planHint === 'analyst') {
+  if (isResolving) {
+    if (isAnalystPlan) {
       return { variant: 'analyst', isResolving: true };
     }
-    if (isInvestorPlan || planHint === 'investor') {
+    if (isInvestorPlan) {
       return { variant: 'investor', isResolving: true };
     }
     return { variant: 'free', isResolving: true };
