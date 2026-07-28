@@ -24,20 +24,25 @@ export default function Topbar() {
   const { openPremium } = usePremiumOverlay();
   const { isPremium, isLoading: isSubscriptionLoading } = useSubscription();
 
-  const billingButtonLabel =
-    !isSubscriptionLoading && isPremium ? 'Manage' : 'Upgrade';
+  const billingButtonLabel = isPremium ? 'Manage' : 'Upgrade';
 
   const handleBillingButtonClick = () => {
     if (!isOnline) {
       setShowOfflineOverlay(true);
       return;
     }
-    if (!isSubscriptionLoading && isPremium) {
+    if (isPremium) {
       router.push('/settings/billing');
+      return;
+    }
+    if (isSubscriptionLoading) {
       return;
     }
     openPremium();
   };
+
+  const isBillingButtonDisabled =
+    !isOnline || (isSubscriptionLoading && !isPremium);
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -123,8 +128,14 @@ export default function Topbar() {
             <button
               type="button"
               onClick={handleBillingButtonClick}
-              disabled={!isOnline}
-              title={!isOnline ? 'Connect to the internet to continue' : undefined}
+              disabled={isBillingButtonDisabled}
+              title={
+                !isOnline
+                  ? 'Connect to the internet to continue'
+                  : isSubscriptionLoading && !isPremium
+                    ? 'Loading subscription…'
+                    : undefined
+              }
               className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
             >
               {billingButtonLabel}
