@@ -12,6 +12,7 @@ interface UseMediaUploadResult {
   selectedGif: string | null;
   mediaError: string | null;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  addImageFiles: (files: File[]) => void;
   handleRemoveMedia: (index: number) => void;
   handleGifSelect: (gifUrl: string) => void;
   clearMedia: () => void;
@@ -44,9 +45,7 @@ export function useMediaUpload(
   const [selectedGif, setSelectedGif] = useState<string | null>(initialGif);
   const [mediaError, setMediaError] = useState<string | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = '';
+  const addImageFiles = (files: File[]) => {
     if (files.length === 0) return;
 
     setMediaError(null);
@@ -64,9 +63,15 @@ export function useMediaUpload(
       valid.push(file);
     }
 
-    const combined = [...mediaFiles, ...valid];
-    const imageFiles = combined.slice(0, maxFiles);
-    const limitExceeded = combined.length > imageFiles.length;
+    let imageFiles: File[];
+    if (maxFiles === 1 && valid.length > 0) {
+      imageFiles = valid.slice(0, 1);
+    } else {
+      const combined = [...mediaFiles, ...valid];
+      imageFiles = combined.slice(0, maxFiles);
+    }
+    const limitExceeded =
+      maxFiles > 1 && [...mediaFiles, ...valid].length > imageFiles.length;
 
     if (errors.length > 0 || limitExceeded) {
       if (limitExceeded && errors.length === 0) {
@@ -76,7 +81,11 @@ export function useMediaUpload(
           `Some files skipped. Max ${maxFiles} image${maxFiles > 1 ? 's' : ''}, 5MB each, JPEG/PNG/WebP only.`
         );
       } else {
-        setMediaError(errors.length === 1 ? errors[0] : 'Some files skipped. Max 5MB each, JPEG/PNG/WebP only.');
+        setMediaError(
+          errors.length === 1
+            ? errors[0]
+            : 'Some files skipped. Max 5MB each, JPEG/PNG/WebP only.'
+        );
       }
     }
 
@@ -84,6 +93,11 @@ export function useMediaUpload(
 
     if (imageFiles.length > 0) {
       setSelectedGif(null);
+    }
+
+    if (imageFiles.length === 0) {
+      setMediaPreviews([]);
+      return;
     }
 
     const newPreviews: string[] = [];
@@ -97,6 +111,12 @@ export function useMediaUpload(
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    addImageFiles(files);
   };
 
   const handleRemoveMedia = (index: number) => {
@@ -126,6 +146,7 @@ export function useMediaUpload(
     selectedGif,
     mediaError,
     handleImageUpload,
+    addImageFiles,
     handleRemoveMedia,
     handleGifSelect,
     clearMedia,

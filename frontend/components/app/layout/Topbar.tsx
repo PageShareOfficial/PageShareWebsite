@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LogOut, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
@@ -15,6 +16,7 @@ import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useSubscription } from '@/hooks/billing/useSubscription';
 
 export default function Topbar() {
+  const router = useRouter();
   const { currentUser } = useCurrentUser();
   const { signOut } = useAuth();
   const isOnline = useOnlineStatus();
@@ -25,9 +27,16 @@ export default function Topbar() {
   const billingButtonLabel =
     !isSubscriptionLoading && isPremium ? 'Manage' : 'Upgrade';
 
-  const handleUpgradeClick = () => {
-    if (isOnline) openPremium();
-    else setShowOfflineOverlay(true);
+  const handleBillingButtonClick = () => {
+    if (!isOnline) {
+      setShowOfflineOverlay(true);
+      return;
+    }
+    if (!isSubscriptionLoading && isPremium) {
+      router.push('/settings/billing');
+      return;
+    }
+    openPremium();
   };
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -113,7 +122,7 @@ export default function Topbar() {
           <div className="flex-shrink-0">
             <button
               type="button"
-              onClick={handleUpgradeClick}
+              onClick={handleBillingButtonClick}
               disabled={!isOnline}
               title={!isOnline ? 'Connect to the internet to continue' : undefined}
               className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
