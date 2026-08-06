@@ -128,6 +128,8 @@ export interface PredictionAnalyticsSubject {
   username: string;
   display_name?: string | null;
   profile_picture_url?: string | null;
+  bio?: string | null;
+  joined_at?: string | null;
 }
 
 export interface PredictionAnalyticsDashboard {
@@ -142,10 +144,20 @@ export interface PredictionAnalyticsDashboard {
     wins: number;
     losses: number;
     expired: number;
+    net_return_percent?: number | null;
   };
+  recent_30d_period_start: string;
+  recent_30d_period_end: string;
   net_rr_series_30d: Array<{
     resolved_at: string;
     cumulative_net_rr: number;
+  }>;
+  resolved_returns_30d: Array<{
+    index: number;
+    outcome: 'win' | 'loss' | 'expired';
+    return_percent: number;
+    asset: string;
+    resolved_at: string;
   }>;
   lifetime: {
     total_predictions: number;
@@ -156,6 +168,10 @@ export interface PredictionAnalyticsDashboard {
     expired: number;
     win_rate_percent?: number | null;
     average_return_percent?: number | null;
+    net_return_percent?: number | null;
+    best_return_percent?: number | null;
+    worst_return_percent?: number | null;
+    max_trade_duration_hours?: number | null;
   };
   style: {
     long_count: number;

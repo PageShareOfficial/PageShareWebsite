@@ -74,6 +74,8 @@ def _analytics_subject(user) -> PredictionAnalyticsSubject:
         username=user.username,
         display_name=user.display_name,
         profile_picture_url=user.profile_picture_url,
+        bio=user.bio,
+        joined_at=user.created_at,
     )
 
 def _dashboard_response(user, dashboard) -> PredictionAnalyticsDashboardResponse:
@@ -89,13 +91,26 @@ def _dashboard_response(user, dashboard) -> PredictionAnalyticsDashboardResponse
             "wins": dashboard.recent_30d.wins,
             "losses": dashboard.recent_30d.losses,
             "expired": dashboard.recent_30d.expired,
+            "net_return_percent": dashboard.recent_30d.net_return_percent,
         },
+        recent_30d_period_start=dashboard.recent_30d_period_start,
+        recent_30d_period_end=dashboard.recent_30d_period_end,
         net_rr_series_30d=[
             {
                 "resolved_at": point.resolved_at,
                 "cumulative_net_rr": point.cumulative_net_rr,
             }
             for point in dashboard.net_rr_series_30d
+        ],
+        resolved_returns_30d=[
+            {
+                "index": bar.index,
+                "outcome": bar.outcome,
+                "return_percent": bar.return_percent,
+                "asset": bar.asset,
+                "resolved_at": bar.resolved_at,
+            }
+            for bar in dashboard.resolved_returns_30d
         ],
         lifetime={
             "total_predictions": dashboard.lifetime.total_predictions,
@@ -106,6 +121,10 @@ def _dashboard_response(user, dashboard) -> PredictionAnalyticsDashboardResponse
             "expired": dashboard.lifetime.expired,
             "win_rate_percent": dashboard.lifetime.win_rate_percent,
             "average_return_percent": dashboard.lifetime.average_return_percent,
+            "net_return_percent": dashboard.lifetime.net_return_percent,
+            "best_return_percent": dashboard.lifetime.best_return_percent,
+            "worst_return_percent": dashboard.lifetime.worst_return_percent,
+            "max_trade_duration_hours": dashboard.lifetime.max_trade_duration_hours,
         },
         style={
             "long_count": dashboard.style.long_count,

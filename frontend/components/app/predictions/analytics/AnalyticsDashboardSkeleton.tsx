@@ -5,6 +5,10 @@ import Skeleton, {
   AvatarSkeleton,
   TextSkeleton,
 } from '@/components/app/common/Skeleton';
+import { AnalyticsRecentFormKpiCardsSkeleton } from '@/components/app/predictions/analytics/AnalyticsRecentFormKpiCards';
+import { AnalyticsTrackRecordKpiCardsSkeleton } from '@/components/app/predictions/analytics/AnalyticsTrackRecordKpiCards';
+import { AnalyticsScaledMetricBarSkeleton } from '@/components/app/predictions/analytics/AnalyticsScaledMetricBar';
+import { AnalyticsNetRrAreaChartSkeleton } from '@/components/app/predictions/analytics/AnalyticsNetRrAreaChart';
 
 function SectionShell({
   children,
@@ -78,44 +82,44 @@ export default function AnalyticsDashboardSkeleton({
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading analytics dashboard">
       <section className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/5 via-transparent to-emerald-500/5 p-4 sm:p-6">
-        <div
-          className={`flex flex-col gap-4 ${
-            isOwnAnalytics ? '' : 'lg:flex-row lg:items-center lg:justify-between'
-          }`}
-        >
-          <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
             <AvatarSkeleton size={56} />
             <div className="min-w-0 flex-1 space-y-2">
               <Skeleton variant="text" width={180} height={22} />
               <Skeleton variant="text" width="100%" height={14} className="max-w-md" />
-              <Skeleton variant="text" width={220} height={14} />
+              <Skeleton variant="text" width={140} height={14} />
             </div>
           </div>
-          {!isOwnAnalytics ? (
-            <div className="flex shrink-0 justify-start lg:justify-end">
+          <div className="flex shrink-0 items-start gap-4 sm:flex-col sm:items-end">
+            <Skeleton variant="circular" width={32} height={32} />
+            {!isOwnAnalytics ? (
               <Skeleton
                 variant="rectangular"
                 width={44}
                 height={44}
                 rounded="rounded-xl"
               />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </section>
 
       <SectionShell>
-        <Skeleton variant="text" width={120} height={18} className="mb-2" />
-        <Skeleton variant="text" width="90%" height={14} className="mb-4 max-w-lg" />
-        <ChartBlockSkeleton height={208} />
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <Skeleton variant="text" width={100} height={18} />
+          <Skeleton variant="text" width={160} height={14} />
+        </div>
+        <AnalyticsRecentFormKpiCardsSkeleton />
+        <AnalyticsNetRrAreaChartSkeleton />
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div>
+          <div className="rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4">
             <Skeleton variant="text" width={100} height={12} className="mb-3" />
             <DonutBlockSkeleton />
           </div>
-          <div>
-            <Skeleton variant="text" width={120} height={12} className="mb-3" />
-            <BarGroupSkeleton rows={3} />
+          <div className="rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4">
+            <Skeleton variant="text" width={160} height={12} className="mb-3" />
+            <ChartBlockSkeleton height={208} />
           </div>
         </div>
         <Skeleton
@@ -128,27 +132,35 @@ export default function AnalyticsDashboardSkeleton({
       </SectionShell>
 
       <SectionShell>
-        <Skeleton variant="text" width={110} height={18} className="mb-2" />
-        <Skeleton variant="text" width={240} height={14} className="mb-4" />
+        <Skeleton variant="text" width={110} height={18} className="mb-4" />
+        <AnalyticsTrackRecordKpiCardsSkeleton />
         <div className="grid gap-6 lg:grid-cols-2">
-          <DonutBlockSkeleton />
-          <BarGroupSkeleton rows={3} />
-        </div>
-        <div className="mt-6">
-          <Skeleton variant="text" width={140} height={12} className="mb-2" />
-          <Skeleton variant="rectangular" width="100%" height={16} rounded="rounded-full" />
+          <div className="rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4">
+            <Skeleton variant="text" width={140} height={12} className="mb-3" />
+            <DonutBlockSkeleton />
+          </div>
+          <div className="rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4">
+            <Skeleton variant="text" width={120} height={12} className="mb-3" />
+            <BarGroupSkeleton rows={3} />
+          </div>
         </div>
       </SectionShell>
 
       <SectionShell>
         <Skeleton variant="text" width={130} height={18} className="mb-4" />
         <div className="grid gap-6 lg:grid-cols-2">
-          <DonutBlockSkeleton />
-          <BarGroupSkeleton rows={4} />
+          <div className="rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4">
+            <Skeleton variant="text" width={100} height={12} className="mb-3" />
+            <DonutBlockSkeleton />
+          </div>
+          <div className="rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4">
+            <Skeleton variant="text" width={80} height={12} className="mb-3" />
+            <BarGroupSkeleton rows={4} />
+          </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <ChartBlockSkeleton height={100} />
-          <ChartBlockSkeleton height={100} />
+          <AnalyticsScaledMetricBarSkeleton titleWidth={100} />
+          <AnalyticsScaledMetricBarSkeleton titleWidth={88} />
         </div>
       </SectionShell>
     </div>

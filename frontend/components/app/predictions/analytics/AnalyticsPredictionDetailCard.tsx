@@ -334,7 +334,7 @@ export default function AnalyticsPredictionDetailCard({
 
         <PredictionTimeline
           steps={[
-            { label: 'Entry At', value: formatDateTime(p.start_time) },
+            { label: 'Submitted', value: formatDateTime(p.start_time) },
             { label: 'Expires', value: formatDateTime(p.expiry_at) },
             {
               label: 'Hit At',

@@ -3,10 +3,21 @@
 import { Bookmark, UserPlus } from 'lucide-react';
 import SavedAnalystsCarousel from '@/components/app/predictions/saved-analysts/SavedAnalystsCarousel';
 import ShowAllButton from '@/components/app/common/ShowAllButton';
+import LoadingState from '@/components/app/common/LoadingState';
+import ErrorState from '@/components/app/common/ErrorState';
 import { useSavedAnalysts } from '@/hooks/predictions/useSavedAnalysts';
 
-export default function SavedAnalystsSection() {
-  const { savedAnalysts } = useSavedAnalysts();
+interface SavedAnalystsSectionProps {
+  /** True while predictions view is waiting on subscription (parent gates auth). */
+  isEntitlementResolving?: boolean;
+}
+
+export default function SavedAnalystsSection({
+  isEntitlementResolving = false,
+}: SavedAnalystsSectionProps) {
+  const { savedAnalysts, isLoading, loadError, refreshSavedAnalysts } =
+    useSavedAnalysts();
+  const isPendingList = isEntitlementResolving || isLoading;
 
   return (
     <section className="space-y-3">
@@ -15,7 +26,18 @@ export default function SavedAnalystsSection() {
         My Analysts
       </h2>
 
-      {savedAnalysts.length === 0 ? (
+      {isPendingList ? (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03]">
+          <LoadingState text="Loading saved analysts…" size="sm" />
+        </div>
+      ) : loadError ? (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03]">
+          <ErrorState
+            message={loadError}
+            onRetry={() => void refreshSavedAnalysts()}
+          />
+        </div>
+      ) : savedAnalysts.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-8 text-center">
           <div className="mx-auto flex max-w-xs flex-col items-center gap-2">
             <span className="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
@@ -27,7 +49,7 @@ export default function SavedAnalystsSection() {
       ) : (
         <SavedAnalystsCarousel analysts={savedAnalysts} />
       )}
-      <ShowAllButton href="/myanalysts" />
+      {!isPendingList && <ShowAllButton href="/myanalysts" />}
     </section>
   );
 }

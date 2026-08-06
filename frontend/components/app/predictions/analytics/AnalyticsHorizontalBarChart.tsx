@@ -1,4 +1,5 @@
 'use client';
+import AnalyticsChartCard from '@/components/app/predictions/analytics/AnalyticsChartCard';
 
 export interface BarChartItem {
   label: string;
@@ -8,31 +9,32 @@ export interface BarChartItem {
 
 interface AnalyticsHorizontalBarChartProps {
   items: BarChartItem[];
+  title?: string;
   maxValue?: number;
   emptyMessage?: string;
   className?: string;
+  /** Max height for the bar list; enables vertical scroll when content overflows. */
+  scrollMaxHeightClass?: string;
 }
 
 export default function AnalyticsHorizontalBarChart({
   items,
+  title,
   maxValue,
   emptyMessage = 'No data yet',
   className = '',
+  scrollMaxHeightClass,
 }: AnalyticsHorizontalBarChartProps) {
   const peak = maxValue ?? Math.max(...items.map((i) => i.value), 1);
 
-  if (items.length === 0 || peak <= 0) {
-    return (
-      <div
-        className={`flex h-32 items-center justify-center rounded-xl border border-dashed border-white/10 text-xs text-gray-500 ${className}`}
-      >
-        {emptyMessage}
-      </div>
-    );
-  }
+  const emptyBody = (
+    <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-white/10 bg-black/20 text-xs text-gray-500">
+      {emptyMessage}
+    </div>
+  );
 
-  return (
-    <div className={`space-y-3 ${className}`} role="img" aria-label="Bar chart">
+  const barList = (
+    <div className="space-y-3" role="img" aria-label="Bar chart">
       {items.map((item) => {
         const widthPct = Math.max(4, (item.value / peak) * 100);
         return (
@@ -54,5 +56,28 @@ export default function AnalyticsHorizontalBarChart({
         );
       })}
     </div>
+  );
+
+  const chartBody =
+    items.length === 0 || peak <= 0 ? (
+      emptyBody
+    ) : scrollMaxHeightClass ? (
+      <div
+        className={`${scrollMaxHeightClass} overflow-y-auto overscroll-y-contain pr-1`}
+      >
+        {barList}
+      </div>
+    ) : (
+      barList
+    );
+
+  if (!title) {
+    return <div className={className}>{chartBody}</div>;
+  }
+
+  return (
+    <AnalyticsChartCard title={title} className={className}>
+      {chartBody}
+    </AnalyticsChartCard>
   );
 }

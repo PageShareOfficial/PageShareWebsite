@@ -26,30 +26,29 @@ export function formatSignedPercent(value: number | null | undefined): string {
   return `${prefix}${rounded}%`;
 }
 
-export function buildRecentFormInsight(
-  dashboard: PredictionAnalyticsDashboard
+/** One decimal place; for chart axis labels (always shows sign for positive). */
+export function formatSignedPercentAxis(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  const prefix = rounded > 0 ? '+' : '';
+  return `${prefix}${rounded}%`;
+}
+
+/** Max hold window from prediction start to expiry (backend sends hours). */
+export function formatMaxTradeDurationHours(
+  hours: number | null | undefined
 ): string {
-  const { recent_30d: recent, net_rr_30d: netRr } = dashboard;
-  if (recent.resolved_count === 0) {
-    return 'No resolved predictions in the last 30 days yet.';
+  if (hours == null || hours <= 0) return '—';
+  const wholeHours = Math.round(hours * 10) / 10;
+  if (wholeHours >= 24) {
+    const days = Math.floor(wholeHours / 24);
+    const rem = Math.round(wholeHours - days * 24);
+    if (rem <= 0) return `${days}d`;
+    return `${days}d ${rem}h`;
   }
-  if (recent.resolved_count < 3) {
-    return 'Early sample in the last 30 days — rank and Net RR will stabilize with more resolved calls.';
+  if (Number.isInteger(wholeHours)) {
+    return `${wholeHours}h`;
   }
-  const wr = recent.win_rate_percent;
-  if (netRr > 0 && wr != null && wr < 50) {
-    return 'Net RR is positive despite a sub-50% win rate — wins are carrying risk-reward.';
-  }
-  if (netRr < 0 && wr != null && wr >= 50) {
-    return 'Win rate looks decent, but losses have cost more in RR terms recently.';
-  }
-  if (netRr >= 2) {
-    return 'Strong recent form: Net RR over the last 30 days is leading the story.';
-  }
-  if (netRr <= -2) {
-    return 'Recent drawdown in Net RR — check the Predictions tab for context on losses.';
-  }
-  return `${recent.resolved_count} resolved calls in 30 days — Net RR and win rate tell the full picture.`;
+  return `${wholeHours}h`;
 }
 
 export function buildHeroSubline(

@@ -1,5 +1,6 @@
 """Tests for prediction analytics access and summary."""
 
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 import pytest
@@ -18,6 +19,8 @@ from app.services.saved_analyst_service import (
 )
 
 def _sample_dashboard() -> PredictionAnalyticsDashboard:
+    period_start = datetime(2026, 7, 7, tzinfo=timezone.utc)
+    period_end = datetime(2026, 8, 6, tzinfo=timezone.utc)
     return PredictionAnalyticsDashboard(
         rank=3,
         rank_total=10,
@@ -29,8 +32,12 @@ def _sample_dashboard() -> PredictionAnalyticsDashboard:
             wins=2,
             losses=1,
             expired=1,
+            net_return_percent=12.5,
         ),
+        recent_30d_period_start=period_start,
+        recent_30d_period_end=period_end,
         net_rr_series_30d=(),
+        resolved_returns_30d=(),
         lifetime=AnalyticsLifetimeStats(
             total_predictions=12,
             active_count=2,
@@ -40,6 +47,10 @@ def _sample_dashboard() -> PredictionAnalyticsDashboard:
             expired=1,
             win_rate_percent=66.7,
             average_return_percent=1.2,
+            net_return_percent=15.0,
+            best_return_percent=8.5,
+            worst_return_percent=-4.2,
+            max_trade_duration_hours=48.0,
         ),
         style=AnalyticsTradingStyle(
             long_count=7,
