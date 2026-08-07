@@ -33,6 +33,8 @@ export default function PredictionsDashboard() {
   const showAnalystStatsLoading =
     flags.showAnalystStats && !analystScore && !analystScoreError;
   const showLeaderboardHeading = flags.showLeaderboardHeading;
+  const showSavedAnalystsBlock =
+    flags.showSavedAnalysts || (isResolving && variant === 'investor');
 
   return (
     <div className="space-y-6">
@@ -52,7 +54,9 @@ export default function PredictionsDashboard() {
           )}
         </>
       )}
-      {flags.showSavedAnalysts && <SavedAnalystsSection />}
+      {showSavedAnalystsBlock && (
+        <SavedAnalystsSection isEntitlementResolving={isResolving} />
+      )}
 
       {leaderboardError && !isLeaderboardLoading ? (
         <ErrorState

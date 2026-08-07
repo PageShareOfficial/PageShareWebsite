@@ -47,7 +47,7 @@ export default function LeaderboardDesktopTable({
               Correct
             </th>
             <th className="whitespace-nowrap px-2 py-3 text-right font-medium tabular-nums tracking-normal">
-              Accuracy
+              Win rate
             </th>
           </tr>
         </thead>

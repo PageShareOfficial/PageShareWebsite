@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +12,7 @@ import { ArrowRight, Lock, Mail } from 'lucide-react';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
 
 const signUpSchema = z
   .object({
@@ -35,6 +37,7 @@ export default function EmailSignUpForm({
   onError,
 }: EmailSignUpFormProps) {
   const { signUpWithEmail } = useAuth();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -51,7 +54,14 @@ export default function EmailSignUpForm({
     onError?.(null);
     setSuccessMessage(null);
     try {
-      await signUpWithEmail(data.email, data.password);
+      const session = await signUpWithEmail(data.email, data.password);
+      if (session?.access_token) {
+        const destination = await resolvePostAuthPath(session.access_token, {
+          recordSessionStart: true,
+        });
+        router.replace(destination);
+        return;
+      }
       setSuccessMessage('Check your email to confirm your account.');
     } catch (err) {
       const msg = getErrorMessage(err, 'Sign up failed');

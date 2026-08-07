@@ -1,4 +1,5 @@
 'use client';
+import AnalyticsChartCard from '@/components/app/predictions/analytics/AnalyticsChartCard';
 
 export interface ChartSegment {
   label: string;
@@ -8,6 +9,7 @@ export interface ChartSegment {
 
 interface AnalyticsDonutChartProps {
   segments: ChartSegment[];
+  title?: string;
   size?: number;
   strokeWidth?: number;
   centerLabel?: string;
@@ -18,6 +20,7 @@ interface AnalyticsDonutChartProps {
 
 export default function AnalyticsDonutChart({
   segments,
+  title,
   size = 160,
   strokeWidth = 22,
   centerLabel,
@@ -31,6 +34,18 @@ export default function AnalyticsDonutChart({
   const center = size / 2;
 
   if (total <= 0) {
+    if (title) {
+      return (
+        <AnalyticsChartCard title={title} className={className}>
+          <div
+            className="flex flex-col items-center justify-center rounded-lg border border-dashed border-white/10 bg-black/20 py-10 text-xs text-gray-500"
+            style={{ minHeight: size }}
+          >
+            {emptyMessage}
+          </div>
+        </AnalyticsChartCard>
+      );
+    }
     return (
       <div
         className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-10 text-xs text-gray-500 ${className}`}
@@ -66,8 +81,8 @@ export default function AnalyticsDonutChart({
       return ring;
     });
 
-  return (
-    <div className={`flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-8 ${className}`}>
+  const chartBody = (
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-8">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} role="img" aria-hidden>
           <circle
@@ -117,5 +132,15 @@ export default function AnalyticsDonutChart({
         })}
       </ul>
     </div>
+  );
+
+  if (!title) {
+    return <div className={className}>{chartBody}</div>;
+  }
+
+  return (
+    <AnalyticsChartCard title={title} className={className}>
+      {chartBody}
+    </AnalyticsChartCard>
   );
 }

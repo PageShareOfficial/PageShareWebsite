@@ -32,8 +32,8 @@ interface AuthContextValue {
   backendUser: BackendUser | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<Session | null>;
+  signInWithEmail: (email: string, password: string) => Promise<Session | null>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -123,9 +123,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // When navigating from / to a protected route, fetch backend user (only if we don't have it)
   useEffect(() => {
-    if (shouldFetchBackend && session?.access_token && needsFetch(session)) {
-      fetchBackendUser(session.access_token).then((data) => setBackendUser(data ?? null));
+    if (!shouldFetchBackend || !session?.access_token || !needsFetch(session)) {
+      return;
     }
+    setLoading(true);
+    fetchBackendUser(session.access_token)
+      .then((data) => setBackendUser(data ?? null))
+      .finally(() => setLoading(false));
   }, [shouldFetchBackend, session, needsFetch, fetchBackendUser]);
 
   // Session start: idempotent - creates session if none active (e.g. returning user, new visit)
@@ -147,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = useCallback(
     async (email: string, password: string) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -155,14 +159,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       if (error) throw error;
+      return data.session;
     },
     [supabase.auth]
   );
 
   const signInWithEmail = useCallback(
     async (email: string, password: string) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) throw error;
+      return data.session;
     },
     [supabase.auth]
   );

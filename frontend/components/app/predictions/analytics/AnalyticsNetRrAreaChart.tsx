@@ -1,4 +1,8 @@
 'use client';
+import Skeleton from '@/components/app/common/Skeleton';
+import AnalyticsChartCard, {
+  ANALYTICS_CHART_BORDER_CLASS,
+} from '@/components/app/predictions/analytics/AnalyticsChartCard';
 
 interface NetRrPoint {
   cumulative_net_rr: number;
@@ -22,7 +26,8 @@ export default function AnalyticsNetRrAreaChart({
 }: AnalyticsNetRrAreaChartProps) {
   const width = 400;
   const height = 160;
-  const paddingX = 8;
+  const paddingLeft = 28;
+  const paddingRight = 8;
   const paddingY = 12;
 
   if (series.length === 0) {
@@ -39,12 +44,12 @@ export default function AnalyticsNetRrAreaChart({
   const minY = Math.min(0, ...values);
   const maxY = Math.max(0, ...values);
   const range = maxY - minY || 1;
-  const chartW = width - paddingX * 2;
+  const chartW = width - paddingLeft - paddingRight;
   const chartH = height - paddingY * 2;
 
   const coords = values.map((value, index) => {
     const x =
-      paddingX + (index / Math.max(values.length - 1, 1)) * chartW;
+      paddingLeft + (index / Math.max(values.length - 1, 1)) * chartW;
     const y =
       paddingY + chartH - ((value - minY) / range) * chartH;
     return { x, y, value };
@@ -52,9 +57,9 @@ export default function AnalyticsNetRrAreaChart({
 
   const linePoints = coords.map((c) => `${c.x},${c.y}`).join(' ');
   const areaPoints = [
-    `${coords[0]?.x ?? paddingX},${paddingY + chartH}`,
+    `${coords[0]?.x ?? paddingLeft},${paddingY + chartH}`,
     ...coords.map((c) => `${c.x},${c.y}`),
-    `${coords[coords.length - 1]?.x ?? paddingX},${paddingY + chartH}`,
+    `${coords[coords.length - 1]?.x ?? paddingLeft},${paddingY + chartH}`,
   ].join(' ');
 
   const zeroY = paddingY + chartH - ((0 - minY) / range) * chartH;
@@ -63,19 +68,25 @@ export default function AnalyticsNetRrAreaChart({
     lastValue >= 0 ? 'rgb(52 211 153)' : 'rgb(248 113 113)';
 
   return (
-    <div className={`rounded-xl border border-white/10 bg-black/25 p-3 sm:p-4 ${className}`}>
-      {(title || caption) && (
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-          {title ? (
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-              {title}
-            </p>
-          ) : null}
-          {caption ? (
-            <p className="text-lg font-bold tabular-nums text-white">{caption}</p>
-          ) : null}
-        </div>
-      )}
+    <AnalyticsChartCard
+      className={className}
+      header={
+        title || caption ? (
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            {title ? (
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                {title}
+              </p>
+            ) : null}
+            {caption ? (
+              <p className="text-lg font-bold tabular-nums text-white">
+                {caption}
+              </p>
+            ) : null}
+          </div>
+        ) : undefined
+      }
+    >
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className={`w-full ${heightClass} text-emerald-400`}
@@ -93,9 +104,9 @@ export default function AnalyticsNetRrAreaChart({
           return (
             <line
               key={fraction}
-              x1={paddingX}
+              x1={paddingLeft}
               y1={y}
-              x2={width - paddingX}
+              x2={width - paddingRight}
               y2={y}
               stroke="white"
               strokeOpacity={0.06}
@@ -103,10 +114,20 @@ export default function AnalyticsNetRrAreaChart({
             />
           );
         })}
+        <text
+          x={paddingLeft - 6}
+          y={zeroY + 4}
+          textAnchor="end"
+          fill="rgb(156 163 175)"
+          fontSize={10}
+          fontFamily="system-ui, sans-serif"
+        >
+          0
+        </text>
         <line
-          x1={paddingX}
+          x1={paddingLeft}
           y1={zeroY}
-          x2={width - paddingX}
+          x2={width - paddingRight}
           y2={zeroY}
           stroke="white"
           strokeOpacity={0.12}
@@ -131,6 +152,29 @@ export default function AnalyticsNetRrAreaChart({
           />
         ) : null}
       </svg>
+    </AnalyticsChartCard>
+  );
+}
+
+/** Matches bordered layout with title row + chart area (see loaded AnalyticsNetRrAreaChart). */
+export function AnalyticsNetRrAreaChartSkeleton({
+  className = '',
+}: {
+  className?: string;
+}) {
+  return (
+    <div className={`${ANALYTICS_CHART_BORDER_CLASS} ${className}`} aria-hidden>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+        <Skeleton variant="text" width={168} height={12} />
+        <Skeleton variant="text" width={48} height={22} />
+      </div>
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={208}
+        rounded="rounded-lg"
+        className="border border-white/10"
+      />
     </div>
   );
 }

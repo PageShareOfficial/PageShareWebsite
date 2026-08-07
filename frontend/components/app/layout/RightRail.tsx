@@ -8,6 +8,7 @@ import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import Skeleton from '@/components/app/common/Skeleton';
+import LoadingState from '@/components/app/common/LoadingState';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
@@ -30,8 +31,8 @@ export default function RightRail({
   const isOnline = useOnlineStatus();
   const { setShowOfflineOverlay } = useOfflineOverlay();
   const { openPremium } = usePremiumOverlay();
-  const { isPremium } = useSubscription();
-  const showPremiumUpgradeCard = !isPremium;
+  const { isPremium, isLoading: isSubscriptionLoading } = useSubscription();
+  const showPremiumUpgradeCard = !isSubscriptionLoading && !isPremium;
 
   const handleUpgradeClick = () => {
     if (isOnline) openPremium();
@@ -139,7 +140,12 @@ export default function RightRail({
           )}
         </div>
 
-        {showPremiumUpgradeCard && (
+        {isSubscriptionLoading ? (
+          <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
+            <LoadingState size="sm" className="py-6" />
+          </div>
+        ) : (
+          showPremiumUpgradeCard && (
           <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
             <h2 className="text-lg font-semibold text-white mb-2">Premium</h2>
             <p className="text-sm text-gray-300 mb-4">
@@ -155,6 +161,7 @@ export default function RightRail({
               Upgrade
             </button>
           </div>
+          )
         )}
       </div>
     </aside>

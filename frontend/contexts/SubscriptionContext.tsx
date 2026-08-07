@@ -77,7 +77,7 @@ function resolveEntitlementFlags(
 }
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { session, backendUser } = useAuth();
+  const { session, backendUser, loading: authLoading } = useAuth();
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +122,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     bootstrapPlanId
   );
 
+  const canFetchBilling = Boolean(session?.access_token && getBaseUrl());
+  const isBillingUnsettled = canFetchBilling && billingStatus === null;
+
+  // Auth `loading` stays true until /users/me finishes on app routes (success or failure).
+  // Do not treat backendUser === null alone as pending (fetch errors and `/` skip profile).
+  // Do wait for the first billing response when logged in so we do not flash the upgrade card.
+  const isEntitlementResolved =
+    !isResolving && !authLoading && !isBillingUnsettled;
+
   const value = useMemo(
     () => ({
       billingStatus,
@@ -129,7 +138,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       activePlanId,
       isAnalystPlan: activePlanId === 'analyst',
       isInvestorPlan: activePlanId === 'investor',
-      isLoading: isResolving,
+      isLoading: !isEntitlementResolved,
       error,
       refreshBillingStatus,
     }),
@@ -137,8 +146,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       activePlanId,
       billingStatus,
       error,
+      isEntitlementResolved,
       isPremium,
-      isResolving,
       refreshBillingStatus,
     ]
   );

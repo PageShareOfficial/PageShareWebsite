@@ -68,6 +68,7 @@ export async function updateSession(request: NextRequest) {
   if (user && firstSegment === '' && pathname === '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/home';
+    url.searchParams.delete('error');
     const redirectRes = NextResponse.redirect(url);
     response.cookies.getAll().forEach((c) =>
       redirectRes.cookies.set(c.name, c.value)

@@ -41,6 +41,15 @@ class NetRrSeriesPoint:
 
 
 @dataclass(frozen=True)
+class ResolvedReturnBar:
+    index: int
+    outcome: str
+    return_percent: float
+    asset: str
+    resolved_at: datetime
+
+
+@dataclass(frozen=True)
 class AnalyticsPeriodStats:
     net_rr: float
     win_rate_percent: Optional[float]
@@ -48,6 +57,7 @@ class AnalyticsPeriodStats:
     wins: int
     losses: int
     expired: int
+    net_return_percent: Optional[float]
 
 
 @dataclass(frozen=True)
@@ -60,6 +70,10 @@ class AnalyticsLifetimeStats:
     expired: int
     win_rate_percent: Optional[float]
     average_return_percent: Optional[float]
+    net_return_percent: Optional[float]
+    best_return_percent: Optional[float]
+    worst_return_percent: Optional[float]
+    max_trade_duration_hours: Optional[float]
 
 
 @dataclass(frozen=True)
@@ -85,7 +99,10 @@ class PredictionAnalyticsDashboard:
     rank_total: int
     net_rr_30d: float
     recent_30d: AnalyticsPeriodStats
+    recent_30d_period_start: datetime
+    recent_30d_period_end: datetime
     net_rr_series_30d: tuple[NetRrSeriesPoint, ...]
+    resolved_returns_30d: tuple[ResolvedReturnBar, ...]
     lifetime: AnalyticsLifetimeStats
     style: AnalyticsTradingStyle
 
@@ -184,12 +201,18 @@ def build_analytics_dashboard(
     )
 
     wins_30d = losses_30d = expired_30d = 0
+    return_sum_30d = 0.0
+    return_count_30d = 0
     resolved_30d_rows: list[tuple[datetime, float]] = []
+    resolved_return_bars_raw: list[tuple[datetime, str, float, str]] = []
 
     lifetime_wins = lifetime_losses = lifetime_expired = 0
     active_count = 0
     return_sum = 0.0
     return_count = 0
+    best_return: Optional[float] = None
+    worst_return: Optional[float] = None
+    max_duration_seconds: Optional[float] = None
 
     long_resolved = short_resolved = 0
     asset_counter: Counter[str] = Counter()
@@ -199,6 +222,14 @@ def build_analytics_dashboard(
     setup_rr_count = 0
 
     for row in predictions:
+        if row.start_time and row.expiry_at:
+            duration_seconds = (row.expiry_at - row.start_time).total_seconds()
+            if duration_seconds > 0 and (
+                max_duration_seconds is None
+                or duration_seconds > max_duration_seconds
+            ):
+                max_duration_seconds = duration_seconds
+
         if row.status == PREDICTION_STATUS_ACTIVE:
             active_count += 1
 
@@ -223,8 +254,13 @@ def build_analytics_dashboard(
                 lifetime_expired += 1
 
             if row.return_pct is not None:
-                return_sum += float(row.return_pct) * 100.0
+                pct_display = float(row.return_pct) * 100.0
+                return_sum += pct_display
                 return_count += 1
+                if best_return is None or pct_display > best_return:
+                    best_return = pct_display
+                if worst_return is None or pct_display < worst_return:
+                    worst_return = pct_display
 
             if row.resolved_at and row.resolved_at >= since:
                 if row.outcome == OUTCOME_WIN:
@@ -233,6 +269,17 @@ def build_analytics_dashboard(
                     losses_30d += 1
                 else:
                     expired_30d += 1
+                if row.return_pct is not None:
+                    return_sum_30d += float(row.return_pct) * 100.0
+                    return_count_30d += 1
+                return_pct_display = (
+                    round(float(row.return_pct) * 100.0, 2)
+                    if row.return_pct is not None
+                    else 0.0
+                )
+                resolved_return_bars_raw.append(
+                    (row.resolved_at, row.outcome, return_pct_display, row.asset)
+                )
                 delta = net_rr_contribution(row.outcome, setup_rr)
                 resolved_30d_rows.append((row.resolved_at, delta))
 
@@ -247,6 +294,20 @@ def build_analytics_dashboard(
             )
         )
 
+    resolved_return_bars_raw.sort(key=lambda item: item[0])
+    resolved_returns_30d = tuple(
+        ResolvedReturnBar(
+            index=position,
+            outcome=outcome,
+            return_percent=return_pct,
+            asset=asset,
+            resolved_at=resolved_at,
+        )
+        for position, (resolved_at, outcome, return_pct, asset) in enumerate(
+            resolved_return_bars_raw, start=1
+        )
+    )
+
     resolved_30d = wins_30d + losses_30d + expired_30d
     recent_30d = AnalyticsPeriodStats(
         net_rr=net_rr_30d,
@@ -255,9 +316,17 @@ def build_analytics_dashboard(
         wins=wins_30d,
         losses=losses_30d,
         expired=expired_30d,
+        net_return_percent=(
+            round(return_sum_30d, 2) if return_count_30d > 0 else None
+        ),
     )
 
     lifetime_resolved = lifetime_wins + lifetime_losses + lifetime_expired
+    max_duration_hours = (
+        round(max_duration_seconds / 3600.0, 2)
+        if max_duration_seconds is not None
+        else None
+    )
     lifetime = AnalyticsLifetimeStats(
         total_predictions=len(predictions),
         active_count=active_count,
@@ -269,6 +338,16 @@ def build_analytics_dashboard(
         average_return_percent=(
             round(return_sum / return_count, 2) if return_count > 0 else None
         ),
+        net_return_percent=(
+            round(return_sum, 2) if return_count > 0 else None
+        ),
+        best_return_percent=(
+            round(best_return, 2) if best_return is not None else None
+        ),
+        worst_return_percent=(
+            round(worst_return, 2) if worst_return is not None else None
+        ),
+        max_trade_duration_hours=max_duration_hours,
     )
 
     resolved_for_style = long_resolved + short_resolved
@@ -309,7 +388,10 @@ def build_analytics_dashboard(
         rank_total=rank_total,
         net_rr_30d=net_rr_30d,
         recent_30d=recent_30d,
+        recent_30d_period_start=since,
+        recent_30d_period_end=now,
         net_rr_series_30d=tuple(series),
+        resolved_returns_30d=resolved_returns_30d,
         lifetime=lifetime,
         style=style,
     )

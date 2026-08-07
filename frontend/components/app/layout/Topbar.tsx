@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LogOut, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
@@ -12,18 +13,36 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
+import { useSubscription } from '@/hooks/billing/useSubscription';
 
 export default function Topbar() {
+  const router = useRouter();
   const { currentUser } = useCurrentUser();
   const { signOut } = useAuth();
   const isOnline = useOnlineStatus();
   const { setShowOfflineOverlay } = useOfflineOverlay();
   const { openPremium } = usePremiumOverlay();
+  const { isPremium, isLoading: isSubscriptionLoading } = useSubscription();
 
-  const handleUpgradeClick = () => {
-    if (isOnline) openPremium();
-    else setShowOfflineOverlay(true);
+  const billingButtonLabel = isPremium ? 'Manage' : 'Upgrade';
+
+  const handleBillingButtonClick = () => {
+    if (!isOnline) {
+      setShowOfflineOverlay(true);
+      return;
+    }
+    if (isPremium) {
+      router.push('/settings/billing');
+      return;
+    }
+    if (isSubscriptionLoading) {
+      return;
+    }
+    openPremium();
   };
+
+  const isBillingButtonDisabled =
+    !isOnline || (isSubscriptionLoading && !isPremium);
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -104,16 +123,22 @@ export default function Topbar() {
             </Link>
           </div>
 
-          {/* Right: Upgrade Button */}
+          {/* Right: Upgrade / Manage */}
           <div className="flex-shrink-0">
             <button
               type="button"
-              onClick={handleUpgradeClick}
-              disabled={!isOnline}
-              title={!isOnline ? 'Connect to the internet to continue' : undefined}
+              onClick={handleBillingButtonClick}
+              disabled={isBillingButtonDisabled}
+              title={
+                !isOnline
+                  ? 'Connect to the internet to continue'
+                  : isSubscriptionLoading && !isPremium
+                    ? 'Loading subscription…'
+                    : undefined
+              }
               className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
             >
-              Upgrade
+              {billingButtonLabel}
             </button>
           </div>
         </div>

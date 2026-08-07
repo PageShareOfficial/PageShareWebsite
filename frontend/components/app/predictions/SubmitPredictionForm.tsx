@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Search, Loader2, AlertCircle, Calendar, WifiOff } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Calendar, WifiOff, Upload } from 'lucide-react';
 import { type SearchSuggestion } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 import ImageWithFallback from '@/components/app/common/ImageWithFallback';
-import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
 import { PrimaryButton } from '@/components/app/common/Button';
@@ -94,7 +93,7 @@ export default function SubmitPredictionForm({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const expiryInputRef = useRef<HTMLInputElement>(null);
-
+  const thesisImageInputRef = useRef<HTMLInputElement>(null);
   const [hasKeyboardSelection, setHasKeyboardSelection] = useState(false);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState('');
@@ -107,6 +106,7 @@ export default function SubmitPredictionForm({
   const [tickerError, setTickerError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isThesisImageDragging, setIsThesisImageDragging] = useState(false);
   const [expiryMinMax, setExpiryMinMax] = useState<{ min: string; max: string }>({
     min: '',
     max: '',
@@ -122,6 +122,7 @@ export default function SubmitPredictionForm({
     mediaFiles,
     mediaError,
     handleImageUpload,
+    addImageFiles,
     handleRemoveMedia,
     clearMediaError,
   } = useMediaUpload(null, {
@@ -209,6 +210,23 @@ export default function SubmitPredictionForm({
     : hasActiveLock && !lockExpired
       ? 'Price lock in progress. Search again after the lock expires to change asset.'
       : undefined;
+
+  const handleThesisImageFiles = (files: File[]) => {
+    if (files.length === 0) return;
+    clearMediaError();
+    addImageFiles(files);
+  };
+
+  const handleThesisImagePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    if (formFieldsDisabled) return;
+    const pastedFiles = Array.from(event.clipboardData.items)
+      .filter((item) => item.type.startsWith('image/'))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => file !== null);
+    if (pastedFiles.length === 0) return;
+    event.preventDefault();
+    handleThesisImageFiles(pastedFiles);
+  };
 
   const applyAssetLock = async (
     tickerSymbol: string,
@@ -825,10 +843,11 @@ export default function SubmitPredictionForm({
               </p>
             </div>
             <div className="mt-4">
-              <label htmlFor="thesis-images" className="block text-sm font-medium text-gray-300 mb-1">
+              <span className="block text-sm font-medium text-gray-300 mb-2">
                 Optional chart (JPG, PNG, or WEBP)
-              </label>
+              </span>
               <input
+                ref={thesisImageInputRef}
                 id="thesis-images"
                 type="file"
                 accept={THESIS_IMAGE_ACCEPT}
@@ -837,20 +856,94 @@ export default function SubmitPredictionForm({
                   clearMediaError();
                   handleImageUpload(e);
                 }}
-                className="text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="sr-only"
+                tabIndex={-1}
               />
+              <div
+                tabIndex={formFieldsDisabled ? -1 : 0}
+                aria-label="Upload thesis chart image by drop or paste"
+                aria-disabled={formFieldsDisabled}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  if (!formFieldsDisabled) setIsThesisImageDragging(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (!formFieldsDisabled) setIsThesisImageDragging(true);
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+                  setIsThesisImageDragging(false);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsThesisImageDragging(false);
+                  if (formFieldsDisabled) return;
+                  const dropped = Array.from(event.dataTransfer.files).filter((file) =>
+                    file.type.startsWith('image/')
+                  );
+                  handleThesisImageFiles(dropped);
+                }}
+                onPaste={handleThesisImagePaste}
+                className={`relative flex min-h-[140px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 ${
+                  formFieldsDisabled
+                    ? 'cursor-not-allowed opacity-50 border-white/10 bg-white/[0.02]'
+                    : isThesisImageDragging
+                      ? 'cursor-copy border-cyan-400/60 bg-cyan-500/10'
+                      : 'border-white/20 bg-white/[0.03]'
+                }`}
+              >
+                {mediaPreviews[0] ? (
+                  <>
+                    <img
+                      src={mediaPreviews[0]}
+                      alt="Thesis chart preview"
+                      className="max-h-48 w-full rounded-md object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleRemoveMedia(0);
+                      }}
+                      disabled={formFieldsDisabled}
+                      className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white hover:bg-black/80 disabled:cursor-not-allowed"
+                    >
+                      Remove
+                    </button>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Drop, paste, or{' '}
+                      <button
+                        type="button"
+                        disabled={formFieldsDisabled}
+                        onClick={() => thesisImageInputRef.current?.click()}
+                        className="font-medium text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        choose file
+                      </button>{' '}
+                      to replace
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mb-2 h-8 w-8 text-gray-400" aria-hidden />
+                    <p className="text-sm text-gray-300">
+                      Drop an image here, paste from clipboard, or{' '}
+                      <button
+                        type="button"
+                        disabled={formFieldsDisabled}
+                        onClick={() => thesisImageInputRef.current?.click()}
+                        className="font-medium text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        choose file
+                      </button>
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">One image, max 5MB</p>
+                  </>
+                )}
+              </div>
               {mediaError ? <p className="mt-2 text-xs text-amber-400">{mediaError}</p> : null}
-              {mediaPreviews.length > 0 ? (
-                <>
-                  <p className="mt-2 text-xs text-gray-500">1 image selected</p>
-                  <MediaPreviewGrid
-                    previews={mediaPreviews}
-                    onRemove={handleRemoveMedia}
-                    containerClassName="mt-3 grid grid-cols-1"
-                    imageClassName="h-44 w-full rounded-md object-contain bg-black/30"
-                  />
-                </>
-              ) : null}
             </div>
           </PredictionFormSection>
 

@@ -60,6 +60,8 @@ class PredictionAnalyticsSubject(BaseModel):
     username: str
     display_name: Optional[str] = None
     profile_picture_url: Optional[str] = None
+    bio: Optional[str] = None
+    joined_at: Optional[datetime] = None
 
 class PredictionAnalyticsSummaryResponse(BaseModel):
     subject: PredictionAnalyticsSubject
@@ -73,6 +75,13 @@ class NetRrSeriesPointResponse(BaseModel):
     resolved_at: datetime
     cumulative_net_rr: float
 
+class ResolvedReturnBarResponse(BaseModel):
+    index: int
+    outcome: Literal["win", "loss", "expired"]
+    return_percent: float
+    asset: str
+    resolved_at: datetime
+
 class AnalyticsPeriodStatsResponse(BaseModel):
     net_rr: float
     win_rate_percent: Optional[float] = None
@@ -80,6 +89,7 @@ class AnalyticsPeriodStatsResponse(BaseModel):
     wins: int
     losses: int
     expired: int
+    net_return_percent: Optional[float] = None
 
 class AnalyticsLifetimeStatsResponse(BaseModel):
     total_predictions: int
@@ -90,6 +100,10 @@ class AnalyticsLifetimeStatsResponse(BaseModel):
     expired: int
     win_rate_percent: Optional[float] = None
     average_return_percent: Optional[float] = None
+    net_return_percent: Optional[float] = None
+    best_return_percent: Optional[float] = None
+    worst_return_percent: Optional[float] = None
+    max_trade_duration_hours: Optional[float] = None
 
 class AssetCountResponse(BaseModel):
     asset: str
@@ -110,7 +124,12 @@ class PredictionAnalyticsDashboardResponse(BaseModel):
     rank_total: int = 0
     net_rr_30d: float = 0.0
     recent_30d: AnalyticsPeriodStatsResponse
+    recent_30d_period_start: datetime
+    recent_30d_period_end: datetime
     net_rr_series_30d: list[NetRrSeriesPointResponse] = Field(default_factory=list)
+    resolved_returns_30d: list[ResolvedReturnBarResponse] = Field(
+        default_factory=list
+    )
     lifetime: AnalyticsLifetimeStatsResponse
     style: AnalyticsTradingStyleResponse
 

@@ -32,7 +32,7 @@ export default function LeaderboardAccuracyActions({
     >
       <div className={isDesktop ? undefined : 'text-right'}>
         {!isDesktop && (
-          <div className="text-[11px] uppercase tracking-wide text-gray-500">Accuracy</div>
+          <div className="text-[11px] uppercase tracking-wide text-gray-500">Win rate</div>
         )}
         <div
           className={`tabular-nums font-medium text-emerald-400 ${
