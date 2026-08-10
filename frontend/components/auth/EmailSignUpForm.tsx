@@ -13,6 +13,7 @@ import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
+import SignUpTermsNotice from '@/components/auth/SignUpTermsNotice';
 
 const signUpSchema = z
   .object({
@@ -147,6 +148,7 @@ export default function EmailSignUpForm({
             {...register('confirmPassword')}
           />
         )}
+        <SignUpTermsNotice className="mt-3" />
       </div>
       {isLanding ? (
         <button

@@ -7,7 +7,7 @@ import EmailSignUpForm from './EmailSignUpForm';
 import EmailSignInForm from './EmailSignInForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
-import { ArrowRight, Lock, Shield } from 'lucide-react';
+import {  Lock, Shield } from 'lucide-react';
 
 type AuthTab = 'signup' | 'signin';
 type AuthView = AuthTab | 'forgot';
@@ -63,7 +63,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
         </div>
         <h2 className="text-xl sm:text-2xl font-bold text-white">Welcome to PageShare</h2>
         <p className="text-sm text-gray-500 mt-1.5">
-          Join traders and analysts building the future of market intelligence.
+          Create an account to publish predictions or explore analyst track records.
         </p>
       </div>
 
@@ -108,7 +108,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
         </div>
       )}
 
-      <div className={view === 'forgot' ? 'min-h-0' : 'min-h-[19.5rem]'}>
+      <div className={view === 'forgot' ? 'min-h-0' : 'min-h-[21.5rem]'}>
         {view === 'forgot' ? (
           <ForgotPasswordForm
             onBack={() => { setView('signin'); setError(null); }}

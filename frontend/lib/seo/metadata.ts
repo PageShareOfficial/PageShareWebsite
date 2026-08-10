@@ -5,7 +5,7 @@
 export const siteConfig = {
   name: 'PageShare',
   description:
-    "PageShare turns market ideas into structured predictions, measurable track records, and actionable intelligence for traders, analysts, investors, and institutions. Verified Predictions • Analyst Credibility • AI Powered Research • Early Narratives",
+    'PageShare is the trust layer for crypto predictions: locked records, objective settlement, and earned analyst credibility. Publish structured calls or compare track records with evidence.',
   url: process.env.NEXT_PUBLIC_APP_URL || 'https://pageshare.io',
   ogImage: '/pageshare_final.png',
 } as const;
