@@ -8,6 +8,7 @@ import AuthTabs from '@/components/auth/AuthTabs';
 import LandingHero from '@/components/landing/LandingHero';
 import HowWeWorkSection from '@/components/landing/HowWeWorkSection';
 import BottomCTA from '@/components/landing/BottomCTA';
+import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -85,52 +86,55 @@ function HomeContent() {
             <Link href="/cookies" className="hover:text-white transition-colors px-1">
               Cookie Policy
             </Link>
-            <span className="text-gray-600 hidden md:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
               href="/coming-soon?page=Accessibility"
-              className="hover:text-white transition-colors px-1 hidden md:inline"
+              className="hover:text-white transition-colors px-1"
             >
               Accessibility
             </Link>
-            <span className="text-gray-600 hidden md:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link href="/disclaimer" className="hover:text-white transition-colors px-1">
               Disclaimer
             </Link>
-            <span className="text-gray-600 hidden lg:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
               href="/coming-soon?page=Blog"
-              className="hover:text-white transition-colors px-1 hidden lg:inline"
+              className="hover:text-white transition-colors px-1"
             >
               Blog
             </Link>
-            <span className="text-gray-600 hidden lg:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
               href="/coming-soon?page=Careers"
-              className="hover:text-white transition-colors px-1 hidden lg:inline"
+              className="hover:text-white transition-colors px-1"
             >
               Careers
             </Link>
-            <span className="text-gray-600 hidden xl:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
               href="/coming-soon?page=Brand-Resources"
-              className="hover:text-white transition-colors px-1 hidden xl:inline"
+              className="hover:text-white transition-colors px-1"
             >
               Brand Resources
             </Link>
-            <span className="text-gray-600 hidden xl:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
               href="/coming-soon?page=API"
-              className="hover:text-white transition-colors px-1 hidden xl:inline"
+              className="hover:text-white transition-colors px-1"
             >
               API
             </Link>
-            <span className="text-gray-600 hidden xl:inline">|</span>
+            <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
               href="/coming-soon?page=Contact"
-              className="hover:text-white transition-colors px-1 hidden xl:inline"
+              className="hover:text-white transition-colors px-1"
             >
               Contact
             </Link>
+            <span className="text-gray-600 hidden sm:inline">|</span>
+            <span className="px-1 text-gray-500">Our Socials</span>
+            <LandingFooterSocial />
           </nav>
           <div className="mt-3 sm:mt-4 text-center">
             <p className="text-gray-500 text-[10px] sm:text-xs px-4 leading-relaxed">
