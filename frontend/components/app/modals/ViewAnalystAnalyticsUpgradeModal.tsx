@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart3, Bookmark, Users } from 'lucide-react';
+import { BarChart3, Bookmark, UserRoundSearch } from 'lucide-react';
 import Modal from '@/components/app/common/Modal';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
@@ -13,22 +13,19 @@ interface ViewAnalystAnalyticsUpgradeModalProps {
 
 const INVESTOR_PERKS = [
   {
-    icon: BarChart3,
-    title: 'Unlock analyst analytics',
-    description:
-      'View prediction scorecards, outcomes, and performance metrics before deciding who to follow.',
+    icon: UserRoundSearch,
+    title: 'See who is behind the rank',
+    description: 'Real names and profiles—so you know who to follow.',
   },
   {
     icon: Bookmark,
-    title: 'Save analysts you want to revisit',
-    description:
-      'Build a shortlist of traders from the leaderboard and come back to them anytime.',
+    title: 'Save analysts worth revisiting',
+    description: 'Shortlist top performers from the leaderboard in one tap.',
   },
   {
-    icon: Users,
-    title: 'Focus on proven signal',
-    description:
-      'Compare analysts with real performance context instead of guessing from a single number.',
+    icon: BarChart3,
+    title: 'Open detailed analytics',
+    description: 'Scorecards, outcomes, and performance beyond a single win rate.',
   },
 ] as const;
 
@@ -49,7 +46,7 @@ export default function ViewAnalystAnalyticsUpgradeModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="View analyst analytics"
+      title="Unlock who these analysts are"
       maxWidth="md"
       contentClassName="p-4 sm:p-6"
     >
@@ -57,10 +54,11 @@ export default function ViewAnalystAnalyticsUpgradeModal({
         <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
           <div className="mb-3 flex items-center gap-2">
             <VerifiedTickIcon variant="investor" size={18} title="Investor subscriber" />
-            <span className="text-sm font-semibold text-emerald-300">Investor plan</span>
+            <span className="text-sm font-semibold text-emerald-300">Investor</span>
           </div>
-          <p className="text-sm text-gray-300">
-            Unlock detailed analyst performance and invest with more confidence.
+          <p className="text-sm leading-relaxed text-gray-300">
+            Reveal names, save analysts, and open detailed analytics—so you know who
+            to follow.
           </p>
         </div>
 
@@ -77,7 +75,9 @@ export default function ViewAnalystAnalyticsUpgradeModal({
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-white">{perk.title}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-gray-400">{perk.description}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-gray-400">
+                    {perk.description}
+                  </p>
                 </div>
               </li>
             );
@@ -90,14 +90,14 @@ export default function ViewAnalystAnalyticsUpgradeModal({
             onClick={onClose}
             className="flex-1 rounded-xl py-2.5"
           >
-            Cancel
+            Not now
           </SecondaryButton>
           <PrimaryButton
             type="button"
             onClick={handleUpgrade}
             className="flex-1 rounded-xl py-2.5 font-semibold"
           >
-            View Investor plan
+            Unlock with Investor
           </PrimaryButton>
         </div>
       </div>

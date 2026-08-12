@@ -7,6 +7,7 @@ export interface PredictionsDashboardFlags {
   showLeaderboardAnalytics: boolean;
   showLeaderboardSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
+  maskLeaderboardIdentity: boolean;
 }
 
 export function usePredictionsDashboardFlags(
@@ -19,5 +20,6 @@ export function usePredictionsDashboardFlags(
     showLeaderboardAnalytics: variant === 'investor' || variant === 'free',
     showLeaderboardSaveAnalyst: variant === 'investor',
     analyticsRequiresUpgrade: variant === 'free',
+    maskLeaderboardIdentity: variant === 'free' || variant === 'analyst',
   };
 }

@@ -73,7 +73,7 @@ export default function AnalyticsAccessGate({
           <p className="text-sm text-gray-400">
             {isOwnAnalytics
               ? 'Analyst subscription required to view analytics.'
-              : 'Investor subscription required to view analyst analytics.'}
+              : 'Unlock who these analysts are to view performance.'}
           </p>
         </div>
       </>
