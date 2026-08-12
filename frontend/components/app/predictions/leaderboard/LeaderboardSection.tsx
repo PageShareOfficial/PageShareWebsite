@@ -15,6 +15,8 @@ interface LeaderboardSectionProps {
   showAnalytics: boolean;
   showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
+  maskIdentity?: boolean;
+  viewerHandle?: string | null;
   isLoading?: boolean;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -24,10 +26,13 @@ interface LeaderboardSectionProps {
 
 function LeaderboardEmptyState() {
   return (
-    <p className="px-3 py-8 text-center text-sm text-gray-400">
-      No ranked analysts yet. Analyst subscribers will appear here once they submit
-      predictions.
-    </p>
+    <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
+      <MdLeaderboard className="h-6 w-6 text-amber-400/80" aria-hidden />
+      <p className="text-sm text-gray-400">
+        No ranked analysts yet. Analyst subscribers will appear here once they submit
+        predictions.
+      </p>
+    </div>
   );
 }
 
@@ -37,6 +42,8 @@ export default function LeaderboardSection({
   showAnalytics,
   showSaveAnalyst,
   analyticsRequiresUpgrade,
+  maskIdentity = false,
+  viewerHandle = null,
   isLoading = false,
   hasMore = false,
   isLoadingMore = false,
@@ -59,39 +66,43 @@ export default function LeaderboardSection({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-white/10">
+      <div className="overflow-visible rounded-xl border border-white/10">
         {isLoading ? (
           <LeaderboardSectionSkeleton />
         ) : entries.length === 0 ? (
           <LeaderboardEmptyState />
         ) : (
           <>
-        <div className="space-y-2.5 px-3 py-3 lg:hidden">
-          {entries.map((entry) => (
-            <LeaderboardMobileRow
-              key={`mobile-${entry.handle}`}
-              entry={entry}
+            <div className="space-y-4 overflow-visible px-3 py-4 lg:hidden">
+              {entries.map((entry) => (
+                <LeaderboardMobileRow
+                  key={`mobile-${entry.handle}`}
+                  entry={entry}
+                  showAnalytics={showAnalytics}
+                  showSaveAnalyst={showSaveAnalyst}
+                  analyticsRequiresUpgrade={analyticsRequiresUpgrade}
+                  maskIdentity={maskIdentity}
+                  viewerHandle={viewerHandle}
+                  onAnalyticsUpgradeRequired={openAnalyticsUpgrade}
+                />
+              ))}
+            </div>
+
+            <LeaderboardDesktopTable
+              entries={entries}
               showAnalytics={showAnalytics}
               showSaveAnalyst={showSaveAnalyst}
               analyticsRequiresUpgrade={analyticsRequiresUpgrade}
+              maskIdentity={maskIdentity}
+              viewerHandle={viewerHandle}
               onAnalyticsUpgradeRequired={openAnalyticsUpgrade}
             />
-          ))}
-        </div>
-
-        <LeaderboardDesktopTable
-          entries={entries}
-          showAnalytics={showAnalytics}
-          showSaveAnalyst={showSaveAnalyst}
-          analyticsRequiresUpgrade={analyticsRequiresUpgrade}
-          onAnalyticsUpgradeRequired={openAnalyticsUpgrade}
-        />
-        <LeaderboardFooter
-          hasMore={hasMore && !isLoading}
-          isLoadingMore={isLoadingMore}
-          onLoadMore={onLoadMore}
-          loadMoreDisabled={loadMoreDisabled}
-        />
+            <LeaderboardFooter
+              hasMore={hasMore && !isLoading}
+              isLoadingMore={isLoadingMore}
+              onLoadMore={onLoadMore}
+              loadMoreDisabled={loadMoreDisabled}
+            />
           </>
         )}
       </div>

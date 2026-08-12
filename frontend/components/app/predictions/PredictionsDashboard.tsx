@@ -4,6 +4,7 @@ import AnalystStatsSection from '@/components/app/predictions/AnalystStatsSectio
 import ErrorState from '@/components/app/common/ErrorState';
 import LeaderboardSection from '@/components/app/predictions/leaderboard/LeaderboardSection';
 import SavedAnalystsSection from '@/components/app/predictions/SavedAnalystsSection';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePredictionsDashboardData } from '@/hooks/predictions/usePredictionsDashboardData';
 import { usePredictionsDashboardFlags } from '@/hooks/predictions/usePredictionsDashboardFlags';
 import { usePredictionsView } from '@/hooks/predictions/usePredictionsView';
@@ -12,6 +13,7 @@ import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 export default function PredictionsDashboard() {
   const { variant, isResolving } = usePredictionsView();
   const flags = usePredictionsDashboardFlags(variant);
+  const { backendUser } = useAuth();
   const isOnline = useOnlineStatus();
   const showAnalystStatsBlock =
     flags.showAnalystStats || (isResolving && variant === 'analyst');
@@ -73,6 +75,8 @@ export default function PredictionsDashboard() {
           showAnalytics={flags.showLeaderboardAnalytics}
           showSaveAnalyst={flags.showLeaderboardSaveAnalyst}
           analyticsRequiresUpgrade={flags.analyticsRequiresUpgrade}
+          maskIdentity={flags.maskLeaderboardIdentity}
+          viewerHandle={backendUser?.username}
           hasMore={hasMoreLeaderboard}
           isLoadingMore={isLeaderboardLoadingMore}
           onLoadMore={() => void loadMoreLeaderboard()}

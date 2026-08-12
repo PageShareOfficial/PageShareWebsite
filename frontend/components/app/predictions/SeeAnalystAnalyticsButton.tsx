@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Lock } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';
 
@@ -35,6 +35,8 @@ export default function SeeAnalystAnalyticsButton({
     router.push(getAnalyticsPath(handle));
   };
 
+  const upgradeLabel = 'Unlock who these analysts are';
+
   return (
     <button
       type="button"
@@ -44,19 +46,28 @@ export default function SeeAnalystAnalyticsButton({
         !isOnline
           ? 'Connect to the internet to view analytics'
           : requiresUpgrade
-            ? `Upgrade to view ${displayName}'s analytics`
+            ? upgradeLabel
             : `View ${displayName}'s analytics`
       }
       title={
         !isOnline
           ? 'Connect to the internet to continue'
           : requiresUpgrade
-            ? 'Upgrade to view analyst analytics'
+            ? upgradeLabel
             : 'See analytics'
       }
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-gray-300 transition-colors hover:border-white/25 hover:bg-white/15 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none ${className}`}
+      className={
+        requiresUpgrade
+          ? `relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/10 text-emerald-300 transition-colors hover:border-emerald-300/60 hover:bg-emerald-500/15 hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none ${className}`
+          : `flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-gray-300 transition-colors hover:border-white/25 hover:bg-white/15 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none ${className}`
+      }
     >
       <BarChart3 className="h-5 w-5" aria-hidden />
+      {requiresUpgrade && (
+        <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-black/80 bg-emerald-400 text-black">
+          <Lock className="h-2 w-2" strokeWidth={3} aria-hidden />
+        </span>
+      )}
     </button>
   );
 }

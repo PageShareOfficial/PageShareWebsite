@@ -220,6 +220,7 @@ export interface PredictionLeaderboardEntry {
   display_name?: string | null;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  avatar_initials?: string | null;
   net_rr_30d: number;
   win_rate_percent?: number | null;
   predictions_count: number;

@@ -1,12 +1,16 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
-import { navigateToProfile } from '@/utils/core/navigationUtils';
-import { getPodiumBorderStyle, getPodiumRowClass } from '@/utils/predictions/leaderboardStyles';
+import { getLeaderboardRowPresentation } from '@/utils/predictions/leaderboardIdentity';
+import {
+  getPodiumBorderStyle,
+  getPodiumRowClass,
+  shouldHighlightOwnLeaderboardRow,
+} from '@/utils/predictions/leaderboardStyles';
 import LeaderboardAccuracyActions from '@/components/app/predictions/leaderboard/LeaderboardAccuracyActions';
 import LeaderboardRankDisplay from '@/components/app/predictions/leaderboard/LeaderboardRankDisplay';
 import LeaderboardTraderLink from '@/components/app/predictions/leaderboard/LeaderboardTraderLink';
+import LeaderboardYouBadge from '@/components/app/predictions/leaderboard/LeaderboardYouBadge';
 import type { LeaderboardEntry } from '@/types/predictions';
 
 interface LeaderboardMobileRowProps {
@@ -15,6 +19,8 @@ interface LeaderboardMobileRowProps {
   showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
   onAnalyticsUpgradeRequired: () => void;
+  maskIdentity?: boolean;
+  viewerHandle?: string | null;
 }
 
 function StatBox({ label, value }: { label: string; value: number }) {
@@ -32,31 +38,39 @@ export default function LeaderboardMobileRow({
   showSaveAnalyst,
   analyticsRequiresUpgrade,
   onAnalyticsUpgradeRequired,
+  maskIdentity = false,
+  viewerHandle = null,
 }: LeaderboardMobileRowProps) {
-  const router = useRouter();
-
-  const podiumBorderStyle = getPodiumBorderStyle(entry.rank);
+  const { isOwnRow, maskThisRow, identity } = getLeaderboardRowPresentation(
+    entry,
+    maskIdentity,
+    viewerHandle
+  );
+  const highlightOwn = shouldHighlightOwnLeaderboardRow(entry.rank, isOwnRow);
+  const podiumBorderStyle = getPodiumBorderStyle(entry.rank, { highlightOwn });
 
   return (
     <div
       style={podiumBorderStyle}
-      className={`rounded-xl border-2 bg-black/65 px-3 py-3 ${getPodiumRowClass(entry.rank)}`}
+      className={`relative rounded-xl border-2 bg-black/65 px-3 py-3 ${getPodiumRowClass(
+        entry.rank,
+        { highlightOwn }
+      )}`}
     >
+      {isOwnRow && <LeaderboardYouBadge rank={entry.rank} />}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2.5">
           <div className="pt-0.5">
             <LeaderboardRankDisplay rank={entry.rank} />
           </div>
           <AvatarWithFallback
-            src={entry.avatar}
-            alt={entry.displayName}
+            src={identity.avatarSrc}
+            alt={identity.avatarAlt}
+            fallbackText={identity.avatarFallbackText}
             size={34}
             className="shrink-0"
           />
-          <LeaderboardTraderLink
-            entry={entry}
-            onNavigate={() => navigateToProfile(entry.handle, router)}
-          />
+          <LeaderboardTraderLink entry={entry} maskIdentity={maskThisRow} />
         </div>
         <LeaderboardAccuracyActions
           entry={entry}
@@ -64,6 +78,7 @@ export default function LeaderboardMobileRow({
           showSaveAnalyst={showSaveAnalyst}
           analyticsRequiresUpgrade={analyticsRequiresUpgrade}
           onAnalyticsUpgradeRequired={onAnalyticsUpgradeRequired}
+          maskIdentity={maskThisRow}
           layout="mobile"
         />
       </div>

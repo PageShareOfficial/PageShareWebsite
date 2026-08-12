@@ -155,6 +155,8 @@ class PredictionLeaderboardEntryResponse(BaseModel):
     display_name: Optional[str] = None
     profile_picture_url: Optional[str] = None
     subscription_plan_id: Optional[str] = None
+    # Initials from real display name when identity is redacted (avatar fallback).
+    avatar_initials: Optional[str] = None
     net_rr_30d: float = 0.0
     win_rate_percent: Optional[float] = None
     predictions_count: int = 0

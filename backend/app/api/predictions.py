@@ -17,7 +17,6 @@ from app.schemas.prediction import (
     PredictionAnalyticsSubject,
     PredictionIndexItemResponse,
     PredictionIndexListResponse,
-    PredictionLeaderboardEntryResponse,
     PredictionLivePriceResponse,
     PredictionResponse,
     PredictionSubmissionQuotaResponse,
@@ -42,10 +41,12 @@ from app.services.prediction_analytics_service import (
 )
 from app.services.prediction_leaderboard_service import (
     DEFAULT_LEADERBOARD_PER_PAGE,
+    build_leaderboard_entry_response,
     list_prediction_leaderboard,
     load_leaderboard_users,
     plan_ids_for_leaderboard,
 )
+from app.services.subscription_service import get_user_plan_id
 from app.services.prediction_analytics_predictions_service import (
     get_analyst_prediction_detail_for_investor,
     get_own_prediction_detail,
@@ -241,8 +242,11 @@ def prediction_leaderboard(
     page: int = Query(1, ge=1),
     per_page: int = Query(DEFAULT_LEADERBOARD_PER_PAGE, ge=1, le=50),
 ):
-    """Analyst rankings by 30d Net RR. Available to all visitors (optional auth)."""
-    del current_user
+    """Analyst rankings by 30d Net RR. Identity redacted unless investor or own row."""
+    viewer_user_id = UUID(current_user.auth_user_id) if current_user else None
+    viewer_plan_id = (
+        get_user_plan_id(db, viewer_user_id) if viewer_user_id is not None else None
+    )
     rows, total = list_prediction_leaderboard(db, page=page, per_page=per_page)
     users = load_leaderboard_users(db, rows)
     plan_map = plan_ids_for_leaderboard(db, rows)
@@ -251,16 +255,12 @@ def prediction_leaderboard(
         user = users.get(row.user_id)
         if user is None:
             continue
-        entry = PredictionLeaderboardEntryResponse(
-            rank=row.rank,
-            username=user.username,
-            display_name=user.display_name,
-            profile_picture_url=user.profile_picture_url,
+        entry = build_leaderboard_entry_response(
+            row=row,
+            user=user,
             subscription_plan_id=plan_map.get(row.user_id),
-            net_rr_30d=row.net_rr_30d,
-            win_rate_percent=row.win_rate_percent,
-            predictions_count=row.predictions_count,
-            wins=row.wins,
+            viewer_plan_id=viewer_plan_id,
+            viewer_user_id=viewer_user_id,
         )
         data.append(entry.model_dump())
     return paginated_response(data, page, per_page, total)

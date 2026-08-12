@@ -11,6 +11,8 @@ export type LeaderboardEntry = {
   verifiedCount: number;
   avatar: string;
   subscriptionPlanId?: PlanId;
+  /** From real display name when identity is redacted; for avatar fallback only. */
+  avatarInitials?: string;
 };
 
 export type AnalystScoreSummary = {

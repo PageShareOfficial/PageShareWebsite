@@ -9,6 +9,8 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 from app.models.prediction import Prediction
 from app.models.user import User
+from app.schemas.prediction import PredictionLeaderboardEntryResponse
+from app.services.billing_constants import PLAN_ID_INVESTOR
 from app.services.prediction_analytics_service import (
     _analyst_user_ids,
     _prediction_setup_rr,
@@ -35,6 +37,82 @@ class LeaderboardEntryRow:
     win_rate_percent: Optional[float]
     predictions_count: int
     wins: int
+
+def _is_valid_leaderboard_rank(rank: int) -> bool:
+    return isinstance(rank, int) and rank >= 1
+
+def masked_leaderboard_display_name(rank: int) -> str:
+    """Public label when identity is redacted for the viewer."""
+    if not _is_valid_leaderboard_rank(rank):
+        return "Analyst"
+    return f"Analyst_{rank}"
+
+def masked_leaderboard_username(rank: int) -> str:
+    """Non-profile placeholder username for redacted rows."""
+    if not _is_valid_leaderboard_rank(rank):
+        return "analyst"
+    return f"analyst_{rank}"
+
+def leaderboard_avatar_initials(display_name: Optional[str]) -> str:
+    """
+    Initials from display name for masked avatars (same rules as AvatarWithFallback:
+    first letter of up to two whitespace-separated words).
+    """
+    if not isinstance(display_name, str):
+        return "?"
+    words = [part for part in display_name.strip().split() if part]
+    if not words:
+        return "?"
+    return "".join(word[0] for word in words[:2]).upper()
+
+def should_reveal_leaderboard_identity(
+    *,
+    viewer_plan_id: Optional[str],
+    viewer_user_id: Optional[UUID],
+    entry_user_id: UUID,
+) -> bool:
+    """
+    Investors see everyone. Anyone may see their own row (analyst competition).
+    Free / anonymous / other analysts see peers redacted.
+    """
+    if viewer_plan_id == PLAN_ID_INVESTOR:
+        return True
+    if viewer_user_id is not None and viewer_user_id == entry_user_id:
+        return True
+    return False
+
+def build_leaderboard_entry_response(
+    *,
+    row: LeaderboardEntryRow,
+    user: User,
+    subscription_plan_id: Optional[str],
+    viewer_plan_id: Optional[str],
+    viewer_user_id: Optional[UUID],
+) -> PredictionLeaderboardEntryResponse:
+    """Build one leaderboard entry, redacting identity when the viewer is not entitled."""
+    reveal = should_reveal_leaderboard_identity(
+        viewer_plan_id=viewer_plan_id,
+        viewer_user_id=viewer_user_id,
+        entry_user_id=row.user_id,
+    )
+    return PredictionLeaderboardEntryResponse(
+        rank=row.rank,
+        username=user.username if reveal else masked_leaderboard_username(row.rank),
+        display_name=(
+            user.display_name if reveal else masked_leaderboard_display_name(row.rank)
+        ),
+        profile_picture_url=user.profile_picture_url if reveal else None,
+        subscription_plan_id=subscription_plan_id,
+        avatar_initials=(
+            None
+            if reveal
+            else leaderboard_avatar_initials(user.display_name or user.username)
+        ),
+        net_rr_30d=row.net_rr_30d,
+        win_rate_percent=row.win_rate_percent,
+        predictions_count=row.predictions_count,
+        wins=row.wins,
+    )
 
 def _lifetime_stats_by_analyst(
     db: Session, analyst_ids: set[UUID]

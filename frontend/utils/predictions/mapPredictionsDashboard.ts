@@ -19,12 +19,14 @@ export function mapLeaderboardEntry(
     verifiedCount: entry.wins,
     avatar: entry.profile_picture_url?.trim() ?? '',
     subscriptionPlanId: (entry.subscription_plan_id as PlanId | undefined) ?? 'analyst',
+    avatarInitials: entry.avatar_initials?.trim() || undefined,
   };
 }
 
 export function mapAnalystScoreSummary(
   summary: MyPredictionAnalyticsSummary
-): AnalystScoreSummary {  return {
+): AnalystScoreSummary {
+  return {
     rank: summary.rank ?? 0,
     winRatePercent: summary.win_rate_percent ?? 0,
     totalPredictions: summary.total_predictions,

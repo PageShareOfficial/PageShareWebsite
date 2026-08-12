@@ -1,12 +1,16 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
-import { navigateToProfile } from '@/utils/core/navigationUtils';
-import { getPodiumBorderStyle, getPodiumRowClass } from '@/utils/predictions/leaderboardStyles';
+import { getLeaderboardRowPresentation } from '@/utils/predictions/leaderboardIdentity';
+import {
+  getPodiumBorderStyle,
+  getPodiumRowClass,
+  shouldHighlightOwnLeaderboardRow,
+} from '@/utils/predictions/leaderboardStyles';
 import LeaderboardAccuracyActions from '@/components/app/predictions/leaderboard/LeaderboardAccuracyActions';
 import LeaderboardRankDisplay from '@/components/app/predictions/leaderboard/LeaderboardRankDisplay';
 import LeaderboardTraderLink from '@/components/app/predictions/leaderboard/LeaderboardTraderLink';
+import LeaderboardYouBadge from '@/components/app/predictions/leaderboard/LeaderboardYouBadge';
 import type { LeaderboardEntry } from '@/types/predictions';
 
 interface LeaderboardDesktopTableProps {
@@ -15,6 +19,8 @@ interface LeaderboardDesktopTableProps {
   showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
   onAnalyticsUpgradeRequired: () => void;
+  maskIdentity?: boolean;
+  viewerHandle?: string | null;
 }
 
 export default function LeaderboardDesktopTable({
@@ -23,12 +29,12 @@ export default function LeaderboardDesktopTable({
   showSaveAnalyst,
   analyticsRequiresUpgrade,
   onAnalyticsUpgradeRequired,
+  maskIdentity = false,
+  viewerHandle = null,
 }: LeaderboardDesktopTableProps) {
-  const router = useRouter();
-
   return (
-    <div className="hidden overflow-hidden px-2 py-2 lg:block">
-      <table className="w-full table-fixed border-separate border-spacing-y-2 text-left text-sm">
+    <div className="hidden overflow-visible px-2 py-4 lg:block">
+      <table className="w-full table-fixed border-separate border-spacing-y-4 text-left text-sm">
         <colgroup>
           <col className="w-14" />
           <col />
@@ -53,66 +59,70 @@ export default function LeaderboardDesktopTable({
         </thead>
         <tbody>
           {entries.map((entry) => {
-            const podiumBorderStyle = getPodiumBorderStyle(entry.rank);
+            const { isOwnRow, maskThisRow, identity } = getLeaderboardRowPresentation(
+              entry,
+              maskIdentity,
+              viewerHandle
+            );
+            const highlightOwn = shouldHighlightOwnLeaderboardRow(
+              entry.rank,
+              isOwnRow
+            );
+            const podiumBorderStyle = getPodiumBorderStyle(entry.rank, {
+              highlightOwn,
+            });
+            const rowClass = getPodiumRowClass(entry.rank, { highlightOwn });
             return (
-            <tr key={entry.handle}>
-              <td
-                style={podiumBorderStyle}
-                className={`rounded-l-xl border-y-2 border-l-2 bg-black/65 px-2 py-3 pl-3 font-medium tabular-nums ${getPodiumRowClass(
-                  entry.rank
-                )}`}
-              >
-                <LeaderboardRankDisplay rank={entry.rank} />
-              </td>
-              <td
-                style={podiumBorderStyle}
-                className={`border-y-2 bg-black/65 px-2 py-3 ${getPodiumRowClass(entry.rank)}`}
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <AvatarWithFallback
-                    src={entry.avatar}
-                    alt={entry.displayName}
-                    size={36}
-                    className="shrink-0"
-                  />
-                  <LeaderboardTraderLink
+              <tr key={entry.handle}>
+                <td
+                  style={podiumBorderStyle}
+                  className={`relative rounded-l-xl border-y-2 border-l-2 bg-black/65 px-2 py-3 pl-3 font-medium tabular-nums ${rowClass}`}
+                >
+                  {isOwnRow && <LeaderboardYouBadge rank={entry.rank} />}
+                  <LeaderboardRankDisplay rank={entry.rank} />
+                </td>
+                <td
+                  style={podiumBorderStyle}
+                  className={`border-y-2 bg-black/65 px-2 py-3 ${rowClass}`}
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <AvatarWithFallback
+                      src={identity.avatarSrc}
+                      alt={identity.avatarAlt}
+                      fallbackText={identity.avatarFallbackText}
+                      size={36}
+                      className="shrink-0"
+                    />
+                    <LeaderboardTraderLink entry={entry} maskIdentity={maskThisRow} />
+                  </div>
+                </td>
+                <td
+                  style={podiumBorderStyle}
+                  className={`border-y-2 bg-black/65 px-2 py-3 text-right tabular-nums text-gray-300 ${rowClass}`}
+                >
+                  {entry.predictionsCount}
+                </td>
+                <td
+                  style={podiumBorderStyle}
+                  className={`border-y-2 bg-black/65 px-2 py-3 text-right tabular-nums text-gray-400 ${rowClass}`}
+                >
+                  {entry.verifiedCount}
+                </td>
+                <td
+                  style={podiumBorderStyle}
+                  className={`rounded-r-xl border-y-2 border-r-2 bg-black/65 px-2 py-3 pr-3 text-right ${rowClass}`}
+                >
+                  <LeaderboardAccuracyActions
                     entry={entry}
-                    onNavigate={() => navigateToProfile(entry.handle, router)}
+                    showAnalytics={showAnalytics}
+                    showSaveAnalyst={showSaveAnalyst}
+                    analyticsRequiresUpgrade={analyticsRequiresUpgrade}
+                    onAnalyticsUpgradeRequired={onAnalyticsUpgradeRequired}
+                    maskIdentity={maskThisRow}
+                    layout="desktop"
                   />
-                </div>
-              </td>
-              <td
-                style={podiumBorderStyle}
-                className={`border-y-2 bg-black/65 px-2 py-3 text-right tabular-nums text-gray-300 ${getPodiumRowClass(
-                  entry.rank
-                )}`}
-              >
-                {entry.predictionsCount}
-              </td>
-              <td
-                style={podiumBorderStyle}
-                className={`border-y-2 bg-black/65 px-2 py-3 text-right tabular-nums text-gray-400 ${getPodiumRowClass(
-                  entry.rank
-                )}`}
-              >
-                {entry.verifiedCount}
-              </td>
-              <td
-                style={podiumBorderStyle}
-                className={`rounded-r-xl border-y-2 border-r-2 bg-black/65 px-2 py-3 pr-3 text-right ${getPodiumRowClass(
-                  entry.rank
-                )}`}
-              >
-                <LeaderboardAccuracyActions
-                  entry={entry}
-                  showAnalytics={showAnalytics}
-                  showSaveAnalyst={showSaveAnalyst}
-                  analyticsRequiresUpgrade={analyticsRequiresUpgrade}
-                  onAnalyticsUpgradeRequired={onAnalyticsUpgradeRequired}
-                  layout="desktop"
-                />
-              </td>
-            </tr>
+                </td>
+              </tr>
             );
           })}
         </tbody>

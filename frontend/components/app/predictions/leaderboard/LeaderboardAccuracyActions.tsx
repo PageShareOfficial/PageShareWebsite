@@ -1,5 +1,6 @@
 import SeeAnalystAnalyticsButton from '@/components/app/predictions/SeeAnalystAnalyticsButton';
 import SaveAnalystButton from '@/components/app/predictions/SaveAnalystButton';
+import { getLeaderboardIdentity } from '@/utils/predictions/leaderboardIdentity';
 import { leaderboardEntryToSavedAnalyst } from '@/utils/predictions/leaderboardToSavedAnalyst';
 import type { LeaderboardEntry } from '@/types/predictions';
 
@@ -9,6 +10,7 @@ interface LeaderboardAccuracyActionsProps {
   showSaveAnalyst: boolean;
   analyticsRequiresUpgrade: boolean;
   onAnalyticsUpgradeRequired: () => void;
+  maskIdentity?: boolean;
   layout?: 'mobile' | 'desktop';
 }
 
@@ -18,8 +20,10 @@ export default function LeaderboardAccuracyActions({
   showSaveAnalyst,
   analyticsRequiresUpgrade,
   onAnalyticsUpgradeRequired,
+  maskIdentity = false,
   layout = 'mobile',
 }: LeaderboardAccuracyActionsProps) {
+  const identity = getLeaderboardIdentity(entry, maskIdentity);
   const isDesktop = layout === 'desktop';
 
   return (
@@ -44,8 +48,8 @@ export default function LeaderboardAccuracyActions({
       </div>
       {showAnalytics && (
         <SeeAnalystAnalyticsButton
-          displayName={entry.displayName}
-          handle={entry.handle}
+          displayName={identity.displayName}
+          handle={identity.handle ?? entry.handle}
           className="shrink-0"
           requiresUpgrade={analyticsRequiresUpgrade}
           onUpgradeRequired={onAnalyticsUpgradeRequired}
