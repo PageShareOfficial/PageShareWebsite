@@ -43,6 +43,12 @@ class PredictionResponse(BaseModel):
     return_pct: Optional[float] = None
     resolution_source: Optional[str] = None
     resolution_note: Optional[str] = None
+    content_hash: Optional[str] = None
+    anchor_status: str = "none"
+    chain_tx_hash: Optional[str] = None
+    chain_id: Optional[int] = None
+    anchored_at: Optional[datetime] = None
+    explorer_url: Optional[str] = None
     created_at: datetime
 
 class PredictionSubmissionQuotaResponse(BaseModel):

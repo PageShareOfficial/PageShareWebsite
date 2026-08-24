@@ -4,6 +4,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -49,6 +50,11 @@ class Prediction(Base):
     return_pct = Column(Numeric(18, 8), nullable=True)
     resolution_source = Column(String(40), nullable=True)
     resolution_note = Column(Text, nullable=True)
+    content_hash = Column(String(64), nullable=True)
+    anchor_status = Column(String(20), nullable=False, server_default="none")
+    chain_tx_hash = Column(String(66), nullable=True)
+    chain_id = Column(Integer, nullable=True)
+    anchored_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -68,6 +74,10 @@ class Prediction(Base):
         CheckConstraint(
             "outcome IS NULL OR outcome IN ('win', 'loss', 'expired')",
             name="predictions_outcome_check",
+        ),
+        CheckConstraint(
+            "anchor_status IN ('none', 'pending', 'submitted', 'confirmed', 'failed')",
+            name="predictions_anchor_status_check",
         ),
         CheckConstraint(
             f"char_length(thesis) <= {300}",

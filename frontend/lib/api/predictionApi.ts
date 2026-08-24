@@ -52,6 +52,12 @@ export interface PredictionResponse {
   return_pct?: number | null;
   resolution_source?: string | null;
   resolution_note?: string | null;
+  content_hash?: string | null;
+  anchor_status?: 'none' | 'pending' | 'submitted' | 'confirmed' | 'failed';
+  chain_tx_hash?: string | null;
+  chain_id?: number | null;
+  anchored_at?: string | null;
+  explorer_url?: string | null;
   created_at: string;
 }
 
