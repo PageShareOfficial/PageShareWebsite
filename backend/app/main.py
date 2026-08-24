@@ -71,6 +71,11 @@ async def health_check_db():
 async def root():
     return {"message": "PageShare Backend API"}
 
+@app.get("/json/version")
+async def chrome_devtools_probe():
+    """Chrome/Cursor DevTools probes this path; not an app API."""
+    return {"Browser": "PageShare Backend"}
+
 # Routers
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(session_router, prefix="/api/v1")

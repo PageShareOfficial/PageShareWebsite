@@ -14,10 +14,12 @@ import ImageWithFallback from '@/components/app/common/ImageWithFallback';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import { useCashtagImages } from '@/hooks/composer/useCashtagImages';
 import AnalyticsPredictionSetupMap from '@/components/app/predictions/analytics/AnalyticsPredictionSetupMap';
+import PredictionOnChainProof from '@/components/app/predictions/analytics/PredictionOnChainProof';
 import type { PredictionAnalyticsDetail } from '@/lib/api/predictionApi';
 import { computeRiskReward } from '@/utils/predictions/predictionRules';
 import { formatDateTime } from '@/utils/core/dateUtils';
 import { formatSignedPercent } from '@/utils/predictions/analyticsFormat';
+import { shouldShowOnChainProof } from '@/utils/predictions/polygonExplorer';
 
 interface AnalyticsPredictionDetailCardProps {
   detail: PredictionAnalyticsDetail | null;
@@ -346,6 +348,15 @@ export default function AnalyticsPredictionDetailCard({
             },
           ]}
         />
+
+        {shouldShowOnChainProof(p) && p.content_hash ? (
+          <PredictionOnChainProof
+            contentHash={p.content_hash}
+            chainTxHash={p.chain_tx_hash}
+            chainId={p.chain_id}
+            explorerUrl={p.explorer_url}
+          />
+        ) : null}
 
         <div
           className={`flex flex-col gap-4 ${

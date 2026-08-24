@@ -72,6 +72,13 @@ def test_create_prediction_overwrites_client_entry_with_coinbase():
             "app.services.prediction_service.Prediction",
             return_value=prediction,
         ),
+        patch(
+            "app.services.prediction_service.stamp_anchor_fields",
+        ),
+        patch(
+            "app.services.prediction_service.is_polygon_configured",
+            return_value=False,
+        ),
     ):
         result = create_prediction(
             db,

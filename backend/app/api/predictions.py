@@ -2,7 +2,7 @@
 
 from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.api.prediction_api_constants import (
     CLIENT_TIMEZONE_HEADER,
@@ -60,6 +60,10 @@ from app.services.saved_analyst_service import (
 )
 from app.services.prediction_validation_service import PredictionValidationError
 from app.services.user_service import get_or_create_user_for_auth
+from app.services.polygon_anchor_service import (
+    polygon_tx_explorer_url,
+    schedule_anchor,
+)
 from app.utils.http import parse_uuid_or_404
 from app.utils.rate_limit import is_rate_limited
 from app.utils.responses import paginated_response
@@ -165,6 +169,14 @@ def _to_response(prediction) -> PredictionResponse:
         return_pct=_optional_float(prediction.return_pct),
         resolution_source=prediction.resolution_source,
         resolution_note=prediction.resolution_note,
+        content_hash=prediction.content_hash,
+        anchor_status=prediction.anchor_status or "none",
+        chain_tx_hash=prediction.chain_tx_hash,
+        chain_id=prediction.chain_id,
+        anchored_at=prediction.anchored_at,
+        explorer_url=polygon_tx_explorer_url(
+            prediction.chain_id, prediction.chain_tx_hash
+        ),
         created_at=prediction.created_at,
     )
 
@@ -485,6 +497,7 @@ def get_my_prediction(
 @router.post("", response_model=PredictionResponse, status_code=status.HTTP_201_CREATED)
 def submit_prediction(
     body: CreatePredictionRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
     client_timezone: str | None = Header(default=None, alias=CLIENT_TIMEZONE_HEADER),
@@ -536,4 +549,5 @@ def submit_prediction(
             detail=str(exc),
         ) from exc
 
+    schedule_anchor(background_tasks, prediction.id)
     return _to_response(prediction)

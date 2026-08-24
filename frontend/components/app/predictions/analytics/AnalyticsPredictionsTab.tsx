@@ -81,7 +81,7 @@ export default function AnalyticsPredictionsTab({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4">
+      <section className="overflow-visible rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4">
         <AnalyticsPredictionNumberStrip
           items={indexItems}
           selectedId={selectedId}

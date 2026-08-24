@@ -61,6 +61,18 @@ class Settings:
         self.stripe_customer_portal_return_url: str = os.getenv(
             "STRIPE_CUSTOMER_PORTAL_RETURN_URL", ""
         )
+        # Polygon prediction hash anchoring (optional; submits still work if unset)
+        self.polygon_rpc_url: str = os.getenv("POLYGON_RPC_URL", "").strip()
+        self.polygon_relayer_private_key: str = os.getenv(
+            "POLYGON_RELAYER_PRIVATE_KEY", ""
+        ).strip()
+        self.polygon_anchor_contract_address: str = os.getenv(
+            "POLYGON_ANCHOR_CONTRACT_ADDRESS", ""
+        ).strip()
+        try:
+            self.polygon_chain_id: int = int(os.getenv("POLYGON_CHAIN_ID", "137"))
+        except ValueError:
+            self.polygon_chain_id = 137
         # Basic safety check for critical vars in non-dev environments
         if self.app_env != "dev":
             missing = []

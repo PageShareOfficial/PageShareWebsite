@@ -43,6 +43,64 @@ function stripStatus(item: PredictionIndexItem): {
   };
 }
 
+interface PredictionCallChipProps {
+  item: PredictionIndexItem;
+  isLatest: boolean;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+function PredictionCallChip({
+  item,
+  isLatest,
+  isSelected,
+  onSelect,
+}: PredictionCallChipProps) {
+  const status = stripStatus(item);
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(item.id)}
+      className={`group relative flex h-[8.25rem] w-[6.75rem] shrink-0 flex-col items-center overflow-visible rounded-2xl border px-2.5 pb-2.5 pt-2 text-center transition-all duration-200 ${
+        isSelected
+          ? `border-white/25 bg-gradient-to-b from-white/15 to-white/[0.06] text-white shadow-lg ring-2 ${status.ring}`
+          : 'border-white/10 bg-black/25 text-gray-300 hover:border-white/20 hover:bg-white/[0.06]'
+      }`}
+    >
+      <span
+        className={`mb-1 inline-flex min-h-[1.125rem] items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+          isLatest
+            ? 'bg-sky-500 text-white'
+            : 'invisible pointer-events-none select-none'
+        }`}
+        aria-hidden={!isLatest}
+      >
+        Latest
+      </span>
+      <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+        Call
+      </span>
+      <span className="mt-0.5 text-2xl font-bold tabular-nums leading-tight">
+        {item.number}
+      </span>
+      <span className="mt-2 flex w-full items-center justify-center gap-1.5 text-xs font-medium text-gray-400">
+        <span
+          className={`h-2 w-2 shrink-0 rounded-full ${status.dot}`}
+          aria-hidden
+        />
+        <span className="truncate">{item.asset}</span>
+      </span>
+      <span
+        className={`mt-1 whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide ${
+          isSelected ? 'text-gray-300' : 'text-gray-600 group-hover:text-gray-500'
+        }`}
+      >
+        {status.label}
+      </span>
+    </button>
+  );
+}
+
 export default function AnalyticsPredictionNumberStrip({
   items,
   selectedId,
@@ -63,7 +121,7 @@ export default function AnalyticsPredictionNumberStrip({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 overflow-visible">
       <ScrollChevronButton
         direction="left"
         disabled={items.length <= 1}
@@ -71,57 +129,18 @@ export default function AnalyticsPredictionNumberStrip({
       />
       <div
         ref={scrollRef}
-        className="scrollbar-hidden min-w-0 flex-1 overflow-x-auto scroll-smooth"
+        className="scrollbar-hidden min-w-0 flex-1 overflow-x-auto overscroll-x-contain scroll-smooth"
       >
-        <div className="flex justify-start gap-2 px-1 py-2 sm:justify-center sm:gap-3">
-          {items.map((item, index) => {
-            const isSelected = item.id === selectedId;
-            const status = stripStatus(item);
-            const isLatest = index === 0;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className={`group relative flex min-w-[6.25rem] shrink-0 flex-col items-center rounded-2xl border px-3 pb-3 pt-2 text-center transition-all duration-200 ${
-                  isSelected
-                    ? `border-white/25 bg-gradient-to-b from-white/15 to-white/[0.06] text-white shadow-lg ring-2 ${status.ring}`
-                    : 'border-white/10 bg-black/25 text-gray-300 hover:border-white/20 hover:bg-white/[0.06]'
-                }`}
-              >
-                <span
-                  className={`mb-1.5 inline-flex min-h-[1.125rem] items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-                    isLatest
-                      ? 'bg-sky-500 text-white'
-                      : 'invisible pointer-events-none select-none'
-                  }`}
-                  aria-hidden={!isLatest}
-                >
-                  Latest
-                </span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                  Call
-                </span>
-                <span className="mt-0.5 text-2xl font-bold tabular-nums leading-none">
-                  {item.number}
-                </span>
-                <span className="mt-2 flex max-w-full items-center gap-1.5 truncate text-xs font-medium text-gray-400">
-                  <span
-                    className={`h-2 w-2 shrink-0 rounded-full ${status.dot}`}
-                    aria-hidden
-                  />
-                  {item.asset}
-                </span>
-                <span
-                  className={`mt-1 text-[10px] font-semibold uppercase tracking-wide ${
-                    isSelected ? 'text-gray-300' : 'text-gray-600 group-hover:text-gray-500'
-                  }`}
-                >
-                  {status.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="flex w-max gap-2 py-3 pl-1 pr-3 sm:gap-3">
+          {items.map((item, index) => (
+            <PredictionCallChip
+              key={item.id}
+              item={item}
+              isLatest={index === 0}
+              isSelected={item.id === selectedId}
+              onSelect={onSelect}
+            />
+          ))}
         </div>
       </div>
       <ScrollChevronButton

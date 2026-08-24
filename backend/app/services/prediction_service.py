@@ -22,6 +22,11 @@ from app.services.coinbase_market_service import (
     UnsupportedAssetError,
     get_live_price,
 )
+from app.config import get_settings
+from app.services.polygon_anchor_service import (
+    is_polygon_configured,
+    stamp_anchor_fields,
+)
 
 class AnalystRequiredError(Exception):
     """User does not have an active analyst subscription."""
@@ -147,7 +152,15 @@ def create_prediction(
         thesis_image_url=thesis_image_url,
         status=PREDICTION_STATUS_ACTIVE,
     )
+    return _persist_new_prediction(db, prediction)
+
+def _persist_new_prediction(db: Session, prediction: Prediction) -> Prediction:
     db.add(prediction)
+    db.flush()
+    stamp_anchor_fields(
+        prediction,
+        chain_configured=is_polygon_configured(get_settings()),
+    )
     db.commit()
     db.refresh(prediction)
     return prediction
