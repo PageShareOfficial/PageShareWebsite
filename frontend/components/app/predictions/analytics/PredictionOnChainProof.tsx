@@ -19,6 +19,10 @@ export default function PredictionOnChainProof({
   const scanUrl =
     explorerUrl || polygonExplorerTxUrl(chainId, chainTxHash || undefined);
 
+  // When confirmed, show the tx hash — that's what users search on Polygonscan.
+  // Fall back to the SHA-256 content hash for pending/submitted states.
+  const displayedHash = chainTxHash || contentHash;
+
   return (
     <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
       <div className="flex items-center gap-1.5 text-gray-500">
@@ -28,7 +32,7 @@ export default function PredictionOnChainProof({
         </p>
       </div>
       <p className="mt-2 break-all font-mono text-xs leading-relaxed text-gray-300">
-        {contentHash}
+        {displayedHash}
       </p>
       {scanUrl ? (
         <a
