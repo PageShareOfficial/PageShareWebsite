@@ -169,7 +169,13 @@ def _to_response(prediction) -> PredictionResponse:
         return_pct=_optional_float(prediction.return_pct),
         resolution_source=prediction.resolution_source,
         resolution_note=prediction.resolution_note,
-        content_hash=prediction.content_hash,
+        # For the UI "On-chain proof" card, show the transaction hash once the
+        # anchor is confirmed (instead of the canonical content hash).
+        content_hash=(
+            prediction.chain_tx_hash
+            if prediction.anchor_status == "confirmed" and prediction.chain_tx_hash
+            else prediction.content_hash
+        ),
         anchor_status=prediction.anchor_status or "none",
         chain_tx_hash=prediction.chain_tx_hash,
         chain_id=prediction.chain_id,
