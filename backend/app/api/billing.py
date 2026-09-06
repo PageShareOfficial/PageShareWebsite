@@ -3,23 +3,27 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
+from app.api.billing_http import (
+    CHECKOUT_ERROR_STATUS,
+    PORTAL_ERROR_STATUS,
+    SWITCH_ERROR_STATUS,
+    raise_billing_http,
+    reject_if_rate_limited,
+)
 from app.config import Settings, get_settings
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.schemas.billing import (
     BillingStatusResponse,
+    CheckoutSessionBody,
     CheckoutSessionResponse,
     CreateCheckoutSessionRequest,
     PortalSessionResponse,
     SwitchPlanRequest,
 )
-from app.schemas.billing import CheckoutSessionBody
 from app.services.auth_service import CurrentUser
 from app.services.billing_service import (
-    AlreadySubscribedError,
     BillingNotConfiguredError,
-    NoActiveSubscriptionError,
-    PaymentFailedError,
     construct_webhook_event,
     create_checkout_session,
     create_portal_session,
@@ -28,7 +32,6 @@ from app.services.billing_service import (
     reconcile_entitlement_with_stripe,
     switch_subscription_plan,
 )
-from app.utils.rate_limit import is_rate_limited
 from app.services.subscription_service import get_billing_status
 from app.services.user_service import get_or_create_user_for_auth
 
@@ -56,11 +59,10 @@ def billing_checkout(
     settings: Settings = Depends(get_settings),
 ):
     user_id = UUID(current_user.auth_user_id)
-    if is_rate_limited(f"billing:checkout:{user_id}"):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many checkout requests. Please try again shortly.",
-        )
+    reject_if_rate_limited(
+        f"billing:checkout:{user_id}",
+        "Too many checkout requests. Please try again shortly.",
+    )
     get_or_create_user_for_auth(db, current_user)
     email = current_user.claims.get("email")
 
@@ -77,21 +79,8 @@ def billing_checkout(
             ),
             email=email,
         )
-    except BillingNotConfiguredError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        ) from exc
-    except AlreadySubscribedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(exc),
-        ) from exc
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
+    except Exception as exc:
+        raise_billing_http(exc, CHECKOUT_ERROR_STATUS)
 
     return CheckoutSessionResponse(url=url)
 
@@ -104,11 +93,10 @@ def billing_switch(
 ):
     """Switch an active subscription to another plan/interval with proration."""
     user_id = UUID(current_user.auth_user_id)
-    if is_rate_limited(f"billing:switch:{user_id}"):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many plan changes. Please try again shortly.",
-        )
+    reject_if_rate_limited(
+        f"billing:switch:{user_id}",
+        "Too many plan changes. Please try again shortly.",
+    )
 
     try:
         switch_subscription_plan(
@@ -118,31 +106,8 @@ def billing_switch(
             plan_id=body.plan_id,
             interval=body.interval,
         )
-    except BillingNotConfiguredError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        ) from exc
-    except AlreadySubscribedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(exc),
-        ) from exc
-    except NoActiveSubscriptionError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(exc),
-        ) from exc
-    except PaymentFailedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=str(exc),
-        ) from exc
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
+    except Exception as exc:
+        raise_billing_http(exc, SWITCH_ERROR_STATUS)
 
     return get_billing_status(db, user_id)
 
@@ -153,24 +118,15 @@ def billing_portal(
     settings: Settings = Depends(get_settings),
 ):
     user_id = UUID(current_user.auth_user_id)
-    if is_rate_limited(f"billing:portal:{user_id}"):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many portal requests. Please try again shortly.",
-        )
+    reject_if_rate_limited(
+        f"billing:portal:{user_id}",
+        "Too many portal requests. Please try again shortly.",
+    )
 
     try:
         url = create_portal_session(db, settings, user_id=user_id)
-    except BillingNotConfiguredError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        ) from exc
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(exc),
-        ) from exc
+    except Exception as exc:
+        raise_billing_http(exc, PORTAL_ERROR_STATUS)
 
     return PortalSessionResponse(url=url)
 

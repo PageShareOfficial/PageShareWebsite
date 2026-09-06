@@ -2,9 +2,20 @@ import type { BillingInterval, PlanId } from '@/types/billing';
 
 export type { BillingInterval, PlanId };
 export type PlanTheme = PlanId;
-export interface PlanPricing {
-  original: number;
-  discounted: number;
+
+/** Monthly plan: single list price, no strikethrough. */
+export interface MonthlyPlanPricing {
+  amount: number;
+}
+
+/**
+ * Yearly plan: shown as a monthly-equivalent rate with months-free savings.
+ * Analyst: $199/mo billed yearly ($2,388) vs $299×12 → 4 months free.
+ * Investor: $999/mo billed yearly ($11,988) vs $1,199×12 → ~2 months free.
+ */
+export interface YearlyPlanPricing {
+  amountPerMonth: number;
+  monthsFree: number;
 }
 
 export interface PlanDefinition {
@@ -13,16 +24,13 @@ export interface PlanDefinition {
   tickLabel: string;
   roleTitle: string;
   tagline: string;
-  badge: string;
   pricing: {
-    monthly: PlanPricing;
-    yearly: PlanPricing;
+    monthly: MonthlyPlanPricing;
+    yearly: YearlyPlanPricing;
   };
   features: string[];
   ctaLabel: string;
 }
-
-export const YEARLY_DISCOUNT_PERCENT = 40;
 
 export const PLANS: PlanDefinition[] = [
   {
@@ -31,10 +39,9 @@ export const PLANS: PlanDefinition[] = [
     tickLabel: 'Blue Tick',
     roleTitle: 'Analyst / Trader',
     tagline: 'Build Credibility. Publish Predictions. Grow Your Influence.',
-    badge: 'ONE BEST PLAN',
     pricing: {
-      monthly: { original: 499, discounted: 299 },
-      yearly: { original: 5999, discounted: 3599 },
+      monthly: { amount: 299 },
+      yearly: { amountPerMonth: 199, monthsFree: 4 },
     },
     features: [
       'Publish Your Predictions',
@@ -55,10 +62,9 @@ export const PLANS: PlanDefinition[] = [
     tickLabel: 'Green Tick',
     roleTitle: 'Investor',
     tagline: 'Discover Real Signal. Track Performance. Invest Smarter.',
-    badge: 'ONE BEST PLAN',
     pricing: {
-      monthly: { original: 1999, discounted: 1199 },
-      yearly: { original: 23999, discounted: 14399 },
+      monthly: { amount: 1199 },
+      yearly: { amountPerMonth: 999, monthsFree: 2 },
     },
     features: [
       'Unlimited Analyst Scorecards',
@@ -75,29 +81,5 @@ export const PLANS: PlanDefinition[] = [
   },
 ];
 
-export const TRUST_PILLARS = [
-  {
-    title: 'Locked Predictions',
-    description: 'Immutable records. No edits. No deletes.',
-    accent: 'violet',
-    icon: 'lock',
-  },
-  {
-    title: 'Verified Performance',
-    description: 'Every analyst. Every call. Fully trackable.',
-    accent: 'blue',
-    icon: 'badge-check',
-  },
-  {
-    title: 'Evidence-Based Trust',
-    description: 'Decisions backed by real data, not hype.',
-    accent: 'emerald',
-    icon: 'bar-chart',
-  },
-  {
-    title: 'Your Edge. Your Way.',
-    description: 'Powerful tools for serious market players.',
-    accent: 'amber',
-    icon: 'sparkles',
-  },
-] as const;
+export type { PlanFaqItem } from './planFaqs';
+export { PLAN_FAQS } from './planFaqs';

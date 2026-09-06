@@ -11,6 +11,7 @@ from app.services.billing_service import (
     BillingNotConfiguredError,
     NoActiveSubscriptionError,
     PaymentFailedError,
+    PlanTypeChangeNotAllowedError,
     build_price_map,
     cancel_existing_subscription_for_checkout,
     create_checkout_session,
@@ -390,6 +391,20 @@ class TestSwitchSubscriptionPlan:
                 MagicMock(),
                 _settings_with_prices(),
                 user_id=user_id,
+                plan_id="investor",
+                interval="yearly",
+            )
+
+    @patch("app.services.billing_service.get_entitlement")
+    def test_rejects_cross_plan_type_switch(self, mock_get_entitlement):
+        user_id = UUID("11111111-1111-1111-1111-111111111111")
+        mock_get_entitlement.return_value = self._active_investor_monthly_row(user_id)
+
+        with pytest.raises(PlanTypeChangeNotAllowedError):
+            switch_subscription_plan(
+                MagicMock(),
+                _settings_with_prices(),
+                user_id=user_id,
                 plan_id="analyst",
                 interval="yearly",
             )
@@ -417,7 +432,7 @@ class TestSwitchSubscriptionPlan:
                 MagicMock(),
                 _settings_with_prices(),
                 user_id=user_id,
-                plan_id="analyst",
+                plan_id="investor",
                 interval="yearly",
             )
 
