@@ -22,6 +22,9 @@ STALE_SUBSCRIPTION_STATUSES = frozenset({
 VALID_PLAN_IDS = frozenset({PLAN_ID_ANALYST, PLAN_ID_INVESTOR})
 VALID_INTERVALS = frozenset({INTERVAL_MONTHLY, INTERVAL_YEARLY})
 PAST_DUE_GRACE_DAYS = 7
+CROSS_PLAN_SWITCH_MESSAGE = (
+    "Analyst and Investor are separate plans and can't be switched in place."
+)
 
 def resolve_stripe_price_id(
     plan_id: str,

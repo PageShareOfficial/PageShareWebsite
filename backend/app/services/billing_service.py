@@ -8,10 +8,12 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.schemas.billing import CheckoutSessionBody
 from app.services.billing_constants import (
+    CROSS_PLAN_SWITCH_MESSAGE,
     INTERVAL_MONTHLY,
     INTERVAL_YEARLY,
     PLAN_ID_ANALYST,
     PLAN_ID_INVESTOR,
+    normalize_plan_id,
     resolve_stripe_price_id,
 )
 from app.services.subscription_service import (
@@ -38,6 +40,20 @@ class NoActiveSubscriptionError(Exception):
 
 class PaymentFailedError(Exception):
     """Raised when the prorated charge for a plan switch cannot be collected."""
+
+
+class PlanTypeChangeNotAllowedError(Exception):
+    """Raised when a subscriber tries to move between Analyst and Investor."""
+
+
+def _assert_plan_type_unchanged(row, target_plan_id: str) -> None:
+    """Premium subscribers may only change interval within the same plan type."""
+    if not row or not row_grants_premium(row):
+        return
+    current_plan = normalize_plan_id(row.plan_id)
+    target_plan = normalize_plan_id(target_plan_id)
+    if current_plan and target_plan and current_plan != target_plan:
+        raise PlanTypeChangeNotAllowedError(CROSS_PLAN_SWITCH_MESSAGE)
 
 def _require_stripe_config(settings: Settings) -> None:
     if not settings.stripe_secret_key:
@@ -292,6 +308,7 @@ def create_checkout_session(
             "You already have an active subscription for this plan. "
             "Use Manage billing to update payment details."
         )
+    _assert_plan_type_unchanged(row, body.plan_id)
 
     customer_id = get_or_create_stripe_customer(db, settings, user_id, email)
 
@@ -359,6 +376,7 @@ def switch_subscription_plan(
     row = get_entitlement(db, user_id)
     if entitlement_matches_checkout(row, plan_id, interval):
         raise AlreadySubscribedError("You are already subscribed to this plan.")
+    _assert_plan_type_unchanged(row, plan_id)
     if not row or not row.stripe_customer_id:
         raise NoActiveSubscriptionError(
             "No active subscription to switch. Start a checkout instead."
