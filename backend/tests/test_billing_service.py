@@ -196,6 +196,8 @@ class TestCreateCheckoutSession:
                 {
                     "metadata": {"plan_id": "investor", "interval": "monthly"},
                     "url": "https://checkout.stripe.test/open",
+                    "automatic_tax": {"enabled": True},
+                    "tax_id_collection": {"enabled": True},
                 }
             ]
         )
@@ -215,6 +217,93 @@ class TestCreateCheckoutSession:
 
         assert url == "https://checkout.stripe.test/open"
         mock_session_create.assert_not_called()
+
+    @patch("app.services.billing_service.stripe.checkout.Session.create")
+    @patch("app.services.billing_service.stripe.checkout.Session.list")
+    @patch("app.services.billing_service.get_or_create_stripe_customer")
+    @patch("app.services.billing_service.get_entitlement")
+    def test_skips_open_checkout_without_tax_collection(
+        self,
+        mock_get_entitlement,
+        mock_get_customer,
+        mock_session_list,
+        mock_session_create,
+    ):
+        from app.schemas.billing import CheckoutSessionBody
+
+        user_id = UUID("11111111-1111-1111-1111-111111111111")
+        mock_get_entitlement.return_value = None
+        mock_get_customer.return_value = "cus_123"
+        mock_session_list.return_value = MagicMock(
+            data=[
+                {
+                    "metadata": {"plan_id": "investor", "interval": "monthly"},
+                    "url": "https://checkout.stripe.test/stale",
+                }
+            ]
+        )
+        mock_session_create.return_value = {
+            "url": "https://checkout.stripe.test/fresh",
+            "status": "open",
+        }
+
+        body = CheckoutSessionBody(
+            plan_id="investor",
+            interval="monthly",
+            success_url="https://app.test/success",
+            cancel_url="https://app.test/cancel",
+        )
+        url = create_checkout_session(
+            MagicMock(),
+            _settings_with_prices(),
+            user_id=user_id,
+            body=body,
+        )
+
+        assert url == "https://checkout.stripe.test/fresh"
+        mock_session_create.assert_called_once()
+
+    @patch("app.services.billing_service.stripe.checkout.Session.create")
+    @patch("app.services.billing_service.stripe.checkout.Session.list")
+    @patch("app.services.billing_service.get_or_create_stripe_customer")
+    @patch("app.services.billing_service.get_entitlement")
+    def test_enables_automatic_tax_and_optional_tax_id(
+        self,
+        mock_get_entitlement,
+        mock_get_customer,
+        mock_session_list,
+        mock_session_create,
+    ):
+        from app.schemas.billing import CheckoutSessionBody
+
+        user_id = UUID("11111111-1111-1111-1111-111111111111")
+        mock_get_entitlement.return_value = None
+        mock_get_customer.return_value = "cus_123"
+        mock_session_list.return_value = MagicMock(data=[])
+        mock_session_create.return_value = {
+            "url": "https://checkout.stripe.test/tax",
+            "status": "open",
+        }
+
+        body = CheckoutSessionBody(
+            plan_id="analyst",
+            interval="monthly",
+            success_url="https://app.test/success",
+            cancel_url="https://app.test/cancel",
+        )
+        url = create_checkout_session(
+            MagicMock(),
+            _settings_with_prices(),
+            user_id=user_id,
+            body=body,
+        )
+
+        assert url == "https://checkout.stripe.test/tax"
+        kwargs = mock_session_create.call_args.kwargs
+        assert kwargs["billing_address_collection"] == "required"
+        assert kwargs["automatic_tax"] == {"enabled": True}
+        assert kwargs["tax_id_collection"] == {"enabled": True}
+        assert kwargs["customer_update"] == {"address": "auto", "name": "auto"}
 
     @patch("app.services.billing_service.get_or_create_stripe_customer")
     @patch("app.services.billing_service.get_entitlement")

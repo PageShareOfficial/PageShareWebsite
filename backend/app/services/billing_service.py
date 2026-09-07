@@ -117,13 +117,26 @@ def _mark_entitlement_canceled_locally(db: Session, user_id: UUID) -> None:
     db.add(row)
     db.commit()
 
+def _checkout_session_has_tax_collection(session: Any) -> bool:
+    """True when the session was created with automatic tax + optional tax ID."""
+    automatic_tax = session.get("automatic_tax") or {}
+    tax_id_collection = session.get("tax_id_collection") or {}
+    return (
+        automatic_tax.get("enabled") is True
+        and tax_id_collection.get("enabled") is True
+    )
+
 def _find_open_checkout_session_url(
     settings: Settings,
     customer_id: str,
     plan_id: str,
     interval: str,
 ) -> Optional[str]:
-    """Reuse an in-flight Checkout session so double-clicks are idempotent."""
+    """Reuse an in-flight Checkout session so double-clicks are idempotent.
+
+    Skips older open sessions that lack tax / tax-ID collection so buyers get a
+    fresh Checkout after those settings are enabled in code.
+    """
     _configure_stripe(settings)
     sessions = stripe.checkout.Session.list(
         customer=customer_id,
@@ -133,6 +146,8 @@ def _find_open_checkout_session_url(
     for session in sessions.data:
         metadata = session.get("metadata") or {}
         if metadata.get("plan_id") != plan_id or metadata.get("interval") != interval:
+            continue
+        if not _checkout_session_has_tax_collection(session):
             continue
         url = session.get("url")
         if url:
@@ -327,6 +342,8 @@ def create_checkout_session(
     # No Stripe idempotency key: double-click protection is handled by reusing
     # the open Checkout session above, and a static key collides whenever the
     # customer or URLs change (e.g. re-subscribe after cancel within 24h).
+    # Tax + optional B2B tax ID: Dashboard registrations/tax codes must be set;
+    # tax_id_collection stays optional so B2C buyers can skip it.
     session = stripe.checkout.Session.create(
         mode="subscription",
         customer=customer_id,
@@ -334,6 +351,13 @@ def create_checkout_session(
         success_url=body.success_url,
         cancel_url=body.cancel_url,
         client_reference_id=str(user_id),
+        billing_address_collection="required",
+        automatic_tax={"enabled": True},
+        tax_id_collection={"enabled": True},
+        customer_update={
+            "address": "auto",
+            "name": "auto",
+        },
         metadata={
             "supabase_user_id": str(user_id),
             "plan_id": body.plan_id,
