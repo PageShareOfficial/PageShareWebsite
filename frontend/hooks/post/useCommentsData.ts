@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Comment, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatRelativeTime } from '@/utils/core/dateUtils';
+import { mapApiAuthorToUser } from '@/utils/user/mapApiAuthor';
 import {
   CommentResponse,
   CreateCommentPayload,
@@ -44,12 +45,7 @@ function mapCommentResponseToComment(res: CommentResponse): Comment {
   const mapped: Comment = {
     id: res.id,
     postId: res.post_id,
-    author: {
-      id: res.author.id,
-      displayName: res.author.display_name,
-      handle: res.author.username,
-      avatar: res.author.profile_picture_url ?? '',
-    },
+    author: mapApiAuthorToUser(res.author),
     content: res.content,
     createdAt: formatRelativeTime(new Date(res.created_at)),
     likes: res.likes,

@@ -14,10 +14,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import { apiDelete } from '@/lib/api/client';
+import Link from 'next/link';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { getBillingRowSubtitle } from '@/utils/billing/billingRowSubtitle';
+import { ChevronRight, CreditCard } from 'lucide-react';
 
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { billingStatus } = useSubscription();
   const { currentUser: authCurrentUser } = useCurrentUser();
   const { session, signOut } = useAuth();
   const {
@@ -161,7 +166,7 @@ function SettingsContent() {
   if (!isClient) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="flex flex-1 items-center justify-center min-h-[50vh]">
           <Loading />
         </div>
@@ -171,7 +176,7 @@ function SettingsContent() {
 
   return (
     <>
-      <Topbar onUpgradeLabs={() => router.push('/plans')} />
+      <Topbar />
 
       {/* Desktop Header - Desktop Only */}
       <div className="hidden md:flex items-center px-4 py-4 border-b border-white/10">
@@ -180,6 +185,26 @@ function SettingsContent() {
 
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10">
+              <div className="px-2 pt-4 lg:px-4">
+                <Link
+                  href="/settings/billing"
+                  className="flex items-center justify-between gap-3 px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/[0.07] transition-colors"
+                >
+                  <span className="flex items-center gap-3 min-w-0">
+                    <CreditCard className="w-5 h-5 text-cyan-400 shrink-0" aria-hidden />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-white">
+                        Billing &amp; subscription
+                      </span>
+                      <span className="block text-xs text-gray-400 truncate">
+                        {getBillingRowSubtitle(billingStatus)}
+                      </span>
+                    </span>
+                  </span>
+                  <ChevronRight className="w-5 h-5 text-gray-500 shrink-0" aria-hidden />
+                </Link>
+              </div>
+
               {/* Privacy and Security Section */}
               <div className="px-2 py-6 lg:px-4">
                 <div className="mb-6">

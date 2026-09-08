@@ -1,9 +1,11 @@
+import type { PlanId } from '@/types/billing';
+
 export interface User {
   id: string;
   displayName: string;
   handle: string;
   avatar: string;
-  badge?: 'Verified' | 'Public';
+  subscriptionPlanId?: PlanId;
 }
 
 // Normal tweet/post (from TweetComposer)

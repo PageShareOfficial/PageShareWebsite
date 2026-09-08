@@ -21,14 +21,3 @@ export function getCategoryBadgeColor(category: NewsCategory): string {
       return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
   }
 }
-
-/**
- * Get badge color classes for ticker types
- * @param type - The ticker type ('stock' or 'crypto')
- * @returns Tailwind CSS classes for the badge
- */
-export function getTickerTypeBadgeColor(type: 'stock' | 'crypto'): string {
-  return type === 'crypto'
-    ? 'bg-purple-500/20 text-purple-400 borderborder-purple-500/30'
-    : 'bg-blue-500/20 text-blue-400 borderborder-blue-500/30';
-}

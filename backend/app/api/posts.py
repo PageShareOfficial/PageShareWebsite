@@ -33,7 +33,10 @@ from app.services.post_service import (
 )
 from app.services.poll_service import get_poll_info_for_post, get_polls_for_posts
 from app.models.user import User
+from app.api.content_limit_http import enforce_content_length_for_user
+from app.services.subscription_service import get_user_plan_id
 from app.utils.http import parse_uuid_or_404
+from app.utils.post_author import build_post_author, load_subscription_plan_map
 from app.utils.responses import paginated_response
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -50,12 +53,9 @@ def _build_original_post_response(db: Session, original_post_id) -> Optional[Ori
         return None
     return OriginalPostInResponse(
         id=str(orig.id),
-        author=PostAuthor(
-            id=str(orig_author.id),
-            username=orig_author.username,
-            display_name=orig_author.display_name,
-            profile_picture_url=orig_author.profile_picture_url,
-            badge=orig_author.badge,
+        author=build_post_author(
+            orig_author,
+            get_user_plan_id(db, orig_author.id),
         ),
         content=orig.content or "",
         media_urls=orig.media_urls,
@@ -90,6 +90,7 @@ def _post_response(
     reposted_by_profile_user: Optional[bool] = None,
     content_override: Optional[str] = None,
     original_post: Optional[OriginalPostInResponse] = None,
+    subscription_plan_id: Optional[str] = None,
 ):
     """Build PostResponse or PostInFeedResponse from post + stats + interactions + tickers + optional poll + optional original_post for quote reposts."""
     likes, comments, reposts = stats
@@ -103,13 +104,7 @@ def _post_response(
     if include_author and author:
         return PostInFeedResponse(
             id=str(post.id),
-            author=PostAuthor(
-                id=str(author.id),
-                username=author.username,
-                display_name=author.display_name,
-                profile_picture_url=author.profile_picture_url,
-                badge=author.badge,
-            ),
+            author=build_post_author(author, subscription_plan_id),
             content=content,
             media_urls=post.media_urls,
             gif_url=post.gif_url,
@@ -150,9 +145,11 @@ def create_post_endpoint(
         )
     poll_options = body.poll.options if body.poll else None
     poll_duration = body.poll.duration_days if body.poll else None
+    user_id = UUID(current_user.auth_user_id)
+    enforce_content_length_for_user(db, user_id, body.content)
     post = create_post(
         db,
-        user_id=UUID(current_user.auth_user_id),
+        user_id=user_id,
         content=body.content,
         media_urls=body.media_urls,
         gif_url=body.gif_url,
@@ -212,6 +209,8 @@ def list_posts_endpoint(
     interactions_map = _get_user_interactions(db, current_id, post_ids)
     tickers_map = {p.id: get_post_tickers(db, p.id) for p, *_ in rows}
     poll_map = get_polls_for_posts(db, post_ids, current_id)
+    author_ids = list({row[1].id for row in rows})
+    plan_map = load_subscription_plan_map(db, author_ids)
 
     if triple:
         # Same as feed: use post.content (no content_override). Quote posts have content on the Post row. Include original_post for quote reposts.
@@ -227,6 +226,7 @@ def list_posts_endpoint(
                 reposted_by_profile_user=is_repost,
                 content_override=None,
                 original_post=_build_original_post_response(db, getattr(p, "original_post_id", None)),
+                subscription_plan_id=plan_map.get(u.id),
             )
             for p, u, is_repost in rows
         ]
@@ -241,6 +241,7 @@ def list_posts_endpoint(
                 author=u,
                 poll_info=poll_map.get(p.id),
                 original_post=_build_original_post_response(db, getattr(p, "original_post_id", None)),
+                subscription_plan_id=plan_map.get(u.id),
             )
             for p, u in rows
         ]
@@ -274,6 +275,7 @@ def get_post_endpoint(
         author=author,
         poll_info=poll_info,
         original_post=_build_original_post_response(db, getattr(post, "original_post_id", None)),
+        subscription_plan_id=get_user_plan_id(db, author.id),
     )
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)

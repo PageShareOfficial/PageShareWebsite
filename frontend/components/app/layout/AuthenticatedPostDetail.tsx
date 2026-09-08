@@ -15,7 +15,7 @@ import CommentComposer from '@/components/app/composer/CommentComposer';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import LoadingState from '@/components/app/common/LoadingState';
 import ErrorState from '@/components/app/common/ErrorState';
 import { formatDateTime } from '@/utils/core/dateUtils';
@@ -231,12 +231,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                               <span className="text-xs text-gray-400">
                                 @{comment.author.handle}
                               </span>
-                              {comment.author.badge && (
-                                <UserBadge
-                                  badge={comment.author.badge}
-                                  size="sm"
-                                />
-                              )}
+                              <AuthorBadges subscriptionPlanId={comment.author.subscriptionPlanId} size="sm" />
                               <span className="text-xs text-gray-500">
                                 · {comment.createdAt}
                               </span>

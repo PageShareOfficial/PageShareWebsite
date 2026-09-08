@@ -9,10 +9,6 @@ class UserBase(BaseModel):
     display_name: constr(min_length=1, max_length=100)  # type: ignore[call-arg]
     bio: Optional[str] = None
     profile_picture_url: Optional[str] = None
-    badge: Optional[str] = Field(
-        default=None,
-        description="User badge; DB enforces 'Verified' or 'Public' if set.",
-    )
     timezone: Optional[str] = None
     country: Optional[str] = None
     country_code: Optional[str] = None
@@ -28,6 +24,10 @@ class UserResponse(UserBase):
     updated_at: datetime
     stats: UserStats = UserStats()
     interests: List[str] = []
+    subscription_plan_id: Optional[str] = Field(
+        default=None,
+        description="Paid tier: analyst or investor when subscription is active.",
+    )
 
     class Config:
         from_attributes = True
@@ -38,7 +38,10 @@ class PublicUserResponse(BaseModel):
     display_name: str
     bio: Optional[str] = None
     profile_picture_url: Optional[str] = None
-    badge: Optional[str] = None
+    subscription_plan_id: Optional[str] = Field(
+        default=None,
+        description="Paid tier: analyst or investor when subscription is active.",
+    )
     follower_count: int = 0
     following_count: int = 0
     post_count: int = 0

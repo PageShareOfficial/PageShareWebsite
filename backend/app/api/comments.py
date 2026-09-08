@@ -7,7 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.middleware.auth import get_current_user, get_optional_user
-from app.schemas.comment import CommentAuthor, CommentResponse, CreateCommentRequest
+from app.api.content_limit_http import enforce_content_length_for_user
+from app.schemas.comment import CommentResponse, CreateCommentRequest
+from app.utils.post_author import build_comment_author, load_subscription_plan_map
 from app.schemas.poll import PollInfo
 from app.services.auth_service import CurrentUser
 from app.services.comment_service import (
@@ -59,10 +61,12 @@ def create_comment_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     poll_options = body.poll.options if body.poll else None
     poll_duration = body.poll.duration_days if body.poll else None
+    user_id = UUID(current_user.auth_user_id)
+    enforce_content_length_for_user(db, user_id, body.content)
     comment = create_comment(
         db,
         post_id=pid,
-        user_id=UUID(current_user.auth_user_id),
+        user_id=user_id,
         content=body.content,
         media_urls=body.media_urls,
         gif_url=body.gif_url,
@@ -75,11 +79,9 @@ def create_comment_endpoint(
     return CommentResponse(
         id=str(comment.id),
         post_id=str(comment.post_id),
-        author=CommentAuthor(
-            id=str(author.id),
-            username=author.username,
-            display_name=author.display_name,
-            profile_picture_url=author.profile_picture_url,
+        author=build_comment_author(
+            author,
+            load_subscription_plan_map(db, [author.id]).get(author.id),
         ),
         content=comment.content,
         media_urls=comment.media_urls,
@@ -111,16 +113,13 @@ def list_comments_endpoint(
     like_counts = get_reaction_counts_for_comments(db, comment_ids)
     user_liked = get_user_liked_comments(db, current_id, comment_ids) if current_id else set()
     poll_map = get_polls_for_comments(db, comment_ids, current_id)
+    author_ids = [u.id for _, u in rows]
+    plan_map = load_subscription_plan_map(db, author_ids)
     data = [
         CommentResponse(
             id=str(c.id),
             post_id=str(c.post_id),
-            author=CommentAuthor(
-                id=str(u.id),
-                username=u.username,
-                display_name=u.display_name,
-                profile_picture_url=u.profile_picture_url,
-            ),
+            author=build_comment_author(u, plan_map.get(u.id)),
             content=c.content,
             media_urls=c.media_urls,
             gif_url=c.gif_url,

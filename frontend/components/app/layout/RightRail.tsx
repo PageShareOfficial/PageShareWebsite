@@ -8,13 +8,15 @@ import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import Skeleton from '@/components/app/common/Skeleton';
+import LoadingState from '@/components/app/common/LoadingState';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
+import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
+import { useSubscription } from '@/hooks/billing/useSubscription';
 
 interface RightRailProps {
   watchlist: WatchlistItem[];
   onManageWatchlist: () => void;
-  onUpgradeLabs: () => void;
   onUpdateWatchlist: (watchlist: WatchlistItem[]) => void;
   isLoading?: boolean;
 }
@@ -22,16 +24,18 @@ interface RightRailProps {
 export default function RightRail({
   watchlist,
   onManageWatchlist,
-  onUpgradeLabs,
   onUpdateWatchlist,
   isLoading = false,
 }: RightRailProps) {
   const router = useRouter();
   const isOnline = useOnlineStatus();
   const { setShowOfflineOverlay } = useOfflineOverlay();
+  const { openPremium } = usePremiumOverlay();
+  const { isPremium, isLoading: isSubscriptionLoading } = useSubscription();
+  const showPremiumUpgradeCard = !isSubscriptionLoading && !isPremium;
 
   const handleUpgradeClick = () => {
-    if (isOnline) onUpgradeLabs();
+    if (isOnline) openPremium();
     else setShowOfflineOverlay(true);
   };
 
@@ -136,22 +140,29 @@ export default function RightRail({
           )}
         </div>
 
-        {/* Labs Pro Card */}
-        <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-white mb-2">Premium</h2>
-          <p className="text-sm text-gray-300 mb-4">
-            Premium AI tools, deeper filters, and credibility analytics.
-          </p>
-          <button
-            type="button"
-            onClick={handleUpgradeClick}
-            disabled={!isOnline}
-            title={!isOnline ? 'Connect to the internet to continue' : undefined}
-            className="w-full px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
-          >
-            Upgrade
-          </button>
-        </div>
+        {isSubscriptionLoading ? (
+          <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
+            <LoadingState size="sm" className="py-6" />
+          </div>
+        ) : (
+          showPremiumUpgradeCard && (
+          <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
+            <h2 className="text-lg font-semibold text-white mb-2">Premium</h2>
+            <p className="text-sm text-gray-300 mb-4">
+              Premium AI tools, deeper filters, and credibility analytics.
+            </p>
+            <button
+              type="button"
+              onClick={handleUpgradeClick}
+              disabled={!isOnline}
+              title={!isOnline ? 'Connect to the internet to continue' : undefined}
+              className="w-full px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
+            >
+              Upgrade
+            </button>
+          </div>
+          )
+        )}
       </div>
     </aside>
   );

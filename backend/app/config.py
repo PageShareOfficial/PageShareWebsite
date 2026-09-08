@@ -43,6 +43,36 @@ class Settings:
         self.cron_secret: str = os.getenv("CRON_SECRET", "")
         # News (GNews API – optional, 100 req/day free tier)
         self.gnews_api_key: str = os.getenv("GNEWS_API_KEY", "")
+        # Stripe billing (optional until checkout is enabled)
+        self.stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+        self.stripe_webhook_secret: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+        self.stripe_price_id_analyst_monthly: str = os.getenv(
+            "STRIPE_PRICE_ID_ANALYST_MONTHLY", ""
+        )
+        self.stripe_price_id_analyst_yearly: str = os.getenv(
+            "STRIPE_PRICE_ID_ANALYST_YEARLY", ""
+        )
+        self.stripe_price_id_investor_monthly: str = os.getenv(
+            "STRIPE_PRICE_ID_INVESTOR_MONTHLY", ""
+        )
+        self.stripe_price_id_investor_yearly: str = os.getenv(
+            "STRIPE_PRICE_ID_INVESTOR_YEARLY", ""
+        )
+        self.stripe_customer_portal_return_url: str = os.getenv(
+            "STRIPE_CUSTOMER_PORTAL_RETURN_URL", ""
+        )
+        # Polygon prediction hash anchoring (optional; submits still work if unset)
+        self.polygon_rpc_url: str = os.getenv("POLYGON_RPC_URL", "").strip()
+        self.polygon_relayer_private_key: str = os.getenv(
+            "POLYGON_RELAYER_PRIVATE_KEY", ""
+        ).strip()
+        self.polygon_anchor_contract_address: str = os.getenv(
+            "POLYGON_ANCHOR_CONTRACT_ADDRESS", ""
+        ).strip()
+        try:
+            self.polygon_chain_id: int = int(os.getenv("POLYGON_CHAIN_ID", "137"))
+        except ValueError:
+            self.polygon_chain_id = 137
         # Basic safety check for critical vars in non-dev environments
         if self.app_env != "dev":
             missing = []

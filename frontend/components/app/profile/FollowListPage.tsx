@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, notFound } from 'next/navigation';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
@@ -20,7 +20,7 @@ import {
   type ProfileByUsernameResponse,
   type FollowerFollowingItem,
 } from '@/lib/api/userApi';
-import { notFound } from 'next/navigation';
+import { parseSubscriptionPlanId } from '@/utils/user/mapApiAuthor';
 import { getBaseUrl } from '@/lib/api/client';
 
 function mapItemToUser(item: FollowerFollowingItem): User {
@@ -29,7 +29,7 @@ function mapItemToUser(item: FollowerFollowingItem): User {
     displayName: item.display_name,
     handle: item.username,
     avatar: item.profile_picture_url ?? '',
-    badge: undefined,
+    subscriptionPlanId: parseSubscriptionPlanId(item.subscription_plan_id),
   };
 }
 
@@ -176,7 +176,7 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
   if (!pageReady) {
     return (
       <>
-        <Topbar onUpgradeLabs={() => router.push('/plans')} />
+        <Topbar />
         <div className="w-full border-l border-r border-white/10 flex-1 flex pb-16 md:pb-0 items-center justify-center min-h-[400px]">
           <Loading />
         </div>
@@ -191,7 +191,7 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
             onBack={() => navigateToProfile(username, router)}
           />
           <div className="hidden md:block">
-            <Topbar onUpgradeLabs={() => router.push('/plans')} />
+            <Topbar />
           </div>
 
           <div className="flex-1 flex pb-16 md:pb-0">

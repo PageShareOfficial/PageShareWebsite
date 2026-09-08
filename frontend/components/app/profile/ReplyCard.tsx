@@ -12,7 +12,7 @@ import PostActions from '@/components/app/post/PostActions';
 import PollComponent from '@/components/app/post/PollComponent';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import { isTweet } from '@/utils/content/postUtils';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
@@ -136,9 +136,7 @@ export default function ReplyCard({
                         />
                         <span className="font-semibold text-white text-sm">{quotedPost.author.displayName}</span>
                         <span className="text-xs text-gray-400">@{quotedPost.author.handle}</span>
-                        {quotedPost.author.badge && (
-                          <UserBadge badge={quotedPost.author.badge} size="sm" />
-                        )}
+                        <AuthorBadges subscriptionPlanId={quotedPost.author.subscriptionPlanId} size="sm" />
                         <span className="text-xs text-gray-500">· {quotedPost.createdAt}</span>
                       </div>
                       {isTweet(quotedPost) && (
@@ -321,9 +319,7 @@ export default function ReplyCard({
                   {reply.author.displayName}
                 </span>
                 <span className="text-gray-400 text-sm">@{reply.author.handle}</span>
-                {reply.author.badge && (
-                  <UserBadge badge={reply.author.badge} size="md" />
-                )}
+                <AuthorBadges subscriptionPlanId={reply.author.subscriptionPlanId} size="md" />
                 <span className="text-gray-500 text-sm">·</span>
                 <span className="text-gray-400 text-sm">{reply.createdAt}</span>
               </div>

@@ -11,10 +11,6 @@ interface ListWatchlistResponse {
   data: BackendWatchlistItem[];
 }
 
-interface AddWatchlistRequestBody {
-  symbol: string;
-}
-
 interface AddWatchlistResponseBody {
   data: {
     ticker: string;

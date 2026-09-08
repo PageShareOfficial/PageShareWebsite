@@ -3,6 +3,7 @@
  */
 import { Post, User } from '@/types';
 import { formatRelativeTime } from '@/utils/core/dateUtils';
+import { mapApiAuthorToUser } from '@/utils/user/mapApiAuthor';
 import { apiDelete, apiGet, apiPost, apiUploadMedia } from './client';
 
 export interface PollInResponse {
@@ -21,9 +22,9 @@ export interface OriginalPostInResponse {
     id: string;
     username: string;
     display_name: string;
-    profile_picture_url?: string | null;
-    badge?: string | null;
-  };
+  profile_picture_url?: string | null;
+  subscription_plan_id?: string | null;
+};
   content: string;
   media_urls?: string[] | null;
   gif_url?: string | null;
@@ -36,9 +37,9 @@ export interface PostInFeedResponse {
     id: string;
     username: string;
     display_name: string;
-    profile_picture_url?: string | null;
-    badge?: string | null;
-  };
+  profile_picture_url?: string | null;
+  subscription_plan_id?: string | null;
+};
   content: string;
   media_urls?: string[] | null;
   gif_url?: string | null;
@@ -99,13 +100,7 @@ export function mapPostResponseToPost(
   pollOverride?: { options: string[]; duration: number }
 ): Post {
   const author: User = 'author' in res
-    ? {
-        id: res.author.id,
-        displayName: res.author.display_name,
-        handle: res.author.username,
-        avatar: res.author.profile_picture_url ?? '',
-        badge: res.author.badge === 'Verified' ? 'Verified' : res.author.badge === 'Public' ? 'Public' : undefined,
-      } as User
+    ? mapApiAuthorToUser(res.author)
     : authorOverride!;
 
   const raw = res as unknown as Record<string, unknown>;
@@ -145,13 +140,7 @@ export function mapPostResponseToPost(
     const op = originalPostRaw as OriginalPostInResponse;
     post.quotedPost = {
       id: op.id,
-      author: {
-        id: op.author.id,
-        displayName: op.author.display_name,
-        handle: op.author.username,
-        avatar: op.author.profile_picture_url ?? '',
-        badge: op.author.badge === 'Verified' ? 'Verified' : op.author.badge === 'Public' ? 'Public' : undefined,
-      },
+      author: mapApiAuthorToUser(op.author),
       content: op.content,
       createdAt: formatRelativeTime(new Date(op.created_at)),
       createdAtRaw: op.created_at,

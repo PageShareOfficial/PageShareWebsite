@@ -12,6 +12,7 @@ interface UseMediaUploadResult {
   selectedGif: string | null;
   mediaError: string | null;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  addImageFiles: (files: File[]) => void;
   handleRemoveMedia: (index: number) => void;
   handleGifSelect: (gifUrl: string) => void;
   clearMedia: () => void;
@@ -21,48 +22,70 @@ interface UseMediaUploadResult {
   setSelectedGif: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
+interface UseMediaUploadOptions {
+  maxFiles?: number;
+  maxFileSizeBytes?: number;
+  allowedTypes?: string[];
+}
+
 /**
  * Hook to manage media uploads (images and GIFs)
  * Handles file selection, preview generation, and media removal.
  * Validates: max 4 files, 5MB each, JPEG/PNG/WebP only.
  */
-export function useMediaUpload(initialGif: string | null = null): UseMediaUploadResult {
+export function useMediaUpload(
+  initialGif: string | null = null,
+  options: UseMediaUploadOptions = {}
+): UseMediaUploadResult {
+  const maxFiles = options.maxFiles ?? MAX_MEDIA_FILES;
+  const maxFileSizeBytes = options.maxFileSizeBytes ?? MAX_FILE_SIZE_BYTES;
+  const allowedTypes = options.allowedTypes ?? ALLOWED_MEDIA_TYPES;
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [selectedGif, setSelectedGif] = useState<string | null>(initialGif);
   const [mediaError, setMediaError] = useState<string | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = '';
+  const addImageFiles = (files: File[]) => {
     if (files.length === 0) return;
 
     setMediaError(null);
     const valid: File[] = [];
     const errors: string[] = [];
     for (const file of files) {
-      if (!ALLOWED_MEDIA_TYPES.includes(file.type)) {
+      if (!allowedTypes.includes(file.type)) {
         errors.push(`${file.name}: use JPEG, PNG or WebP`);
         continue;
       }
-      if (file.size > MAX_FILE_SIZE_BYTES) {
+      if (file.size > maxFileSizeBytes) {
         errors.push(`${file.name}: max 5MB`);
         continue;
       }
       valid.push(file);
     }
 
-    const combined = [...mediaFiles, ...valid];
-    const imageFiles = combined.slice(0, MAX_MEDIA_FILES);
-    const limitExceeded = combined.length > imageFiles.length;
+    let imageFiles: File[];
+    if (maxFiles === 1 && valid.length > 0) {
+      imageFiles = valid.slice(0, 1);
+    } else {
+      const combined = [...mediaFiles, ...valid];
+      imageFiles = combined.slice(0, maxFiles);
+    }
+    const limitExceeded =
+      maxFiles > 1 && [...mediaFiles, ...valid].length > imageFiles.length;
 
     if (errors.length > 0 || limitExceeded) {
       if (limitExceeded && errors.length === 0) {
-        setMediaError('You can upload up to 4 images per post.');
+        setMediaError(`You can upload up to ${maxFiles} image${maxFiles > 1 ? 's' : ''}.`);
       } else if (limitExceeded && errors.length > 0) {
-        setMediaError('Some files skipped. Max 4 images per post, 5MB each, JPEG/PNG/WebP only.');
+        setMediaError(
+          `Some files skipped. Max ${maxFiles} image${maxFiles > 1 ? 's' : ''}, 5MB each, JPEG/PNG/WebP only.`
+        );
       } else {
-        setMediaError(errors.length === 1 ? errors[0] : 'Some files skipped. Max 5MB each, JPEG/PNG/WebP only.');
+        setMediaError(
+          errors.length === 1
+            ? errors[0]
+            : 'Some files skipped. Max 5MB each, JPEG/PNG/WebP only.'
+        );
       }
     }
 
@@ -70,6 +93,11 @@ export function useMediaUpload(initialGif: string | null = null): UseMediaUpload
 
     if (imageFiles.length > 0) {
       setSelectedGif(null);
+    }
+
+    if (imageFiles.length === 0) {
+      setMediaPreviews([]);
+      return;
     }
 
     const newPreviews: string[] = [];
@@ -83,6 +111,12 @@ export function useMediaUpload(initialGif: string | null = null): UseMediaUpload
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    addImageFiles(files);
   };
 
   const handleRemoveMedia = (index: number) => {
@@ -112,6 +146,7 @@ export function useMediaUpload(initialGif: string | null = null): UseMediaUpload
     selectedGif,
     mediaError,
     handleImageUpload,
+    addImageFiles,
     handleRemoveMedia,
     handleGifSelect,
     clearMedia,

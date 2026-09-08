@@ -1,5 +1,24 @@
 import React from 'react';
 
+/** Cashtags end at space, newline, or end of string. */
+export const CASHTAG_REGEX = /\$[A-Za-z0-9_]+(?=\s|$|\n)/g;
+
+/**
+ * Extract unique cashtags from plain text (order preserved, case-insensitive dedupe).
+ */
+export function extractCashtags(text: string): string[] {
+  if (!text) return [];
+
+  const matches = text.match(CASHTAG_REGEX) ?? [];
+  const seen = new Set<string>();
+  return matches.filter((tag) => {
+    const key = tag.toUpperCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /**
  * Parses text and highlights cashtags (words starting with $)
  * Cashtags end at: space, newline, or end of string
@@ -10,9 +29,7 @@ import React from 'react';
 export function parseCashtags(text: string, interactive: boolean = true): (string | React.ReactElement)[] {
   if (!text) return [];
 
-  // Regex to match cashtags: $ followed by alphanumeric characters (and underscores)
-  // Cashtags end at: space, newline, or end of string (using positive lookahead)
-  const cashtagRegex = /\$[A-Za-z0-9_]+(?=\s|$|\n)/g;
+  const cashtagRegex = new RegExp(CASHTAG_REGEX.source, CASHTAG_REGEX.flags);
   const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
   let match;

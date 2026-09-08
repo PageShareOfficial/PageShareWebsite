@@ -1,14 +1,50 @@
 'use client';
 
-import { Suspense,useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
 import Loading from '@/components/app/common/Loading';
+import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
 
-/** User needs onboarding if username is a placeholder (starts with user_) */
-function needsOnboarding(username: string): boolean {
-  return username.startsWith('user_');
+const SESSION_WAIT_MS = 8000;
+
+async function waitForAuthSession(
+  supabase: SupabaseClient,
+  timeoutMs: number
+): Promise<Session | null> {
+  const {
+    data: { session: initialSession },
+  } = await supabase.auth.getSession();
+  if (initialSession?.access_token) {
+    return initialSession;
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (session: Session | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+      resolve(session);
+    };
+
+    const timeoutId = window.setTimeout(() => finish(null), timeoutMs);
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        session?.access_token &&
+        (event === 'SIGNED_IN' ||
+          event === 'INITIAL_SESSION' ||
+          event === 'TOKEN_REFRESHED')
+      ) {
+        finish(session);
+      }
+    });
+  });
 }
 
 function AuthCallbackContent() {
@@ -23,85 +59,55 @@ function AuthCallbackContent() {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const hasHash = hash.length > 0;
 
-    async function redirectWithSession(session: { access_token: string }, isNewLogin: boolean) {
+    async function completeSignIn(session: Session, recordSessionStart: boolean) {
       if (handled.current) return;
       handled.current = true;
 
-      const apiUrl = getBaseUrl();
-      if (apiUrl) {
-        if (isNewLogin) {
-          try {
-            await apiPost('/session/start', {}, session.access_token);
-          } catch {
-            // Non-blocking: session tracking best-effort
-          }
-        }
-        try {
-          const user = await apiGet<{ username: string }>('/users/me', session.access_token);
-          if (needsOnboarding(user.username)) {
-            router.replace('/onboarding');
-            return;
-          }
-          router.replace('/home');
-          return;
-        } catch {
-          // Backend unreachable: user likely just confirmed email → send to onboarding
-          router.replace('/onboarding');
-          return;
-        }
-      }
-      // No API URL: assume new user from email confirmation → onboarding
-      router.replace('/onboarding');
+      const destination = await resolvePostAuthPath(session.access_token, {
+        recordSessionStart,
+      });
+      router.replace(destination);
     }
 
-    let subscription: { unsubscribe: () => void } | null = null;
+    async function failAuth() {
+      if (handled.current) return;
+      handled.current = true;
+      setStatus('error');
+      router.replace('/?error=auth');
+    }
 
     async function run() {
-      // PKCE flow: exchange code for session
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
-          setStatus('error');
-          router.replace('/?error=auth');
+          await failAuth();
           return;
         }
-        const { data: { session } } = await supabase.auth.getSession();
+
+        const session =
+          data.session ?? (await waitForAuthSession(supabase, SESSION_WAIT_MS));
         if (session?.access_token) {
-          await redirectWithSession(session, true);
-        } else {
-          setStatus('error');
-          router.replace('/?error=auth');
+          await completeSignIn(session, true);
+          return;
         }
+
+        await failAuth();
         return;
       }
 
-      // Hash flow (email confirmation, magic link): Supabase auto-parses hash on init.
-      // Listen for auth state change since hash parsing can be async.
-      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (
-            session?.access_token &&
-            (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')
-          ) {
-            await redirectWithSession(session, hasHash);
-          }
-        }
+      const session = await waitForAuthSession(
+        supabase,
+        hasHash ? SESSION_WAIT_MS : 2000
       );
-      subscription = sub;
-
-      // Also check immediately in case session is already set
-      const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
-        await redirectWithSession(session, hasHash);
-      } else if (!hasHash) {
-        // No code, no hash - invalid callback
-        setStatus('error');
-        router.replace('/?error=auth');
+        await completeSignIn(session, hasHash);
+        return;
       }
+
+      await failAuth();
     }
 
-    run();
-    return () => subscription?.unsubscribe();
+    void run();
   }, [router, searchParams]);
 
   if (status === 'error') {

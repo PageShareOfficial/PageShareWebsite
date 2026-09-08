@@ -1,21 +1,19 @@
 'use client';
 
-import { TickerDetailData, TickerType } from '@/types/ticker';
+import { TickerDetailData } from '@/types/ticker';
 import { formatCurrency, formatPercentage, getChangeColorClass, isPositive } from '@/utils/ticker/tickerUtils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import TickerTypeBadge from '@/components/app/common/TickerTypeBadge';
 import TickerImage from '@/components/app/ticker/TickerImage';
 
 interface TickerHeaderProps {
   data: TickerDetailData;
-  type: TickerType;
 }
 
 /**
  * Ticker header component
  * Displays ticker name, symbol, price, and change prominently
  */
-export default function TickerHeader({ data, type }: TickerHeaderProps) {
+export default function TickerHeader({ data }: TickerHeaderProps) {
   const d = data as { currentPrice: number; priceChangePercent24h: number; priceChange24h: number; name: string; symbol: string; marketCapRank: number; image?: string };
   const price = d.currentPrice;
   const change = d.priceChangePercent24h;
@@ -28,7 +26,6 @@ export default function TickerHeader({ data, type }: TickerHeaderProps) {
   const changeColor = getChangeColorClass(change);
   const ChangeIcon = isPos ? TrendingUp : TrendingDown;
   const image = d.image ?? '';
-  void type;
 
   return (
     <div className="p-6 bg-white/5 border border-white/10 rounded-xl mb-6">
@@ -46,7 +43,6 @@ export default function TickerHeader({ data, type }: TickerHeaderProps) {
             <h1 className="text-2xl md:text-3xl font-bold text-white truncate">
               {name}
             </h1>
-            <TickerTypeBadge type={type} size="md" className="flex-shrink-0" />
           </div>
           
           <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm">

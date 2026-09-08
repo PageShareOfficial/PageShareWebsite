@@ -1,15 +1,16 @@
-# Call backend GET /api/v1/cron/sessions every 30 min for stale session cleanup.
+# One scheduled job every 30 min: stale sessions, then Polygon prediction-hash retries.
+# Keep both in this workflow so they never compete for GitHub Actions concurrency.
 # Scheduled runs use the "production" environment (prod backend only).
 # Manual runs can target production, dev, or preview by choosing the environment.
 #
 # Setup (GitHub repo → Settings → Environments):
 #   - Create environment "production" → add secrets: CRON_SECRET, CRON_BACKEND_URL (prod backend URL).
 #   - Optionally create "dev" and "preview" → add same secret names with dev/preview backend URLs.
-# Scheduled runs always use "production". Manual run: Actions → "Cron – sessions cleanup" → Run workflow → pick environment.
+# Scheduled runs always use "production". Manual run: Actions → "Cron – backend jobs" → Run workflow → pick environment.
 #
 # GitHub limits: Free tier 2,000 min/month (private) or unlimited (public). ~360 min/month for prod only.
 
-name: Cron – sessions cleanup
+name: Cron – backend jobs
 
 on:
   schedule:
@@ -27,11 +28,13 @@ on:
           - preview
 
 jobs:
-  sessions:
+  backend-jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}
     steps:
       - name: Call sessions cron
+        id: sessions
+        continue-on-error: true
         run: |
           code=$(curl -s -o /dev/null -w '%{http_code}' \
             -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
@@ -41,4 +44,21 @@ jobs:
             exit 1
           fi
           echo "Sessions cron OK (HTTP $code)"
+
+      - name: Call prediction-anchor cron
+        id: anchors
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.CRON_BACKEND_URL }}/api/v1/cron/anchor-predictions")
+          if [ "$code" != "200" ]; then
+            echo "Anchor cron returned HTTP $code"
+            exit 1
+          fi
+          echo "Anchor cron OK (HTTP $code)"
           echo "Environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}"
+
+      - name: Fail if any cron failed
+        if: steps.sessions.outcome == 'failure' || steps.anchors.outcome == 'failure'
+        run: exit 1

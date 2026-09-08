@@ -6,7 +6,13 @@ import { apiDelete, apiGet, apiPost } from './client';
 
 export interface BookmarkedPostItem {
   id: string;
-  author: { username: string; display_name: string; profile_picture_url?: string | null };
+  author: {
+    id: string;
+    username: string;
+    display_name: string;
+    profile_picture_url?: string | null;
+    subscription_plan_id?: string | null;
+  };
   content: string;
   created_at: string;
   bookmarked_at: string;

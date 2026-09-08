@@ -21,6 +21,10 @@ class CommentAuthor(BaseModel):
     username: str
     display_name: str
     profile_picture_url: Optional[str] = None
+    subscription_plan_id: Optional[str] = Field(
+        default=None,
+        description="Paid tier: analyst or investor when subscription is active.",
+    )
 
 class CommentResponse(BaseModel):
     """Comment in response (create or list)."""

@@ -26,5 +26,8 @@ from . import (  # noqa: E402,F401
     watchlist_item,
     error_log,
     user_session,
+    user_entitlement,
+    prediction,
+    saved_analyst,
 )
 

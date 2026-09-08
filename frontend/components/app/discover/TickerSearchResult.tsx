@@ -4,12 +4,10 @@ import { useState } from 'react';
 import { StockData } from '@/utils/api/stockApi';
 import { WatchlistItem } from '@/types';
 import { Plus } from 'lucide-react';
-import TickerTypeBadge from '@/components/app/common/TickerTypeBadge';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 
 interface TickerSearchResultProps {
   tickerData: StockData;
-  type: 'stock' | 'crypto';
   watchlist?: WatchlistItem[];
   onAddToWatchlist?: (item: WatchlistItem) => void;
   onTickerClick?: (ticker: string) => void; // Optional: for showing detailed view
@@ -22,7 +20,6 @@ interface TickerSearchResultProps {
  */
 export default function TickerSearchResult({
   tickerData,
-  type,
   watchlist = [],
   onAddToWatchlist,
   onTickerClick,
@@ -66,7 +63,6 @@ export default function TickerSearchResult({
             <span className="font-semibold text-white text-lg">
               {tickerData.ticker}
             </span>
-            <TickerTypeBadge type={type} size="sm" />
           </div>
           
           <div className="text-sm text-gray-400 truncate mb-3">

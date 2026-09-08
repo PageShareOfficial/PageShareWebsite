@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.orm import Session
+from app.config import Settings, get_settings
 from app.database import get_db
 from app.middleware.auth import get_current_user, get_optional_user
 from app.schemas.user import (
@@ -41,9 +42,12 @@ from app.services.user_service import (
     get_user_stats,
 )
 from app.services.supabase_admin import delete_auth_user
+from app.services.billing_service import cancel_user_stripe_subscription
 from app.utils.media_validator import validate_image_file
 from app.api.deps import get_user_or_404
 from app.utils.http import parse_uuid_or_404
+from app.services.subscription_service import get_user_plan_id
+from app.utils.post_author import load_subscription_plan_map
 from app.utils.responses import paginated_response
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -84,10 +88,14 @@ def list_user_replies(
     user_liked = get_user_liked_comments(db, current_id, comment_ids) if current_id else set()
     poll_map = get_polls_for_comments(db, comment_ids, current_id)
     post_poll_map = get_polls_for_posts(db, post_ids, current_id)
+    author_ids = list(
+        {c_author.id for _, c_author, _, _ in rows}
+        | {p_author.id for _, _, _, p_author in rows}
+    )
+    plan_map = load_subscription_plan_map(db, author_ids)
     data = []
     for c, c_author, post, p_author in rows:
         post_poll = _poll_info_from_tuple(post_poll_map.get(post.id))
-        post_author_badge = getattr(p_author, "badge", None)
         data.append({
             "comment": {
                 "id": str(c.id),
@@ -97,7 +105,7 @@ def list_user_replies(
                     "username": c_author.username,
                     "display_name": c_author.display_name,
                     "profile_picture_url": c_author.profile_picture_url,
-                    "badge": getattr(c_author, "badge", None),
+                    "subscription_plan_id": plan_map.get(c_author.id),
                 },
                 "content": c.content,
                 "media_urls": c.media_urls,
@@ -117,7 +125,7 @@ def list_user_replies(
                     "username": p_author.username,
                     "display_name": p_author.display_name,
                     "profile_picture_url": getattr(p_author, "profile_picture_url", None),
-                    "badge": post_author_badge,
+                    "subscription_plan_id": plan_map.get(p_author.id),
                 },
                 "created_at": post.created_at.isoformat() if post.created_at else None,
                 "poll": post_poll,
@@ -149,6 +157,8 @@ def list_user_likes(
     interactions_map = _get_user_interactions(db, current_id, post_ids)
     tickers_map = {p.id: get_post_tickers(db, p.id) for p, _ in rows}
     poll_map = get_polls_for_posts(db, post_ids, current_id)
+    author_ids = [u.id for _, u in rows]
+    plan_map = load_subscription_plan_map(db, author_ids)
     data = [
         build_post_response(
             db,
@@ -158,6 +168,7 @@ def list_user_likes(
             interactions_map.get(p.id, (False, False)),
             tickers_map.get(p.id, []),
             poll_map.get(p.id),
+            plan_map.get(u.id),
         )
         for p, u in rows
     ]
@@ -178,7 +189,6 @@ async def get_me(
         display_name=user.display_name,
         bio=user.bio,
         profile_picture_url=user.profile_picture_url,
-        badge=user.badge,
         timezone=user.timezone,
         country=user.country,
         country_code=user.country_code,
@@ -190,6 +200,7 @@ async def get_me(
             post_count=post_count,
         ),
         interests=interests,
+        subscription_plan_id=get_user_plan_id(db, user.id),
     )
 
 @router.get("/by-username/{username}", response_model=PublicUserResponse)
@@ -216,13 +227,13 @@ async def get_user_by_username_endpoint(
         display_name=user.display_name,
         bio=user.bio,
         profile_picture_url=user.profile_picture_url,
-        badge=user.badge,
         follower_count=follower_count,
         following_count=following_count,
         post_count=post_count,
         is_following=is_fol,
         interests=interests,
         created_at=user.created_at,
+        subscription_plan_id=get_user_plan_id(db, user.id),
     )
 
 @router.get("/{user_id}", response_model=PublicUserResponse)
@@ -244,13 +255,13 @@ async def get_user_profile(
         display_name=user.display_name,
         bio=user.bio,
         profile_picture_url=user.profile_picture_url,
-        badge=user.badge,
         follower_count=follower_count,
         following_count=following_count,
         post_count=post_count,
         is_following=is_fol,
         interests=interests,
         created_at=user.created_at,
+        subscription_plan_id=get_user_plan_id(db, user.id),
     )
 
 @router.patch("/me", response_model=UserResponse)
@@ -271,7 +282,6 @@ async def update_me(
         display_name=user.display_name,
         bio=user.bio,
         profile_picture_url=user.profile_picture_url,
-        badge=user.badge,
         timezone=user.timezone,
         country=user.country,
         country_code=user.country_code,
@@ -283,6 +293,7 @@ async def update_me(
             post_count=post_count,
         ),
         interests=interests,
+        subscription_plan_id=get_user_plan_id(db, user.id),
     )
 
 @router.post("/me/onboarding", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -312,7 +323,6 @@ async def onboarding(
         display_name=user.display_name,
         bio=user.bio,
         profile_picture_url=user.profile_picture_url,
-        badge=user.badge,
         timezone=user.timezone,
         country=user.country,
         country_code=user.country_code,
@@ -324,6 +334,7 @@ async def onboarding(
             post_count=post_count,
         ),
         interests=interests,
+        subscription_plan_id=get_user_plan_id(db, user.id),
     )
 
 @router.post("/me/profile-picture")
@@ -361,7 +372,6 @@ async def upload_profile_picture_endpoint(
             display_name=user.display_name,
             bio=user.bio,
             profile_picture_url=user.profile_picture_url,
-            badge=user.badge,
             timezone=user.timezone,
             country=user.country,
             country_code=user.country_code,
@@ -373,6 +383,7 @@ async def upload_profile_picture_endpoint(
                 post_count=post_count,
             ),
             interests=interests,
+            subscription_plan_id=get_user_plan_id(db, user.id),
         )
     }
 
@@ -392,9 +403,15 @@ async def delete_profile_picture_endpoint(
 async def delete_me(
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
 ):
     """Permanently delete the current user's account and all associated data."""
     auth_user_id = str(current_user.auth_user_id)
+    cancel_user_stripe_subscription(
+        db,
+        settings,
+        UUID(current_user.auth_user_id),
+    )
     delete_account(db, current_user)
     try:
         delete_auth_user(auth_user_id)

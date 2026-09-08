@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.search import SearchResponseData, SearchTickerItem, SearchUserItem
+from app.services.subscription_service import get_active_plan_ids_for_users
 from app.services.search_service import search_tickers, search_users
 from app.utils.responses import paginated_response
 
@@ -30,12 +31,16 @@ def search_endpoint(
 
     if type_lower in ("users", "all"):
         users_list, total_users = search_users(db, q, page=page, per_page=per_page)
+        plan_map = get_active_plan_ids_for_users(
+            db, [u.id for u in users_list]
+        )
         users = [
             SearchUserItem(
                 id=str(u.id),
                 username=u.username,
                 display_name=u.display_name,
                 profile_picture_url=u.profile_picture_url,
+                subscription_plan_id=plan_map.get(u.id),
             )
             for u in users_list
         ]

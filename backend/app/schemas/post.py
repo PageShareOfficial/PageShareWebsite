@@ -30,7 +30,10 @@ class PostAuthor(BaseModel):
     username: str
     display_name: str
     profile_picture_url: Optional[str] = None
-    badge: Optional[str] = None
+    subscription_plan_id: Optional[str] = Field(
+        default=None,
+        description="Paid tier: analyst or investor when subscription is active.",
+    )
 
 class PostStats(BaseModel):
     """Aggregated stats for a post."""

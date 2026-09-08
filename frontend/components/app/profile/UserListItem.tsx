@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { UserPlus, UserMinus } from 'lucide-react';
 import { User } from '@/types';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
-import UserBadge from '@/components/app/common/UserBadge';
+import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 
@@ -56,9 +56,7 @@ export default function UserListItem({
             <span className="font-semibold text-white text-sm truncate">
               {user.displayName}
             </span>
-            {user.badge && (
-              <UserBadge badge={user.badge} size="md" />
-            )}
+            <AuthorBadges subscriptionPlanId={user.subscriptionPlanId} size="md" />
           </div>
           <p className="text-gray-400 text-sm truncate">@{user.handle}</p>
         </div>

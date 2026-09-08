@@ -7,6 +7,8 @@ interface TickerImageProps {
   src?: string;
   ticker: string;
   size?: 'sm' | 'md' | 'lg';
+  /** Square side length in px; overrides fixed size presets. */
+  squarePx?: number;
   className?: string;
   showShimmer?: boolean;
 }
@@ -26,11 +28,16 @@ export default function TickerImage({
   src,
   ticker,
   size = 'md',
+  squarePx,
   className = '',
   showShimmer = false,
 }: TickerImageProps) {
   const [imageError, setImageError] = useState(false);
   const sizeClass = sizeClasses[size];
+  const dimensionStyle =
+    squarePx != null && squarePx > 0
+      ? { width: squarePx, height: squarePx }
+      : undefined;
   const fallbackText = ticker.substring(0, 2).toUpperCase();
 
   // Check cache on mount - if ticker logo request failed before, skip loading
@@ -55,7 +62,10 @@ export default function TickerImage({
 
   return (
     <div
-      className={`${sizeClass.container} rounded-lg bg-white/5 border border-white/10 flex-shrink-0 overflow-hidden relative ${className}`}
+      style={dimensionStyle}
+      className={`${
+        dimensionStyle ? 'shrink-0' : sizeClass.container
+      } rounded-lg bg-white/5 border border-white/10 overflow-hidden relative ${className}`}
     >
       {src && !imageError ? (
         <>

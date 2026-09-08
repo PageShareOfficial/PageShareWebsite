@@ -12,6 +12,7 @@ import { ArrowRight, Lock, Mail } from 'lucide-react';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
 
 const signInSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -47,10 +48,15 @@ export default function EmailSignInForm({
     setIsLoading(true);
     onError?.(null);
     try {
-      await signInWithEmail(data.email, data.password);
-      // After successful sign-in, navigate to home.
-      // Home (and middleware) will handle redirect to onboarding if needed.
-      router.push('/home');
+      const session = await signInWithEmail(data.email, data.password);
+      if (session?.access_token) {
+        const destination = await resolvePostAuthPath(session.access_token, {
+          recordSessionStart: true,
+        });
+        router.replace(destination);
+      } else {
+        router.replace('/home');
+      }
     } catch (err) {
       let msg = getErrorMessage(err, 'Sign in failed');
       // Map Supabase auth errors to user-friendly messages
