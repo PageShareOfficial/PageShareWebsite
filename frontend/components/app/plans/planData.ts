@@ -15,7 +15,7 @@ export interface MonthlyPlanPricing {
  */
 export interface YearlyPlanPricing {
   amountPerMonth: number;
-  monthsFree: number;
+  discount: number;
 }
 
 export interface PlanDefinition {
@@ -40,8 +40,8 @@ export const PLANS: PlanDefinition[] = [
     roleTitle: 'Analyst / Trader',
     tagline: 'Build Credibility. Publish Predictions. Grow Your Influence.',
     pricing: {
-      monthly: { amount: 299 },
-      yearly: { amountPerMonth: 199, monthsFree: 4 },
+      monthly: { amount: 79 },
+      yearly: { amountPerMonth: 59, discount: 25 },
     },
     features: [
       'Publish Your Predictions',
@@ -63,8 +63,8 @@ export const PLANS: PlanDefinition[] = [
     roleTitle: 'Investor',
     tagline: 'Discover Real Signal. Track Performance. Invest Smarter.',
     pricing: {
-      monthly: { amount: 1199 },
-      yearly: { amountPerMonth: 999, monthsFree: 2 },
+      monthly: { amount: 999 },
+      yearly: { amountPerMonth: 799, discount: 20 },
     },
     features: [
       'Unlimited Analyst Scorecards',
