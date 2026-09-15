@@ -98,11 +98,11 @@ function PlanCardHeader({
 
 function PlanCardPricing({
   displayAmount,
-  monthsFree,
+  discount,
   styles,
 }: {
   displayAmount: number;
-  monthsFree: number;
+  discount: number;
   styles: PlanThemeStyles;
 }) {
   const priceClass = 'text-3xl sm:text-4xl font-black tracking-tight';
@@ -113,11 +113,11 @@ function PlanCardPricing({
         <span className={`${priceClass} text-white`}>${formatPrice(displayAmount)}</span>
         <span className={`${priceClass} text-gray-400`}>/month</span>
       </div>
-      {monthsFree > 0 ? (
+      {discount > 0 ? (
         <p
           className={`mt-2 inline-block text-[11px] font-bold tracking-wide uppercase px-3 py-1 rounded-full border ${styles.savings}`}
         >
-          Get {monthsFree} months free when billed annually
+          Save {discount}% with yearly billing
         </p>
       ) : null}
     </div>
@@ -194,7 +194,7 @@ export default function PlanCard({
 }: PlanCardProps) {
   const styles = THEME_STYLES[plan.theme];
   const displayAmount = getDisplayPrice(plan, interval);
-  const monthsFree = plan.pricing.yearly.monthsFree;
+  const discount = plan.pricing.yearly.discount;
   const buttonLabel = resolveButtonLabel({
     isCurrentBilling,
     isCrossPlanLocked,
@@ -212,7 +212,7 @@ export default function PlanCard({
       <PlanCardHeader plan={plan} styles={styles} isCurrentBilling={isCurrentBilling} />
       <PlanCardPricing
         displayAmount={displayAmount}
-        monthsFree={monthsFree}
+        discount={discount}
         styles={styles}
       />
       <PlanFeatureList features={plan.features} styles={styles} />
