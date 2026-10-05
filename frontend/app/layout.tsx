@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   keywords: [
+    "PageShare",
+    "PageShare.io",
     "crypto",
     "Binance",
     "Coinbase",
