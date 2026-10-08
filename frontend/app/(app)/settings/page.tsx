@@ -17,7 +17,7 @@ import { apiDelete } from '@/lib/api/client';
 import Link from 'next/link';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getBillingRowSubtitle } from '@/utils/billing/billingRowSubtitle';
-import { ChevronRight, CreditCard } from 'lucide-react';
+import { ChevronRight, CreditCard } from '@/constants/icons';
 
 function SettingsContent() {
   const router = useRouter();

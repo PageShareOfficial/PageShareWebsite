@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
-import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
+import {
+  HiOutlinePhotograph,
+  HiOutlineEmojiHappy,
+  X,
+  RiFileGifLine,
+  RiBarChartLine,
+} from '@/constants/icons';
 import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
@@ -226,7 +231,7 @@ export default function CommentComposer({
                     onClick={() => setSelectedGif(null)}
                     className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
                   >
-                    <HiX className="w-3 h-3 text-white" />
+                    <X className="w-3 h-3 text-white" />
                   </button>
                 </div>
               )}
@@ -245,7 +250,7 @@ export default function CommentComposer({
                   }}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="space-y-2 mb-3">
@@ -265,7 +270,7 @@ export default function CommentComposer({
                         onClick={() => removePollOption(index)}
                         className="p-2 text-gray-400 hover:text-white"
                       >
-                        <HiX className="w-4 h-4" />
+                        <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -313,7 +318,7 @@ export default function CommentComposer({
                   }}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="mb-3">

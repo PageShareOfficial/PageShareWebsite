@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Search, Loader2, AlertCircle, Calendar, WifiOff, Upload } from 'lucide-react';
+import { Search, LoaderCircle, CircleAlert, Calendar, WifiOff, Upload } from '@/constants/icons';
 import { type SearchSuggestion } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -497,7 +497,7 @@ export default function SubmitPredictionForm({
 
       {!canSubmit && !quotaLoading && quota !== null && (
         <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <CircleAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span>
             You have submitted {predictionsUsed} predictions today (max {MAX_PREDICTIONS_PER_DAY}). Try again tomorrow.
           </span>
@@ -539,7 +539,7 @@ export default function SubmitPredictionForm({
                     className={inputRowClass}
                   />
                   {isFetchingTicker && (
-                    <Loader2 className="absolute right-3 top-0 bottom-0 my-auto w-4 h-4 animate-spin text-gray-400" />
+                    <LoaderCircle className="absolute right-3 top-0 bottom-0 my-auto w-4 h-4 animate-spin text-gray-400" />
                   )}
                 </div>
                 {isFetchingTicker ? (
@@ -949,7 +949,7 @@ export default function SubmitPredictionForm({
 
           {submitError && (
             <p className="text-sm text-red-400 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <CircleAlert className="w-4 h-4 flex-shrink-0" />
               {submitError}
             </p>
           )}

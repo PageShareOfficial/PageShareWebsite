@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { LogOut, Trash2 } from 'lucide-react';
+import { LogOut, Trash } from '@/constants/icons';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -93,7 +93,7 @@ export default function Topbar() {
                   onClick={() => setIsProfileMenuOpen(false)}
                   className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash className="w-4 h-4" />
                   <span className="text-sm">Delete account</span>
                 </Link>
                 <button

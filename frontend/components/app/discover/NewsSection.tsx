@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { LoaderCircle } from '@/constants/icons';
 import { NewsCategory, NewsArticle } from '@/types/discover';
 import { useNewsFeed } from '@/hooks/discover/useNewsFeed';
 import NewsCard from './NewsCard';
@@ -213,7 +213,7 @@ export default function NewsSection({
       {/* Loading More Indicator */}
       {isLoading && articles.length > 0 && (
         <div className="text-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+          <LoaderCircle className="w-6 h-6 animate-spin mx-auto text-gray-400" />
         </div>
       )}
 

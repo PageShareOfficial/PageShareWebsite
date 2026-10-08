@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BarChart3, Lock, TrendingUp, Users } from 'lucide-react';
+import { ChartColumn, Lock, TrendingUp, Users } from '@/constants/icons';
 
 const TRUST_PILLS = [
   { icon: Lock, label: 'Locked Records' },
   { icon: TrendingUp, label: 'Earned Credibility' },
   { icon: Users, label: 'Analyst Discoverability' },
-  { icon: BarChart3, label: 'Analytics Intelligence' },
+  { icon: ChartColumn, label: 'Analytics Intelligence' },
 ] as const;
 
 interface LandingHeroProps {

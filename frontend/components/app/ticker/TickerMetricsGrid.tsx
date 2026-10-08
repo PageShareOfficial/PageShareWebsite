@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { TickerDetailData, TickerType } from '@/types/ticker';
 import { formatLargeNumber, formatPercentage, formatRatio, formatCurrency, formatSupply, formatVolume } from '@/utils/ticker/tickerUtils';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from '@/constants/icons';
 
 interface TickerMetricsGridProps {
   data: TickerDetailData;

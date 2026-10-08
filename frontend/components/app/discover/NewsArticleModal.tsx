@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { ExternalLink, Calendar, Globe, Loader2, X } from 'lucide-react';
+import { ExternalLink, Calendar, Globe, LoaderCircle, X } from '@/constants/icons';
 import { NewsArticle } from '@/types/discover';
 import { formatDateTime } from '@/utils/core/dateUtils';
 import CategoryBadge from '@/components/app/common/CategoryBadge';
@@ -238,7 +238,7 @@ export default function NewsArticleModal({
         <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
           {isLoadingContent && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-4" />
+              <LoaderCircle className="w-8 h-8 animate-spin text-gray-400 mb-4" />
               <p className="text-gray-400 text-sm">Loading article content...</p>
             </div>
           )}

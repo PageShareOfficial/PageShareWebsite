@@ -3,8 +3,21 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, Pencil, List, Bookmark, Settings, Trash2 } from 'lucide-react';
-import { MdOutlineWorkspacePremium } from 'react-icons/md';
+import {
+  House,
+  Search,
+  FlaskConical,
+  User,
+  Ellipsis,
+  LogOut,
+  Pencil,
+  List,
+  Bookmark,
+  Settings,
+  Trash,
+  MdOutlineWorkspacePremium,
+  LuChartCandlestick,
+} from '@/constants/icons';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
@@ -14,7 +27,6 @@ import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import Skeleton from '@/components/app/common/Skeleton';
-import { LuChartCandlestick } from 'react-icons/lu';
 
 const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
 
@@ -76,7 +88,7 @@ export default function Sidebar() {
   // Profile uses prefetch={false} to avoid compiling /[username] before login (prevents 401s)
   const profileHref = currentUser?.handle ? `/${currentUser.handle}` : '/home';
   const allNavItems = [
-    { name: 'Home', icon: Home, href: '/home', prefetch: true },
+    { name: 'Home', icon: House, href: '/home', prefetch: true },
     { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
     { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
@@ -92,11 +104,11 @@ export default function Sidebar() {
   
   // Mobile nav items: Home, Discover, Labs, Watchlist, More, Profile (More will have dropdown with Settings and Bookmarks)
   const mobileNavItems = [
-    { name: 'Home', icon: Home, href: '/home', prefetch: true },
+    { name: 'Home', icon: House, href: '/home', prefetch: true },
     { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
     { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
     { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
-    { name: 'More', icon: MoreHorizontal, href: '#', isMore: true, prefetch: true },
+    { name: 'More', icon: Ellipsis, href: '#', isMore: true, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
   ];
   
@@ -230,7 +242,7 @@ export default function Sidebar() {
                     @{currentUser.handle}
                   </div>
                 </div>
-                <MoreHorizontal className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
+                <Ellipsis className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
               </>
             )}
           </button>
@@ -254,7 +266,7 @@ export default function Sidebar() {
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash className="w-4 h-4" />
                 <span className="text-sm">Delete account</span>
               </Link>
               <button

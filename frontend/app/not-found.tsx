@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, ArrowLeft } from 'lucide-react';
+import { House, ArrowLeft } from '@/constants/icons';
 
 export default function NotFound() {
   return (
@@ -26,7 +26,7 @@ export default function NotFound() {
             href="/home"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors"
           >
-            <Home className="w-5 h-5" />
+            <House className="w-5 h-5" />
             Go to Home
           </Link>
           <button

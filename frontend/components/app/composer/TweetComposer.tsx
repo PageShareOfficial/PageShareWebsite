@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
-import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
+import {
+  HiOutlinePhotograph,
+  HiOutlineEmojiHappy,
+  X,
+  RiFileGifLine,
+  RiBarChartLine,
+} from '@/constants/icons';
 import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
@@ -312,7 +317,7 @@ export default function TweetComposer({
                     onClick={() => setSelectedGif(null)}
                     className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
                   >
-                    <HiX className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   </button>
                 </div>
               )}
@@ -331,7 +336,7 @@ export default function TweetComposer({
                   }}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="space-y-2 mb-3">
@@ -351,7 +356,7 @@ export default function TweetComposer({
                         onClick={() => removePollOption(index)}
                         className="p-2 text-gray-400 hover:text-white"
                       >
-                        <HiX className="w-4 h-4" />
+                        <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -403,7 +408,7 @@ export default function TweetComposer({
                   }}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               {/* GIF Search */}
@@ -697,7 +702,7 @@ export default function TweetComposer({
                 className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
                 aria-label="Close"
               >
-                <HiX className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-2 sm:p-4">
@@ -715,7 +720,7 @@ export default function TweetComposer({
                   onClick={() => setShowEmojiPicker(false)}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <div className="max-h-[60vh] overflow-y-auto">

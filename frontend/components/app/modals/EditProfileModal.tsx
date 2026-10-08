@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Camera, Loader2 } from 'lucide-react';
+import { X, Camera, LoaderCircle } from '@/constants/icons';
 import { interestsOptions } from '@/utils/core/constants';
 import { ProfileUser } from '@/utils/user/profileUtils';
 import Modal from '@/components/app/common/Modal';
@@ -202,7 +202,7 @@ export default function EditProfileModal({
                 />
                 {isUploading && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    <LoaderCircle className="w-6 h-6 text-white animate-spin" />
                   </div>
                 )}
               </div>
@@ -312,7 +312,7 @@ export default function EditProfileModal({
             >
               {isSubmitting || isUploading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <LoaderCircle className="w-4 h-4 animate-spin" />
                   <span>Saving...</span>
                 </>
               ) : (

@@ -1,6 +1,6 @@
 'use client';
 
-import { Repeat2 } from 'lucide-react';
+import { Repeat2 } from '@/constants/icons';
 import { Post } from '@/types';
 import { isTweet } from '@/utils/content/postUtils';
 import ContentMenu from '@/components/app/common/ContentMenu';

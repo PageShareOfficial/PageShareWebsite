@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, CreditCard, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { ChevronLeft, CreditCard, ExternalLink, LoaderCircle, Sparkles } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
 import { PLANS } from '@/components/app/plans/planData';
@@ -143,7 +143,7 @@ export default function BillingPageContent() {
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
             {isResolvingBilling ? (
               <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
                 Loading subscription details...
               </div>
             ) : isPremium && plan && accent ? (
@@ -207,7 +207,7 @@ export default function BillingPageContent() {
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {portalLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                      <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
                     ) : (
                       <CreditCard className="w-4 h-4" aria-hidden />
                     )}
@@ -264,7 +264,7 @@ export default function BillingPageContent() {
             {isResolvingBilling ? (
               <div className="mt-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden />
+                  <LoaderCircle className="w-3.5 h-3.5 animate-spin" aria-hidden />
                   Checking account credit...
                 </div>
               </div>

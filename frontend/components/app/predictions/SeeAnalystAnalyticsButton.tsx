@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { BarChart3, Lock } from 'lucide-react';
+import { ChartColumn, Lock } from '@/constants/icons';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';
 
@@ -62,7 +62,7 @@ export default function SeeAnalystAnalyticsButton({
           : `flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-gray-300 transition-colors hover:border-white/25 hover:bg-white/15 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none ${className}`
       }
     >
-      <BarChart3 className="h-5 w-5" aria-hidden />
+      <ChartColumn className="h-5 w-5" aria-hidden />
       {requiresUpgrade && (
         <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-black/80 bg-emerald-400 text-black">
           <Lock className="h-2 w-2" strokeWidth={3} aria-hidden />

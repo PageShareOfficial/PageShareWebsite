@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { MoreHorizontal, Trash2, Bookmark, Link2 } from 'lucide-react';
+import { Ellipsis, Trash, Bookmark, Link2 } from '@/constants/icons';
 import { useBookmarks } from '@/contexts/BookmarkContext';
 import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -134,7 +134,7 @@ export default function ContentMenu({
         className="p-1.5 hover:bg-cyan-400/10 rounded-full transition-colors text-gray-400 hover:text-cyan-400"
         aria-label="More options"
       >
-        <MoreHorizontal className="w-4 h-4" />
+        <Ellipsis className="w-4 h-4" />
       </button>
 
       {/* Dropdown Menu */}
@@ -182,7 +182,7 @@ export default function ContentMenu({
               title={!isOnline ? 'Connect to the internet to continue' : undefined}
               className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 text-sm border-t border-white/10 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash className="w-4 h-4" />
               <span>Delete</span>
             </button>
           )}

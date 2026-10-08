@@ -133,7 +133,6 @@ function HomeContent() {
               Contact
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
-            <span className="px-1 text-gray-500">Our Socials</span>
             <LandingFooterSocial />
           </nav>
           <div className="mt-3 sm:mt-4 text-center">

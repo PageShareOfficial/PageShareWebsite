@@ -1,4 +1,4 @@
-import { Clock, Lock } from 'lucide-react';
+import { Clock, Lock } from '@/constants/icons';
 import { LOCK_DURATION_MS } from '@/utils/predictions/predictionRules';
 
 interface PriceLockBannerProps {

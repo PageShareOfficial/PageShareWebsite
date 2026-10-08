@@ -7,7 +7,7 @@ import EmailSignUpForm from './EmailSignUpForm';
 import EmailSignInForm from './EmailSignInForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
-import {  Lock, Shield } from 'lucide-react';
+import { Lock, Shield } from '@/constants/icons';
 
 type AuthTab = 'signup' | 'signin';
 type AuthView = AuthTab | 'forgot';

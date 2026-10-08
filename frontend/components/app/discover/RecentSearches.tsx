@@ -1,6 +1,6 @@
 'use client';
 
-import { X, User, TrendingUp, Clock } from 'lucide-react';
+import { X, User, TrendingUp, Clock } from '@/constants/icons';
 import { useRecentSearches } from '@/hooks/discover/useRecentSearches';
 import { RecentSearch } from '@/types/discover';
 import { formatTimeAgo } from '@/utils/core/dateUtils';

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Topbar from '@/components/app/layout/Topbar';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/constants/icons';
 import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import TickerImage from '@/components/app/ticker/TickerImage';

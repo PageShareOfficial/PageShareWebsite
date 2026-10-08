@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart } from 'lucide-react';
+import { Heart } from '@/constants/icons';
 import { Post, Comment } from '@/types';
 import { parseCashtags } from '@/utils/core/textFormatting';
 import { navigateToProfile } from '@/utils/core/navigationUtils';

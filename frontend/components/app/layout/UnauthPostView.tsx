@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@/constants/icons';
 import UnauthSidebar from '@/components/app/layout/UnauthSidebar';
 import PostCard from '@/components/app/post/PostCard';
 import { formatDateTime } from '@/utils/core/dateUtils';

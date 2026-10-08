@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, LineChart, Users } from 'lucide-react';
+import { BadgeCheck, ChartLine, Users } from '@/constants/icons';
 import Modal from '@/components/app/common/Modal';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
@@ -13,7 +13,7 @@ interface PredictionSubmitUpgradeModalProps {
 
 const ANALYST_PERKS = [
   {
-    icon: LineChart,
+    icon: ChartLine,
     title: 'Publish Your Predictions',
     description: 'Lock in your market calls with a permanent, trackable record.',
   },

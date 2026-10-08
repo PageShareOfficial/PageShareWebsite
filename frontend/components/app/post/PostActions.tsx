@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2 } from '@/constants/icons';
 import { Post } from '@/types';
 import RepostButton from './RepostButton';
 import IconActionButton from '@/components/app/common/IconActionButton';

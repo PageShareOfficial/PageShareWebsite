@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { StockData } from '@/utils/api/stockApi';
 import { WatchlistItem } from '@/types';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/constants/icons';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 
 interface TickerSearchResultProps {

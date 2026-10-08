@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { UserPlus, UserMinus } from 'lucide-react';
+import { UserPlus, UserMinus } from '@/constants/icons';
 import { User } from '@/types';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
 import AuthorBadges from '@/components/app/common/AuthorBadges';

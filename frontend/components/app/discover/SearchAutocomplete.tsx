@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Search, Clock, X, User as UserIcon, TrendingUp } from 'lucide-react';
+import { Search, Clock, X, User as UserIcon, TrendingUp } from '@/constants/icons';
 import { User } from '@/types';
 import { SearchSuggestion } from '@/utils/api/stockApi';
 import { RecentSearch } from '@/types/discover';

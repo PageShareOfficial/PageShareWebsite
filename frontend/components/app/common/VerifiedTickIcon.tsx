@@ -1,6 +1,6 @@
 'use client';
 
-import { GoVerified } from 'react-icons/go';
+import { GoVerified } from '@/constants/icons';
 import {
   VERIFIED_TICK_COLORS,
   type VerifiedTickVariant,

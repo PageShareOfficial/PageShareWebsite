@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { WifiOff } from 'lucide-react';
+import { WifiOff } from '@/constants/icons';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '../contexts/OfflineOverlayContext';
 

@@ -1,8 +1,6 @@
 'use client';
 
-import type { IconType } from 'react-icons';
-import { LuChartCandlestick } from 'react-icons/lu';
-import { MdSpaceDashboard } from 'react-icons/md';
+import { type IconType, LuChartCandlestick, MdSpaceDashboard } from '@/constants/icons';
 
 export type AnalyticsTabId = 'dashboard' | 'predictions';
 

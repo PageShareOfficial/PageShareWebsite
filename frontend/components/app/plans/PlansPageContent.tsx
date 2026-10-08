@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, Loader2, X } from 'lucide-react';
+import { CircleAlert, LoaderCircle, X } from '@/constants/icons';
 import PlanCard from './PlanCard';
 import PlansFaq from './PlansFaq';
 import { usePlanCheckout } from '@/hooks/billing/usePlanCheckout';
@@ -25,7 +25,7 @@ function CheckoutErrorBanner({
       className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3"
       role="alert"
     >
-      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+      <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
       <p className="flex-1 text-sm text-red-200">{message}</p>
       <button
         type="button"
@@ -84,7 +84,7 @@ export default function PlansPageContent({
 
       {isCheckoutBusy ? (
         <div className="mb-4 flex items-center justify-center gap-2 text-sm text-gray-300">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
           Redirecting to secure checkout...
         </div>
       ) : null}

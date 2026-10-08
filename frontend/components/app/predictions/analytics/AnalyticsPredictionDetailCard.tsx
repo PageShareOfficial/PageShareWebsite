@@ -1,14 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import {
-  CalendarClock,
-  Lock,
-  Sparkles,
-  Target,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react';
+import { CalendarClock, Lock, Sparkles, Target, TrendingDown, TrendingUp } from '@/constants/icons';
 import Skeleton from '@/components/app/common/Skeleton';
 import ImageWithFallback from '@/components/app/common/ImageWithFallback';
 import TickerImage from '@/components/app/ticker/TickerImage';

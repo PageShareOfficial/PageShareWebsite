@@ -2,7 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from '@/constants/icons';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import BillingIntervalToggle from '@/components/app/plans/BillingIntervalToggle';
 import PlansPageContent from '@/components/app/plans/PlansPageContent';

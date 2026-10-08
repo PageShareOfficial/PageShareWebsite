@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { TriangleAlert, RefreshCw } from '@/constants/icons';
 import React from 'react';
 
 interface ErrorStateProps {
@@ -23,7 +23,7 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className={`flex flex-col items-center justify-center py-10 text-gray-300 ${className}`}>
-      <AlertTriangle className="w-10 h-10 mb-4 text-amber-400" />
+      <TriangleAlert className="w-10 h-10 mb-4 text-amber-400" />
       <p className="text-lg font-semibold text-white mb-1">{title}</p>
       <p className="text-sm text-gray-400 mb-4 text-center max-w-md">{message}</p>
       {onRetry && (

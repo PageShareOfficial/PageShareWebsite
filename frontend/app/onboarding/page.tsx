@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Camera } from 'lucide-react';
+import { Camera } from '@/constants/icons';
 import { interestsOptions } from '@/utils/core/constants';
 import FormInput from '@/components/app/common/FormInput';
 import FormErrorMessage from '@/components/app/common/FormErrorMessage';

@@ -2,7 +2,7 @@
 
 import { forwardRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@/constants/icons';
 import { ReactNode } from 'react';
 
 interface DesktopHeaderProps {

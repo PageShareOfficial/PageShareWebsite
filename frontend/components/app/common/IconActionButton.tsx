@@ -1,6 +1,6 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
+import { type LucideIcon } from '@/constants/icons';
 import React from 'react';
 
 interface IconActionButtonProps {

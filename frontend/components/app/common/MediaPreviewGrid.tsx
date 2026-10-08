@@ -1,4 +1,4 @@
-import { HiX } from 'react-icons/hi';
+import { X } from '@/constants/icons';
 
 interface MediaPreviewGridProps {
   previews: string[];
@@ -28,7 +28,7 @@ export default function MediaPreviewGrid({
             className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
             aria-label={`Remove image ${index + 1}`}
           >
-            <HiX className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+            <X className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
           </button>
         </div>
       ))}

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, Check, LoaderCircle } from '@/constants/icons';
 import PlanTickRibbon from './PlanTickRibbon';
 import type { BillingInterval, PlanDefinition } from './planData';
 
@@ -170,7 +170,7 @@ function PlanCardCta({
       className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${buttonClassName}`}
     >
       {isLoading ? (
-        <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+        <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
       ) : (
         <>
           {label}

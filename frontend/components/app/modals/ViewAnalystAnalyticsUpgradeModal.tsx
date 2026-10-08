@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart3, Bookmark, UserRoundSearch } from 'lucide-react';
+import { ChartColumn, Bookmark, UserRoundSearch } from '@/constants/icons';
 import Modal from '@/components/app/common/Modal';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
@@ -23,7 +23,7 @@ const INVESTOR_PERKS = [
     description: 'Shortlist top performers from the leaderboard in one tap.',
   },
   {
-    icon: BarChart3,
+    icon: ChartColumn,
     title: 'Open detailed analytics',
     description: 'Scorecards, outcomes, and performance beyond a single win rate.',
   },

@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { MdLeaderboard } from 'react-icons/md';
+import { Plus, MdLeaderboard } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 import Loading from '@/components/app/common/Loading';
 import PredictionsDashboard from '@/components/app/predictions/PredictionsDashboard';

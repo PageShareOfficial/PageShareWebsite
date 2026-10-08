@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Calendar, UserPlus, UserMinus } from 'lucide-react';
+import { Calendar, UserPlus, UserMinus } from '@/constants/icons';
 import { User } from '@/types';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';

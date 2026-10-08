@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/constants/icons';
 
 const GET_STARTED_BUTTON_CLASS =
   'mt-6 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition-colors w-full sm:w-auto shadow-[0_0_20px_rgba(34,211,238,0.25)]';

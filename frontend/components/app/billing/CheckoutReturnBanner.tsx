@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CircleCheck, CircleX } from '@/constants/icons';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import {
@@ -66,9 +66,9 @@ export default function CheckoutReturnBanner() {
     >
       <div className="flex items-start gap-3">
         {isSuccess ? (
-          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+          <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
         ) : (
-          <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+          <CircleX className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
         )}
         <p
           className={`text-sm font-medium ${

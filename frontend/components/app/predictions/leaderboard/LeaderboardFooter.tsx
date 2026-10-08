@@ -1,4 +1,4 @@
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp } from '@/constants/icons';
 
 interface LeaderboardFooterProps {
   hasMore?: boolean;

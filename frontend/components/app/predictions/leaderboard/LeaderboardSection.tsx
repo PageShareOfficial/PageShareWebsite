@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MdLeaderboard } from 'react-icons/md';
+import { MdLeaderboard } from '@/constants/icons';
 import ViewAnalystAnalyticsUpgradeModal from '@/components/app/modals/ViewAnalystAnalyticsUpgradeModal';
 import LeaderboardDesktopTable from '@/components/app/predictions/leaderboard/LeaderboardDesktopTable';
 import LeaderboardFooter from '@/components/app/predictions/leaderboard/LeaderboardFooter';

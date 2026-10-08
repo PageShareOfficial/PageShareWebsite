@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/constants/icons';
 import { WatchlistItem } from '@/types';
 import { navigateToTicker } from '@/utils/core/navigationUtils';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';

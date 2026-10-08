@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { Linkedin } from 'lucide-react';
+import { FaLinkedinIn } from '@/constants/icons';
 import { siteConfig } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = {
@@ -91,7 +91,7 @@ export default function AboutPage() {
                   className="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
                   aria-label="Connect on LinkedIn"
                 >
-                  <Linkedin className="w-5 h-5" />
+                  <FaLinkedinIn className="w-5 h-5" />
                 </Link>
               </div>
             </div>

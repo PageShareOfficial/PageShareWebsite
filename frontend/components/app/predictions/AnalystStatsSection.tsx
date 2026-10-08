@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { Target, TrendingUp } from 'lucide-react';
-import { FaMedal } from 'react-icons/fa';
+import { Target, TrendingUp, FaMedal } from '@/constants/icons';
 import type { AnalystScoreSummary } from '@/types/predictions';
 import ShowAllButton from '@/components/app/common/ShowAllButton';
 import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';

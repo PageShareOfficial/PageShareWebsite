@@ -23,7 +23,7 @@ import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
 import { isReservedRoute } from '@/utils/core/routeUtils';
 import { getBaseUrl } from '@/lib/api/client';
-import { FaUserSlash } from 'react-icons/fa';
+import { FaUserSlash } from '@/constants/icons';
 import {
   getProfileByUsername,
   followUserApi,

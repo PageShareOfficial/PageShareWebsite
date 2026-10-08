@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, UserPlus } from 'lucide-react';
+import { Bookmark, UserPlus } from '@/constants/icons';
 import SavedAnalystsCarousel from '@/components/app/predictions/saved-analysts/SavedAnalystsCarousel';
 import ShowAllButton from '@/components/app/common/ShowAllButton';
 import LoadingState from '@/components/app/common/LoadingState';

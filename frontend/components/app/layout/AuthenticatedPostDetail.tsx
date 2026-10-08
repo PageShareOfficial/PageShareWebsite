@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, Heart } from '@/constants/icons';
 const ReportModal = dynamic(
   () => import('@/components/app/modals/ReportModal'),
   { ssr: false }

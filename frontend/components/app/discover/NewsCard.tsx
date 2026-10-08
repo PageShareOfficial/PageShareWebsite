@@ -1,7 +1,7 @@
 'use client';
 
 import { NewsArticle } from '@/types/discover';
-import { Calendar } from 'lucide-react';
+import { Calendar } from '@/constants/icons';
 import { formatTimeAgo } from '@/utils/core/dateUtils';
 import CategoryBadge from '../common/CategoryBadge';
 

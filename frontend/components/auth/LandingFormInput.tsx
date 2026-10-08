@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from '@/constants/icons';
 
 interface LandingFormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;

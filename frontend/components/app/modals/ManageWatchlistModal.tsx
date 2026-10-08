@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Trash, LoaderCircle, Search } from '@/constants/icons';
 import { WatchlistItem } from '@/types';
 import { fetchCryptoData, SearchSuggestion, StockData } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
@@ -293,7 +293,7 @@ export default function ManageWatchlistModal({
               className="inline-flex h-11 min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-black transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
                 <Plus className="h-4 w-4 shrink-0" />
               )}
@@ -366,7 +366,7 @@ export default function ManageWatchlistModal({
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-500/15 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label={`Remove ${item.ticker}`}
                     >
-                      <Trash2 className="h-5 w-5" strokeWidth={2} />
+                      <Trash className="h-5 w-5" strokeWidth={2} />
                     </button>
                   </li>
                 );
