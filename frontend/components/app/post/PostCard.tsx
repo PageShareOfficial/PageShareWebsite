@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
 import { useState, useEffect } from 'react';
 import { isTweet } from '@/utils/content/postUtils';
+import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
 import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
@@ -11,6 +12,7 @@ import PostAuthorMeta from './PostAuthorMeta';
 import PostActions from './PostActions';
 import PostMedia from './PostMedia';
 import PollComponent from './PollComponent';
+import DeletedQuotedPost from './DeletedQuotedPost';
 import ImageViewerModal from '../modals/ImageViewerModal';
 import AvatarWithFallback from '../common/AvatarWithFallback';
 
@@ -48,17 +50,7 @@ export default function PostCard({
 }: PostCardProps) {
   const router = useRouter();
   
-  // Helper function to get original post by ID (use embedded quotedPost from API when present, else find in allPosts)
-  const getOriginalPost = (): Post | undefined => {
-    if (isTweet(post) && post.repostType && post.originalPostId) {
-      if (post.quotedPost) return post.quotedPost;
-      return allPosts.find(p => p.id === post.originalPostId);
-    }
-    return undefined;
-  };
-  
-  // Get original post for reposts
-  const originalPost = getOriginalPost();
+  const originalPost = resolveRepostedPost(post, allPosts);
   
   // Navigate to user profile
   const handleProfileClick = (e: React.MouseEvent, handle: string) => {
@@ -177,8 +169,7 @@ export default function PostCard({
     if (isTweet(post)) {
       return (
         <>
-          {/* Quote repost: show when repostType is 'quote' OR we have originalPostId (profile list from API) */}
-          {(post.repostType === 'quote' || (post.originalPostId && post.repostType !== 'normal')) ? (
+          {isQuotePost(post) ? (
             <>
               {/* User's quote comment – always show (text, media, gif from the quote post) */}
               <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
@@ -264,9 +255,9 @@ export default function PostCard({
                     </>
                   )}
                 </div>
-              ) : post.originalPostId ? (
-                <p className="text-sm text-gray-500 italic">Quoted post</p>
-              ) : null}
+              ) : (
+                <DeletedQuotedPost />
+              )}
             </>
           ) : (
             <>

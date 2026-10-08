@@ -14,6 +14,8 @@ import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import { isTweet } from '@/utils/content/postUtils';
+import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
+import DeletedQuotedPost from '@/components/app/post/DeletedQuotedPost';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface ReplyCardProps {
@@ -63,15 +65,8 @@ export default function ReplyCard({
     }
   };
 
-  // Get original post for reposts
-  const getOriginalPost = (): Post | undefined => {
-    if (isTweet(originalPost) && originalPost.repostType && originalPost.originalPostId) {
-      return allPosts.find(p => p.id === originalPost.originalPostId);
-    }
-    return undefined;
-  };
-
-  const quotedPost = getOriginalPost();
+  const quotedPost = resolveRepostedPost(originalPost, allPosts);
+  const isQuote = isQuotePost(originalPost);
 
   return (
     <div className="border-b border-white/10 px-4">
@@ -119,7 +114,7 @@ export default function ReplyCard({
                 {/* Original Post Content */}
                 {isTweet(originalPost) && (
                   <div className="mt-2">
-                {originalPost.repostType === 'quote' && quotedPost ? (
+                {isQuote && quotedPost ? (
                   <>
                     <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
                       {parseCashtags(originalPost.content)}
@@ -224,6 +219,7 @@ export default function ReplyCard({
                         onVote={() => {}}
                       />
                     )}
+                    {isQuote && <DeletedQuotedPost />}
                   </>
                 )}
               </div>
