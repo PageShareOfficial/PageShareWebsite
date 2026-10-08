@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import AuthTabs from '@/components/auth/AuthTabs';
 import LandingHero from '@/components/landing/LandingHero';
 import HowWeWorkSection from '@/components/landing/HowWeWorkSection';
+import FounderVideoSection from '@/components/landing/FounderVideoSection';
 import BottomCTA from '@/components/landing/BottomCTA';
 import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
 import {
@@ -67,6 +68,7 @@ function HomeContent() {
 
       <div className="relative z-10">
         <HowWeWorkSection />
+        <FounderVideoSection />
         <BottomCTA />
       </div>
 
