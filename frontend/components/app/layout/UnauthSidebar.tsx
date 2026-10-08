@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 import {
   UNAUTH_LOGO_SIZE_DESKTOP,
@@ -38,7 +39,7 @@ export default function UnauthSidebar() {
       <aside className={asideClasses} aria-label="Sign in or sign up">
         <div className="p-4 lg:pl-2 lg:pr-2 flex flex-col items-center lg:items-stretch gap-6 pt-8 min-w-0">
           <Link
-            href="/"
+            href={ROUTES.landing}
             className="flex items-center justify-center lg:justify-start lg:px-6 shrink-0"
             aria-label="PageShare home"
           >
@@ -55,7 +56,7 @@ export default function UnauthSidebar() {
       </aside>
 
       <header className={headerClasses} aria-label="Sign in or sign up">
-        <Link href="/" className="flex items-center shrink-0" aria-label="PageShare home">
+        <Link href={ROUTES.landing} className="flex items-center shrink-0" aria-label="PageShare home">
           <Image
             src={LOGO_SRC}
             alt="PageShare"

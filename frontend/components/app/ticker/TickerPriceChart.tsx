@@ -14,6 +14,7 @@ interface TickerPriceChartProps {
   error: string | null;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
+  onRetry: () => void;
 }
 
 const TIME_RANGES: Array<{ value: TimeRange; label: string }> = [
@@ -38,6 +39,7 @@ export default function TickerPriceChart({
   error,
   timeRange,
   onTimeRangeChange,
+  onRetry,
 }: TickerPriceChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; price: number; date: string } | null>(null);
 
@@ -91,7 +93,8 @@ export default function TickerPriceChart({
         <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
           <p className="text-gray-400 mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            type="button"
+            onClick={onRetry}
             className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-100 transition-colors"
           >
             Retry

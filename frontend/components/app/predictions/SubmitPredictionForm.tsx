@@ -14,6 +14,7 @@ import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
 import { PrimaryButton } from '@/components/app/common/Button';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { ROUTES } from '@/constants/routes';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
 import {
@@ -452,7 +453,7 @@ export default function SubmitPredictionForm({
     );
 
     await refreshQuota();
-    router.push('/predictions');
+    router.replace(ROUTES.predictions);
   };
 
   const inputRowClass =

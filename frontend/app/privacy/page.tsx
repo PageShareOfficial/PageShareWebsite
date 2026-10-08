@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 
 import type { Metadata } from 'next';
@@ -15,7 +16,7 @@ export default function PrivacyPage() {
       {/* Header */}
       <header className="border-b border-white/10 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="inline-block">
+          <Link href={ROUTES.landing} className="inline-block">
             <Image src="/pageshare_final.png" alt="PageShare Logo" width={40} height={40} />
           </Link>
         </div>
@@ -86,7 +87,7 @@ export default function PrivacyPage() {
               We use cookies and similar tracking technologies to track activity on our Platform and store certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our Platform.
             </p>
             <p className="mt-4">
-              For more information about our use of cookies, please see our <Link href="/cookies" className="text-cyan-400 hover:underline">Cookie Policy</Link>.
+              For more information about our use of cookies, please see our <Link href={ROUTES.cookies} className="text-cyan-400 hover:underline">Cookie Policy</Link>.
             </p>
           </section>
 
@@ -152,7 +153,7 @@ export default function PrivacyPage() {
 
         <div className="mt-12 pt-8 border-t border-white/10">
           <Link
-            href="/"
+            href={ROUTES.landing}
             className="text-cyan-400 hover:text-cyan-300 hover:underline"
           >
             ← Back to Home

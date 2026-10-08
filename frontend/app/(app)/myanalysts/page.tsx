@@ -13,6 +13,7 @@ import SaveAnalystButton from '@/components/app/predictions/SaveAnalystButton';
 import SeeAnalystAnalyticsButton from '@/components/app/predictions/SeeAnalystAnalyticsButton';
 import { useSavedAnalysts } from '@/hooks/predictions/useSavedAnalysts';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { ROUTES } from '@/constants/routes';
 
 const PAGE_SUBTITLE = 'Analysts you saved from the predictions leaderboard.';
 
@@ -21,7 +22,7 @@ export default function MyAnalystsPage() {
   const { savedAnalysts, loadError, isLoading, refreshSavedAnalysts } = useSavedAnalysts();
 
   const goToPredictions = () => {
-    router.push('/predictions');
+    router.push(ROUTES.predictions);
   };
 
   return (
@@ -53,7 +54,7 @@ export default function MyAnalystsPage() {
                 </span>
                 <p className="text-sm font-medium text-gray-300">Add analysts</p>
                 <Link
-                  href="/predictions"
+                  href={ROUTES.predictions}
                   className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-gray-100"
                 >
                   Browse leaderboard

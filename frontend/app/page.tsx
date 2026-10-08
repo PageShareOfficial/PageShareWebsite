@@ -9,24 +9,33 @@ import LandingHero from '@/components/landing/LandingHero';
 import HowWeWorkSection from '@/components/landing/HowWeWorkSection';
 import BottomCTA from '@/components/landing/BottomCTA';
 import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
+import {
+  AUTH_ERROR_CODES,
+  ROUTES,
+  comingSoonPath,
+  isAuthErrorCode,
+  type AuthErrorCode,
+} from '@/constants/routes';
+
+const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
+  [AUTH_ERROR_CODES.auth]: 'Sign-in link expired or invalid. Please try signing in again.',
+  [AUTH_ERROR_CODES.resetExpired]: 'Password reset link expired. Please request a new one.',
+};
 
 function HomeContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get('error');
 
-  const authInitialError =
-    errorParam === 'auth'
-      ? 'Sign-in link expired or invalid. Please try signing in again.'
-      : errorParam === 'reset_expired'
-        ? 'Password reset link expired. Please request a new one.'
-        : undefined;
+  const authInitialError = isAuthErrorCode(errorParam)
+    ? AUTH_ERROR_MESSAGES[errorParam]
+    : undefined;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <div className="fixed inset-0 pointer-events-none z-0 bg-black" aria-hidden />
 
       <header className="relative z-10 lg:hidden flex justify-center items-center py-6 sm:py-8 border-b border-white/10">
-        <Link href="/" className="block">
+        <Link href={ROUTES.landing} className="block">
           <Image
             src="/pageshare_final.png"
             alt="PageShare Logo"
@@ -64,70 +73,70 @@ function HomeContent() {
       <footer className="relative z-10 border-t border-white/10 bg-black mt-auto">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4 sm:py-6">
           <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 md:gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500">
-            <Link href="/about" className="hover:text-white transition-colors px-1">
+            <Link href={ROUTES.about} className="hover:text-white transition-colors px-1">
               About
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=Help-Center"
+              href={comingSoonPath('Help-Center')}
               className="hover:text-white transition-colors px-1"
             >
               Help Center
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href="/terms" className="hover:text-white transition-colors px-1">
+            <Link href={ROUTES.terms} className="hover:text-white transition-colors px-1">
               Terms of Service
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href="/privacy" className="hover:text-white transition-colors px-1">
+            <Link href={ROUTES.privacy} className="hover:text-white transition-colors px-1">
               Privacy Policy
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href="/cookies" className="hover:text-white transition-colors px-1">
+            <Link href={ROUTES.cookies} className="hover:text-white transition-colors px-1">
               Cookie Policy
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=Accessibility"
+              href={comingSoonPath('Accessibility')}
               className="hover:text-white transition-colors px-1"
             >
               Accessibility
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href="/disclaimer" className="hover:text-white transition-colors px-1">
+            <Link href={ROUTES.disclaimer} className="hover:text-white transition-colors px-1">
               Disclaimer
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=Blog"
+              href={comingSoonPath('Blog')}
               className="hover:text-white transition-colors px-1"
             >
               Blog
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=Careers"
+              href={comingSoonPath('Careers')}
               className="hover:text-white transition-colors px-1"
             >
               Careers
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=Brand-Resources"
+              href={comingSoonPath('Brand-Resources')}
               className="hover:text-white transition-colors px-1"
             >
               Brand Resources
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=API"
+              href={comingSoonPath('API')}
               className="hover:text-white transition-colors px-1"
             >
               API
             </Link>
             <span className="text-gray-600 hidden sm:inline">|</span>
             <Link
-              href="/coming-soon?page=Contact"
+              href={comingSoonPath('Contact')}
               className="hover:text-white transition-colors px-1"
             >
               Contact

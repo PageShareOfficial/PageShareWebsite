@@ -4,6 +4,7 @@ import ErrorBoundaryWrapper from "@/components/ErrorBoundaryWrapper";
 import OfflineBanner from "@/components/OfflineBanner";
 import OfflineOverlay from "@/components/OfflineOverlay";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import NavigationHistoryTracker from "@/components/NavigationHistoryTracker";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { OfflineOverlayProvider } from "@/contexts/OfflineOverlayContext";
@@ -89,6 +90,7 @@ export default function RootLayout({
       <body className="bg-black">
         <ErrorBoundaryWrapper>
           <ServiceWorkerRegistration />
+          <NavigationHistoryTracker />
           <OfflineBanner />
           <OfflineOverlayProvider>
             <OfflineOverlay />

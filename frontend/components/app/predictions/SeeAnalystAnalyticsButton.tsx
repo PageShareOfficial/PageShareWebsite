@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ChartColumn, Lock } from '@/constants/icons';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
-import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';
+import { getAnalyticsPath } from '@/constants/routes';
 
 interface SeeAnalystAnalyticsButtonProps {
   displayName: string;

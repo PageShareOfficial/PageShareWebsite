@@ -2,6 +2,7 @@
 
 import React from 'react';
 import * as Sentry from '@sentry/nextjs';
+import { ROUTES } from '@/constants/routes';
 import { logErrorToBackend } from '@/utils/error/logError';
 
 interface ErrorBoundaryState {
@@ -93,7 +94,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                 Try again
               </button>
               <button
-                onClick={() => window.location.href = '/home'}
+                onClick={() => window.location.assign(ROUTES.home)}
                 className="px-6 py-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors font-medium border border-white/20"
               >
                 Go to Home

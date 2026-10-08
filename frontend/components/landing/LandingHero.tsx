@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 import { ChartColumn, Lock, TrendingUp, Users } from '@/constants/icons';
 
@@ -19,7 +20,7 @@ export default function LandingHero({ compact = false, showLogo = false }: Landi
     <div className={compact ? 'space-y-4 text-center lg:text-left' : 'space-y-6 sm:space-y-8'}>
       {showLogo && (
         <div className={compact ? 'mb-2 flex justify-center lg:justify-start' : 'mb-4 sm:mb-6'}>
-          <Link href="/" className="block">
+          <Link href={ROUTES.landing} className="block">
             <Image
               src="/pageshare_final.png"
               alt="PageShare Logo"

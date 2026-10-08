@@ -6,6 +6,7 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
 import { clearFeedCache } from '@/lib/feedCache';
+import { ROUTES } from '@/constants/routes';
 
 export interface BackendUser {
   id: string;
@@ -207,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     setBackendUser(null);
-    router.push('/');
+    router.replace(ROUTES.landing);
   }, [supabase.auth, router, session?.access_token]);
 
   const value: AuthContextValue = {

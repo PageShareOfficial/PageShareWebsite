@@ -8,6 +8,7 @@ import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import Skeleton from '@/components/app/common/Skeleton';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { formatJoinedDate } from '@/utils/core/dateUtils';
+import { followersPath } from '@/constants/routes';
 
 interface ProfileUser extends User {
   joinedDate: string;
@@ -81,11 +82,11 @@ export default function ProfileHeader({
   const isOnline = useOnlineStatus();
 
   const handleFollowersClick = () => {
-    router.push(`/${profileUser.handle}/followers`);
+    router.push(followersPath(profileUser.handle));
   };
 
   const handleFollowingClick = () => {
-    router.push(`/${profileUser.handle}/followers?tab=following`);
+    router.push(followersPath(profileUser.handle, 'following'));
   };
   return (
     <div className="px-4 py-6 md:px-6 md:py-8">

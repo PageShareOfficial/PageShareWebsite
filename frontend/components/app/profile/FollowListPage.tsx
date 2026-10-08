@@ -8,6 +8,7 @@ import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import UserListItem from '@/components/app/profile/UserListItem';
 import Loading from '@/components/app/common/Loading';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { followersPath } from '@/constants/routes';
 import { User } from '@/types';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,7 +75,7 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
         tabSwitchTimeoutRef.current = null;
         setActiveTab(tab);
         // Same path, only query changes – page stays mounted, no refetch
-        router.replace(`/${username}/followers${tab === 'following' ? '?tab=following' : ''}`);
+        router.replace(followersPath(username, tab));
       }, TAB_SWITCH_DEBOUNCE_MS);
     },
     [activeTab, username, router]

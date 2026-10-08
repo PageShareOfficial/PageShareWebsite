@@ -1,6 +1,6 @@
 'use client';
 
-import { TriangleAlert, RefreshCw } from '@/constants/icons';
+import { TriangleAlert, RefreshCw, type LucideIcon } from '@/constants/icons';
 import React from 'react';
 
 interface ErrorStateProps {
@@ -8,6 +8,9 @@ interface ErrorStateProps {
   message?: string;
   onRetry?: () => void;
   retryDisabled?: boolean;
+  /** Button text; override when the action is not a retry (e.g. navigating away). */
+  actionLabel?: string;
+  actionIcon?: LucideIcon;
   className?: string;
 }
 
@@ -19,6 +22,8 @@ export default function ErrorState({
   message = 'Please try again in a moment.',
   onRetry,
   retryDisabled = false,
+  actionLabel = 'Retry',
+  actionIcon: ActionIcon = RefreshCw,
   className = '',
 }: ErrorStateProps) {
   return (
@@ -33,8 +38,8 @@ export default function ErrorState({
           disabled={retryDisabled}
           className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <RefreshCw className="w-4 h-4" />
-          <span>Retry</span>
+          <ActionIcon className="w-4 h-4" />
+          <span>{actionLabel}</span>
         </button>
       )}
     </div>

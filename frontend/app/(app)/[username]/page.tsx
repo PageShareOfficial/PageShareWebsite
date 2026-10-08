@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { notFound, useParams, useRouter, useSearchParams } from 'next/navigation';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
@@ -24,6 +24,7 @@ import { usePostsData } from '@/hooks/post/usePostsData';
 import { isReservedRoute } from '@/utils/core/routeUtils';
 import { getBaseUrl } from '@/lib/api/client';
 import { FaUserSlash } from '@/constants/icons';
+import { profilePath, profileTabPath } from '@/constants/routes';
 import {
   getProfileByUsername,
   followUserApi,
@@ -74,8 +75,7 @@ export default function ProfilePage() {
   // Update URL when tab changes
   const handleTabChange = (tab: 'posts' | 'replies' | 'likes') => {
     setActiveTab(tab);
-    const newUrl = `/${username}${tab !== 'posts' ? `?tab=${tab}` : ''}`;
-    router.replace(newUrl, { scroll: false });
+    router.replace(profileTabPath(username, tab), { scroll: false });
   };
   
   // Sync tab with URL on mount and when searchParams change
@@ -148,11 +148,14 @@ export default function ProfilePage() {
     return username ? isReservedRoute(username) : false;
   }, [username]);
   
-  // Handle reserved routes - redirect to the correct static route
+  // Routes are case-sensitive: /Home lands here, so send it to the real /home page.
+  // Already-lowercase reserved names (/login, /search…) have no page and get a 404 below.
+  const isReservedCaseVariant = isReserved && username !== username.toLowerCase();
+
   useEffect(() => {
-    if (!username || !isReserved) return;
-    router.replace(`/${username.toLowerCase()}`);
-  }, [username, router, isReserved]);
+    if (!isReservedCaseVariant) return;
+    router.replace(profilePath(username.toLowerCase()));
+  }, [username, router, isReservedCaseVariant]);
 
   const isOwnProfile = backendProfile ? currentUser.handle === backendProfile.username : currentUser.handle === username.toLowerCase();
 
@@ -474,9 +477,9 @@ export default function ProfilePage() {
     if (data) setBackendProfile(data);
   };
 
-  // If this is a reserved route, don't render profile page
   if (isReserved) {
-    return null; // Will be handled by redirect in useEffect
+    if (isReservedCaseVariant) return null;
+    notFound();
   }
 
   const profileLoading = apiUrl && username && !isReserved && !backendProfile && !profileNotFound;

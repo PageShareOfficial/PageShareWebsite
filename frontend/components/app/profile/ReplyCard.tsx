@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Heart } from '@/constants/icons';
 import { Post, Comment } from '@/types';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from '@/components/app/post/PostHeader';
 import PostMedia from '@/components/app/post/PostMedia';
 import PostActions from '@/components/app/post/PostActions';
@@ -53,8 +53,7 @@ export default function ReplyCard({
 
 
   const handleClick = () => {
-    const username = originalPost.author.handle;
-    router.push(`/${username}/posts/${originalPost.id}`);
+    navigateToPost(originalPost.author.handle, originalPost.id, router);
   };
 
   const handleCommentLikeClick = (e: React.MouseEvent) => {

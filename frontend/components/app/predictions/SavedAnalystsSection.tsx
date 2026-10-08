@@ -5,6 +5,7 @@ import SavedAnalystsCarousel from '@/components/app/predictions/saved-analysts/S
 import ShowAllButton from '@/components/app/common/ShowAllButton';
 import LoadingState from '@/components/app/common/LoadingState';
 import ErrorState from '@/components/app/common/ErrorState';
+import { ROUTES } from '@/constants/routes';
 import { useSavedAnalysts } from '@/hooks/predictions/useSavedAnalysts';
 
 interface SavedAnalystsSectionProps {
@@ -49,7 +50,7 @@ export default function SavedAnalystsSection({
       ) : (
         <SavedAnalystsCarousel analysts={savedAnalysts} />
       )}
-      {!isPendingList && <ShowAllButton href="/myanalysts" />}
+      {!isPendingList && <ShowAllButton href={ROUTES.myAnalysts} />}
     </section>
   );
 }

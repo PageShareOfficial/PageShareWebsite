@@ -27,6 +27,7 @@ import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import Skeleton from '@/components/app/common/Skeleton';
+import { ROUTES, profilePath, settingsDeleteAccountPath } from '@/constants/routes';
 
 const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
 
@@ -86,17 +87,18 @@ export default function Sidebar() {
 
   // All nav items including watchlist for mobile and tablet
   // Profile uses prefetch={false} to avoid compiling /[username] before login (prevents 401s)
-  const profileHref = currentUser?.handle ? `/${currentUser.handle}` : '/home';
+  const hasProfile = Boolean(currentUser?.handle);
+  const profileHref = currentUser?.handle ? profilePath(currentUser.handle) : ROUTES.home;
   const allNavItems = [
-    { name: 'Home', icon: House, href: '/home', prefetch: true },
-    { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
-    { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
-    { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
-    { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
-    { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks', prefetch: true },
-    { name: 'Settings', icon: Settings, href: '/settings', prefetch: true },
+    { name: 'Home', icon: House, href: ROUTES.home, prefetch: true },
+    { name: 'Predictions', icon: LuChartCandlestick, href: ROUTES.predictions, prefetch: true },
+    { name: 'Discover', icon: Search, href: ROUTES.discover, prefetch: true },
+    { name: 'Labs', icon: FlaskConical, href: ROUTES.labs, prefetch: true },
+    { name: 'Watchlist', icon: List, href: ROUTES.watchlist, prefetch: true },
+    { name: 'Bookmarks', icon: Bookmark, href: ROUTES.bookmarks, prefetch: true },
+    { name: 'Settings', icon: Settings, href: ROUTES.settings, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
-    { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans', prefetch: true },
+    { name: 'Premium', icon: MdOutlineWorkspacePremium, href: ROUTES.plans, prefetch: true },
   ];
 
   // Desktop nav items (without watchlist since it's in right rail, but with Premium and Settings)
@@ -104,10 +106,10 @@ export default function Sidebar() {
   
   // Mobile nav items: Home, Discover, Labs, Watchlist, More, Profile (More will have dropdown with Settings and Bookmarks)
   const mobileNavItems = [
-    { name: 'Home', icon: House, href: '/home', prefetch: true },
-    { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
-    { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
-    { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
+    { name: 'Home', icon: House, href: ROUTES.home, prefetch: true },
+    { name: 'Predictions', icon: LuChartCandlestick, href: ROUTES.predictions, prefetch: true },
+    { name: 'Discover', icon: Search, href: ROUTES.discover, prefetch: true },
+    { name: 'Watchlist', icon: List, href: ROUTES.watchlist, prefetch: true },
     { name: 'More', icon: Ellipsis, href: '#', isMore: true, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
   ];
@@ -118,10 +120,10 @@ export default function Sidebar() {
   // Determine active nav based on current pathname
   const getActiveNav = (href: string) => {
     if (href === '#') return false;
-    if (href === '/settings') {
-      return pathname === '/settings' || pathname.startsWith('/settings/');
+    if (href === ROUTES.settings) {
+      return pathname === ROUTES.settings || pathname.startsWith(`${ROUTES.settings}/`);
     }
-    return pathname === href || (href === '/home' && pathname === '/');
+    return pathname === href || (href === ROUTES.home && pathname === ROUTES.landing);
   };
 
   const renderNavItem = (item: (typeof allNavItems)[0]) => {
@@ -157,8 +159,8 @@ export default function Sidebar() {
         key={item.name}
         href={item.href}
         prefetch={item.prefetch !== false}
-        onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-        onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+        onMouseEnter={isProfile && hasProfile ? () => router.prefetch(profileHref) : undefined}
+        onFocus={isProfile && hasProfile ? () => router.prefetch(profileHref) : undefined}
         onClick={() => setActiveNav(item.name)}
         className={itemClassName}
         aria-current={isActive ? 'page' : undefined}
@@ -176,7 +178,7 @@ export default function Sidebar() {
       <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] flex-shrink-0 z-10">
         {/* Logo Header */}
         <div className="p-4 lg:pl-2 lg:pr-2 flex items-center justify-center lg:justify-start">
-          <Link href="/home" prefetch={true} className="flex items-center lg:px-6">
+          <Link href={ROUTES.home} prefetch={true} className="flex items-center lg:px-6">
             <Image
               src="/pageshare_final.png"
               alt="PageShare Logo"
@@ -262,7 +264,7 @@ export default function Sidebar() {
                 </div>
               </div>
               <Link
-                href="/settings?action=delete"
+                href={settingsDeleteAccountPath()}
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
               >
@@ -318,7 +320,7 @@ export default function Sidebar() {
                   {isMoreMenuOpen && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
                       <Link
-                        href="/labs"
+                        href={ROUTES.labs}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
@@ -332,7 +334,7 @@ export default function Sidebar() {
                         <span className="text-sm">Labs</span>
                       </Link>
                       <Link
-                        href="/bookmarks"
+                        href={ROUTES.bookmarks}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
@@ -360,14 +362,14 @@ export default function Sidebar() {
                         <span className="text-sm">Premium</span>
                       </button>
                       <Link
-                        href="/settings"
+                        href={ROUTES.settings}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Settings');
                         }}
                         className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
-                          getActiveNav('/settings') ? 'bg-white/10 text-white' : 'text-white'
+                          getActiveNav(ROUTES.settings) ? 'bg-white/10 text-white' : 'text-white'
                         }`}
                       >
                         <Settings className="w-4 h-4" />
@@ -385,8 +387,8 @@ export default function Sidebar() {
                 key={item.name}
                 href={item.href}
                 prefetch={(item as { prefetch?: boolean }).prefetch !== false}
-                onMouseEnter={isProfileNav && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-                onFocus={isProfileNav && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+                onMouseEnter={isProfileNav && hasProfile ? () => router.prefetch(profileHref) : undefined}
+                onFocus={isProfileNav && hasProfile ? () => router.prefetch(profileHref) : undefined}
                 onClick={() => setActiveNav(item.name)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors min-w-0 ${
                   isActive
@@ -405,7 +407,7 @@ export default function Sidebar() {
 
       {/* Tablet Floating Watchlist Button - Opens Watchlist Page */}
       <Link
-        href="/watchlist"
+        href={ROUTES.watchlist}
         prefetch={true}
         className={`hidden md:flex lg:hidden fixed bottom-6 right-6 z-40 items-center space-x-2 px-4 py-3 bg-white text-black rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 ${
           isScrolling ? 'opacity-30' : 'opacity-100'

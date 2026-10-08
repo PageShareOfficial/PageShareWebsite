@@ -6,6 +6,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import Loading from '@/components/app/common/Loading';
 import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
+import { AUTH_ERROR_CODES, landingWithError } from '@/constants/routes';
 
 const SESSION_WAIT_MS = 8000;
 
@@ -73,7 +74,7 @@ function AuthCallbackContent() {
       if (handled.current) return;
       handled.current = true;
       setStatus('error');
-      router.replace('/?error=auth');
+      router.replace(landingWithError(AUTH_ERROR_CODES.auth));
     }
 
     async function run() {

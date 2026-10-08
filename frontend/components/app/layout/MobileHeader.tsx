@@ -1,8 +1,8 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { ArrowLeft } from '@/constants/icons';
+import { useSafeBack } from '@/hooks/common/useSafeBack';
 import { ReactNode } from 'react';
 
 interface MobileHeaderProps {
@@ -15,13 +15,13 @@ const MobileHeader = forwardRef<HTMLDivElement, MobileHeaderProps>(function Mobi
   { title, onBack, rightContent },
   ref,
 ) {
-  const router = useRouter();
+  const goBack = useSafeBack();
 
   const handleBack = () => {
     if (onBack) {
       onBack();
     } else {
-      router.back();
+      goBack();
     }
   };
 

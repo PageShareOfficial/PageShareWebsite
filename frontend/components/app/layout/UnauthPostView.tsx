@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import { ArrowLeft } from '@/constants/icons';
 import UnauthSidebar from '@/components/app/layout/UnauthSidebar';
 import PostCard from '@/components/app/post/PostCard';
@@ -55,7 +56,7 @@ export default function UnauthPostView({ post }: UnauthPostViewProps) {
             <div className={stickyHeaderClasses}>
               <div className="flex items-center px-4 h-14">
                 <Link
-                  href="/"
+                  href={ROUTES.landing}
                   className={
                     'mr-4 p-2 hover:bg-white/10 rounded-full transition-colors inline-flex'
                   }

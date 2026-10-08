@@ -15,6 +15,7 @@ import { usePostsData } from '@/hooks/post/usePostsData';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { useReportedContent } from '@/hooks/features/useReportedContent';
 import Loading from '@/components/app/common/Loading';
+import { ROUTES } from '@/constants/routes';
 
 function needsOnboarding(username: string): boolean {
   return username.startsWith('user_');
@@ -67,7 +68,7 @@ export default function HomePage() {
   useEffect(() => {
     if (loading) return;
     if (backendUser && needsOnboarding(backendUser.username)) {
-      router.replace('/onboarding');
+      router.replace(ROUTES.onboarding);
     }
   }, [loading, backendUser, router]);
 

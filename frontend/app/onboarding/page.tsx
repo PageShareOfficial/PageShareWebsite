@@ -16,6 +16,7 @@ import { apiPost, apiUploadProfilePicture } from '@/lib/api/client';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { ROUTES } from '@/constants/routes';
 
 // Form validation schema
 const onboardingSchema = z.object({
@@ -123,7 +124,7 @@ export default function OnboardingPage() {
 
       await apiPost('/users/me/onboarding', payload, session.access_token);
       await refreshBackendUser();
-      router.push('/home');
+      router.replace(ROUTES.home);
     } catch (err) {
       setSubmitError(getErrorMessage(err, 'Onboarding failed'));
     } finally {
@@ -136,7 +137,7 @@ export default function OnboardingPage() {
     if (loading) return;
     if (!session) return;
     if (backendUser && !needsOnboarding(backendUser.username)) {
-      router.replace('/home');
+      router.replace(ROUTES.home);
     }
   }, [loading, session, backendUser, router]);
 

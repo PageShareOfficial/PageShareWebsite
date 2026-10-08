@@ -5,7 +5,7 @@ import { Post } from '@/types';
 import { useState, useEffect } from 'react';
 import { isTweet } from '@/utils/content/postUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
 import PostAuthorMeta from './PostAuthorMeta';
 import PostActions from './PostActions';
@@ -69,7 +69,7 @@ export default function PostCard({
   // Navigate to quoted post detail page
   const handleQuotedPostClick = (e: React.MouseEvent, originalPost: Post) => {
     e.stopPropagation();
-    router.push(`/${originalPost.author.handle}/posts/${originalPost.id}`);
+    navigateToPost(originalPost.author.handle, originalPost.id, router);
   };
   
   // For normal reposts, check if original post is liked
@@ -167,13 +167,9 @@ export default function PostCard({
 
   const handleCommentClick = () => {
     // For normal reposts, navigate to original post's comment page
-    if (isTweet(post) && post.repostType === 'normal' && originalPost) {
-      const username = originalPost.author.handle;
-      router.push(`/${username}/posts/${originalPost.id}`);
-    } else {
-      const username = post.author.handle;
-      router.push(`/${username}/posts/${post.id}`);
-    }
+    const targetPost =
+      isTweet(post) && post.repostType === 'normal' && originalPost ? originalPost : post;
+    navigateToPost(targetPost.author.handle, targetPost.id, router);
   };
 
   // Render content based on post type
@@ -361,8 +357,7 @@ export default function PostCard({
     ) {
       return;
     }
-    const username = post.author.handle;
-    router.push(`/${username}/posts/${post.id}`);
+    navigateToPost(post.author.handle, post.id, router);
   };
 
   return (

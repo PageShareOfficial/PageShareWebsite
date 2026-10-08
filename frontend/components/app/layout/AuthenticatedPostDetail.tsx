@@ -1,8 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart } from '@/constants/icons';
+import { useSafeBack } from '@/hooks/common/useSafeBack';
 const ReportModal = dynamic(
   () => import('@/components/app/modals/ReportModal'),
   { ssr: false }
@@ -80,7 +80,7 @@ export type AuthenticatedPostDetailProps = {
  * The `(app)` layout provides sidebars; this component is the center column only.
  */
 export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailProps) {
-  const router = useRouter();
+  const goBack = useSafeBack();
   const {
     post,
     posts,
@@ -133,7 +133,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
               <div className={stickyHeaderClasses}>
                 <div className="flex items-center px-4 h-14">
                   <button
-                    onClick={() => router.back()}
+                    onClick={goBack}
                     className="mr-4 p-2 hover:bg-white/10 rounded-full transition-colors"
                     aria-label="Go back"
                   >

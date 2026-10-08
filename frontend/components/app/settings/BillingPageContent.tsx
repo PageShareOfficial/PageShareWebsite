@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import { ChevronLeft, CreditCard, ExternalLink, LoaderCircle, Sparkles } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
@@ -10,8 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
-import { createPortalSession } from '@/lib/api/billingApi';
 import type { PlanId } from '@/types/billing';
+import { openBillingPortal } from '@/utils/billing/openBillingPortal';
 import { formatDate } from '@/utils/core/dateUtils';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
@@ -76,11 +77,10 @@ export default function BillingPageContent() {
 
     setPortalLoading(true);
     try {
-      const { url } = await createPortalSession(accessToken);
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setPortalLoading(false);
+      await openBillingPortal(accessToken);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not open billing portal. Please try again.'));
+    } finally {
       setPortalLoading(false);
     }
   }, [isOnline, session?.access_token]);
@@ -114,7 +114,7 @@ export default function BillingPageContent() {
 
       <div className="hidden md:flex items-center gap-3 px-4 py-4 border-b border-white/10">
         <Link
-          href="/settings"
+          href={ROUTES.settings}
           className="p-2 -ml-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           aria-label="Back to settings"
         >
@@ -126,7 +126,7 @@ export default function BillingPageContent() {
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-2 py-4 lg:px-4">
           <Link
-            href="/settings"
+            href={ROUTES.settings}
             className="md:hidden inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-4 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />

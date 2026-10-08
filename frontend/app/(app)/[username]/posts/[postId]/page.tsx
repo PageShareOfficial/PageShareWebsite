@@ -18,6 +18,7 @@ import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { useCommentsData } from '@/hooks/post/useCommentsData';
 import { getPostById, mapPostResponseToPost } from '@/lib/api/postApi';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { ROUTES } from '@/constants/routes';
 import type { Post } from '@/types';
 
 export default function PostDetailPage() {
@@ -85,7 +86,7 @@ export default function PostDetailPage() {
     currentUser,
     onDeleteRedirect: (deletedPostId: string) => {
       if (deletedPostId === postId) {
-        router.push('/home');
+        router.replace(ROUTES.home);
       }
     }
   });
@@ -128,7 +129,7 @@ export default function PostDetailPage() {
         const foundPost = posts.find((p) => p.id === postId);
         if (!foundPost) {
           // Only redirect if post is truly not found after all checks
-          router.push('/home');
+          router.replace(ROUTES.home);
         }
       }, 1000);
       return () => clearTimeout(timer);
@@ -149,7 +150,7 @@ export default function PostDetailPage() {
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
           <ErrorState message={singlePostError} />
           <Link
-            href="/"
+            href={ROUTES.landing}
             className="mt-4 text-[#1d9bf0] hover:underline"
           >
             Back to home

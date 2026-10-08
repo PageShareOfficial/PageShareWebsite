@@ -5,6 +5,7 @@ import { useRecentSearches } from '@/hooks/discover/useRecentSearches';
 import { RecentSearch } from '@/types/discover';
 import { formatTimeAgo } from '@/utils/core/dateUtils';
 import { useRouter } from 'next/navigation';
+import { navigateToProfile } from '@/utils/core/navigationUtils';
 
 interface RecentSearchesProps {
   onSearchClick?: (query: string, type: 'account' | 'ticker') => void;
@@ -41,7 +42,7 @@ export default function RecentSearches({
     } else {
       // Default behavior: navigate or perform search
       if (search.type === 'account' && search.resultId) {
-        router.push(`/${search.resultId}`);
+        navigateToProfile(search.resultId, router);
       }
       // For tickers, no default behavior when onSearchClick is not provided
     }

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import { useRouter } from 'next/navigation';
 import { Plus } from '@/constants/icons';
 import { WatchlistItem } from '@/types';
@@ -51,7 +52,7 @@ export default function RightRail({
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <Link
-              href="/watchlist"
+              href={ROUTES.watchlist}
               prefetch={true}
               className="text-lg font-semibold text-white hover:text-cyan-400 transition-colors cursor-pointer"
             >

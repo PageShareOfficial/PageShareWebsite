@@ -20,6 +20,7 @@ import {
   parseAnalyticsTabParam,
 } from '@/utils/predictions/analyticsRoutes';
 import { pulseOfflineBanner } from '@/utils/offline/pulseOfflineBanner';
+import { ROUTES } from '@/constants/routes';
 import type { PredictionAnalyticsDashboard } from '@/lib/api/predictionApi';
 import type { AnalyticsAccessState } from '@/hooks/predictions/usePredictionAnalytics';
 
@@ -111,7 +112,7 @@ function AnalyticsPageBody({
   }, [searchParams]);
 
   const goToPredictions = () => {
-    router.push('/predictions');
+    router.push(ROUTES.predictions);
   };
 
   const isDashboardLoading =
