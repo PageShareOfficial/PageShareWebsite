@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
-
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pageshare.io';
+import { ROBOTS_DISALLOWED_PATHS } from '@/lib/seo/crawlPaths';
+import { siteConfig } from '@/lib/seo/metadata';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -8,21 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/home',
-          '/onboarding',
-          '/bookmarks',
-          '/watchlist',
-          '/settings',
-          '/auth/',
-          '/discover',
-          '/plans',
-          '/labs',
-          '/coming-soon',
-        ],
+        disallow: [...ROBOTS_DISALLOWED_PATHS],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${siteConfig.url}/sitemap.xml`,
   };
 }
