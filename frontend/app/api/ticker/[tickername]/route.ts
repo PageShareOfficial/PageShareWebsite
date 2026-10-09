@@ -4,10 +4,10 @@ import { fetchCryptoDetail } from '@/utils/api/tickerApi';
 /** GET /api/ticker/[tickername] – crypto only (CoinGecko). */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tickername: string } }
+  { params }: { params: Promise<{ tickername: string }> }
 ) {
   try {
-    const { tickername } = params;
+    const { tickername } = await params;
     const ticker = tickername?.toUpperCase();
     if (!ticker) {
       return NextResponse.json({ error: 'Ticker symbol is required' }, { status: 400 });

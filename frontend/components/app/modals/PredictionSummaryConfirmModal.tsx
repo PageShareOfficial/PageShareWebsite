@@ -120,10 +120,10 @@ export default function PredictionSummaryConfirmModal({
       contentClassName="p-4 sm:p-6"
       closeOnOverlayClick={!isSubmitting}
     >
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="rounded-xl border border-white/10 bg-white/3 p-4">
         <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/30 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-md bg-white/10">
+            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-white/10">
               <ImageWithFallback
                 src={assetImageSrc ?? ''}
                 alt={assetImageAlt || assetLabel}
@@ -137,7 +137,7 @@ export default function PredictionSummaryConfirmModal({
             </div>
             <p className="min-w-0 truncate text-sm font-medium text-white">{assetLabel}</p>
           </div>
-          <span className={`rounded px-2 py-1 text-[10px] font-semibold tracking-wide ${positionClass}`}>
+          <span className={`rounded-sm px-2 py-1 text-[10px] font-semibold tracking-wide ${positionClass}`}>
             {positionLabel}
           </span>
         </div>

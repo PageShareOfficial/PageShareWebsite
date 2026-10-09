@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { UserPlus, UserMinus } from 'lucide-react';
+import { UserPlus, UserMinus } from '@/constants/icons';
 import { User } from '@/types';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
@@ -47,7 +47,7 @@ export default function UserListItem({
           src={user.avatar}
           alt={user.displayName}
           size={48}
-          className="flex-shrink-0"
+          className="shrink-0"
         />
 
         {/* User Info */}
@@ -69,7 +69,7 @@ export default function UserListItem({
           onClick={handleFollowClick}
           disabled={!isOnline}
           title={!isOnline ? 'Connect to the internet to continue' : undefined}
-          className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${
+          className={`px-4 py-1.5 rounded-full font-semibold text-sm transition-colors flex items-center gap-1.5 shrink-0 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${
             isFollowing
               ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
               : 'bg-white text-black hover:bg-gray-100'

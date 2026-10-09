@@ -2,6 +2,7 @@
 
 import React from 'react';
 import * as Sentry from '@sentry/nextjs';
+import { ROUTES } from '@/constants/routes';
 import { logErrorToBackend } from '@/utils/error/logError';
 
 interface ErrorBoundaryState {
@@ -78,7 +79,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <details className="mt-4 text-left text-sm text-gray-500">
                 <summary className="cursor-pointer mb-2">Error Details (Dev Only)</summary>
-                <pre className="bg-gray-900 p-4 rounded overflow-auto text-xs">
+                <pre className="bg-gray-900 p-4 rounded-sm overflow-auto text-xs">
                   {this.state.error?.stack}
                   {'\n\n'}
                   {this.state.errorInfo.componentStack}
@@ -93,7 +94,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                 Try again
               </button>
               <button
-                onClick={() => window.location.href = '/home'}
+                onClick={() => window.location.assign(ROUTES.home)}
                 className="px-6 py-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors font-medium border border-white/20"
               >
                 Go to Home

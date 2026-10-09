@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from '@/constants/icons';
 
 interface ScrollChevronButtonProps {
   direction: 'left' | 'right';

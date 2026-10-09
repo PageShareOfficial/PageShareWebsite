@@ -17,6 +17,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/** Negative max offsets turn zero progress into -0; normalize so "no transform" is exactly 0. */
+function normalizeZero(value: number): number {
+  return value === 0 ? 0 : value;
+}
+
 export function getStickyTopPx(viewportHeight: number): number {
   return viewportHeight * STORY_STACK_STICKY_TOP_VH;
 }
@@ -42,8 +47,8 @@ export function transformFromOverlapProgress(
 ): StackingCardTransform {
   return {
     scale: 1 - overlapProgress * STORY_STACK_SCALE_MAX,
-    translateY: overlapProgress * STORY_STACK_TRANSLATE_Y_MAX,
-    translateX: overlapProgress * STORY_STACK_TRANSLATE_X_MAX,
+    translateY: normalizeZero(overlapProgress * STORY_STACK_TRANSLATE_Y_MAX),
+    translateX: normalizeZero(overlapProgress * STORY_STACK_TRANSLATE_X_MAX),
   };
 }
 

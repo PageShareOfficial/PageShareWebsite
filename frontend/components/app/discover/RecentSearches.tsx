@@ -1,10 +1,11 @@
 'use client';
 
-import { X, User, TrendingUp, Clock } from 'lucide-react';
+import { X, User, TrendingUp, Clock } from '@/constants/icons';
 import { useRecentSearches } from '@/hooks/discover/useRecentSearches';
 import { RecentSearch } from '@/types/discover';
 import { formatTimeAgo } from '@/utils/core/dateUtils';
 import { useRouter } from 'next/navigation';
+import { navigateToProfile } from '@/utils/core/navigationUtils';
 
 interface RecentSearchesProps {
   onSearchClick?: (query: string, type: 'account' | 'ticker') => void;
@@ -41,7 +42,7 @@ export default function RecentSearches({
     } else {
       // Default behavior: navigate or perform search
       if (search.type === 'account' && search.resultId) {
-        router.push(`/${search.resultId}`);
+        navigateToProfile(search.resultId, router);
       }
       // For tickers, no default behavior when onSearchClick is not provided
     }
@@ -137,7 +138,7 @@ export default function RecentSearches({
                     </div>
                     <button
                       onClick={(e) => handleRemoveClick(e, search.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded-sm transition-all"
                       aria-label="Remove search"
                     >
                       <X className="w-3 h-3 text-gray-400" />
@@ -177,7 +178,7 @@ export default function RecentSearches({
                     </div>
                     <button
                       onClick={(e) => handleRemoveClick(e, search.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded-sm transition-all"
                       aria-label="Remove search"
                     >
                       <X className="w-3 h-3 text-gray-400" />

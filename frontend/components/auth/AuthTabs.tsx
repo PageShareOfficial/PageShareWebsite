@@ -7,7 +7,7 @@ import EmailSignUpForm from './EmailSignUpForm';
 import EmailSignInForm from './EmailSignInForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
-import {  Lock, Shield } from 'lucide-react';
+import { Lock, Shield } from '@/constants/icons';
 
 type AuthTab = 'signup' | 'signin';
 type AuthView = AuthTab | 'forgot';
@@ -55,7 +55,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
   return (
     <div
       id="auth"
-      className="w-full max-w-md rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-[#111827]/90 to-black/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(34,211,238,0.12)] backdrop-blur-sm"
+      className="w-full max-w-md rounded-2xl border border-cyan-500/25 bg-linear-to-b from-[#111827]/90 to-black/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(34,211,238,0.12)] backdrop-blur-xs"
     >
       <div className="flex flex-col items-center text-center mb-6">
         <div className="w-12 h-12 rounded-full border border-cyan-500/30 bg-cyan-500/10 flex items-center justify-center mb-4">
@@ -108,7 +108,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
         </div>
       )}
 
-      <div className={view === 'forgot' ? 'min-h-0' : 'min-h-[21.5rem]'}>
+      <div className={view === 'forgot' ? 'min-h-0' : 'min-h-86'}>
         {view === 'forgot' ? (
           <ForgotPasswordForm
             onBack={() => { setView('signin'); setError(null); }}

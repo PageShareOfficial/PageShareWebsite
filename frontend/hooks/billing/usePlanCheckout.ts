@@ -1,17 +1,13 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
-import {
-  createCheckoutSession,
-  createPortalSession,
-  switchSubscriptionPlan,
-} from '@/lib/api/billingApi';
+import { createCheckoutSession, switchSubscriptionPlan } from '@/lib/api/billingApi';
 import type { BillingInterval, PlanId } from '@/types/billing';
 import { buildCheckoutReturnUrls } from '@/utils/billing/checkoutReturnUrls';
+import { openBillingPortal } from '@/utils/billing/openBillingPortal';
 import { CROSS_PLAN_SWITCH_MESSAGE } from '@/utils/billing/resolvePlanCardUiState';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
@@ -40,11 +36,6 @@ function isCrossPlanSwitch(
   targetPlanId: PlanId
 ): boolean {
   return isPremium && currentPlanId != null && currentPlanId !== targetPlanId;
-}
-
-async function openBillingPortal(accessToken: string): Promise<void> {
-  const { url } = await createPortalSession(accessToken);
-  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 async function switchIntervalAndReturn(
@@ -78,7 +69,6 @@ async function startNewCheckout(
 }
 
 export function usePlanCheckout(): UsePlanCheckoutResult {
-  const router = useRouter();
   const { session } = useAuth();
   const { billingStatus } = useSubscription();
   const isOnline = useOnlineStatus();
@@ -110,7 +100,6 @@ export function usePlanCheckout(): UsePlanCheckoutResult {
       const accessToken = session?.access_token;
       if (!accessToken) {
         setCheckoutError('Sign in to subscribe to a premium plan.');
-        router.push('/');
         return;
       }
 
@@ -164,7 +153,6 @@ export function usePlanCheckout(): UsePlanCheckoutResult {
       billingStatus?.interval,
       isOnline,
       redirectToStripe,
-      router,
       session?.access_token,
     ]
   );

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import PredictionSubmitUpgradeModal from '@/components/app/modals/PredictionSubmitUpgradeModal';
 import ViewAnalystAnalyticsUpgradeModal from '@/components/app/modals/ViewAnalystAnalyticsUpgradeModal';
 import ErrorState from '@/components/app/common/ErrorState';
+import { ArrowLeft } from '@/constants/icons';
+import { ROUTES } from '@/constants/routes';
 import {
   usePredictionAnalytics,
   type AnalyticsAccessState,
@@ -52,7 +54,7 @@ export default function AnalyticsAccessGate({
 
   const handleCloseUpgrade = () => {
     setShowUpgradeModal(false);
-    router.replace('/predictions');
+    router.replace(ROUTES.predictions);
   };
 
   if (accessState === 'forbidden') {
@@ -85,7 +87,9 @@ export default function AnalyticsAccessGate({
       <ErrorState
         title="Analyst not found"
         message="This profile does not have analyst analytics available."
-        onRetry={() => router.replace('/predictions')}
+        onRetry={() => router.replace(ROUTES.predictions)}
+        actionLabel="Back to predictions"
+        actionIcon={ArrowLeft}
       />
     );
   }

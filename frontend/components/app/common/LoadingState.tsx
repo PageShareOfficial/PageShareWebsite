@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { LoaderCircle } from '@/constants/icons';
 
 interface LoadingStateProps {
   text?: string;
@@ -33,7 +33,7 @@ export default function LoadingState({
 
   return (
     <div className={`flex items-center justify-center gap-2 text-gray-400 ${inline ? 'flex-row py-0' : 'flex-col py-8'} ${className}`}>
-      <Loader2 className={`${sizeClasses[size]} animate-spin ${inline ? '' : 'mb-4'}`} />
+      <LoaderCircle className={`${sizeClasses[size]} animate-spin ${inline ? '' : 'mb-4'}`} />
       {text && <span className={textSizeClasses[size]}>{text}</span>}
     </div>
   );

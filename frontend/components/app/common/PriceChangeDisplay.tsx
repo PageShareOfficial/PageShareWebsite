@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown } from '@/constants/icons';
 
 interface PriceChangeDisplayProps {
   change: number;

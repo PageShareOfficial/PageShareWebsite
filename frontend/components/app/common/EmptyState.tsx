@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchX, Inbox, Package } from 'lucide-react';
+import { SearchX, Inbox, Package } from '@/constants/icons';
 import React from 'react';
 
 interface EmptyStateProps {

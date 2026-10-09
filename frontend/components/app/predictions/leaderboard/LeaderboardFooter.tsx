@@ -1,4 +1,4 @@
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp } from '@/constants/icons';
 
 interface LeaderboardFooterProps {
   hasMore?: boolean;
@@ -14,7 +14,7 @@ export default function LeaderboardFooter({
   loadMoreDisabled = false,
 }: LeaderboardFooterProps) {
   return (
-    <div className="space-y-0 border-t border-white/10 bg-white/[0.02]">
+    <div className="space-y-0 border-t border-white/10 bg-white/2">
       {hasMore && onLoadMore ? (
         <div className="flex justify-center px-3 py-3">
           <button

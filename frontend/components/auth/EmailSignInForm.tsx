@@ -8,11 +8,12 @@ import { z } from 'zod';
 import FormInput from '@/components/app/common/FormInput';
 import LandingFormInput from '@/components/auth/LandingFormInput';
 import { PrimaryButton } from '@/components/app/common/Button';
-import { ArrowRight, Lock, Mail } from 'lucide-react';
+import { ArrowRight, Lock, Mail } from '@/constants/icons';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
+import { ROUTES } from '@/constants/routes';
 
 const signInSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -55,7 +56,7 @@ export default function EmailSignInForm({
         });
         router.replace(destination);
       } else {
-        router.replace('/home');
+        router.replace(ROUTES.home);
       }
     } catch (err) {
       let msg = getErrorMessage(err, 'Sign in failed');

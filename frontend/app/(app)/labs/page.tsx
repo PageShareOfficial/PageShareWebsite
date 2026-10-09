@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { GiBinoculars } from 'react-icons/gi';
+import { GiBinoculars } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 
 export default function LabsPage() {

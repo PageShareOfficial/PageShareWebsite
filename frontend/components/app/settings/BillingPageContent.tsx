@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, CreditCard, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
+import { ChevronLeft, CreditCard, ExternalLink, LoaderCircle, Sparkles } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
 import { PLANS } from '@/components/app/plans/planData';
@@ -10,8 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
-import { createPortalSession } from '@/lib/api/billingApi';
 import type { PlanId } from '@/types/billing';
+import { openBillingPortal } from '@/utils/billing/openBillingPortal';
 import { formatDate } from '@/utils/core/dateUtils';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
@@ -76,11 +77,10 @@ export default function BillingPageContent() {
 
     setPortalLoading(true);
     try {
-      const { url } = await createPortalSession(accessToken);
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setPortalLoading(false);
+      await openBillingPortal(accessToken);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not open billing portal. Please try again.'));
+    } finally {
       setPortalLoading(false);
     }
   }, [isOnline, session?.access_token]);
@@ -114,7 +114,7 @@ export default function BillingPageContent() {
 
       <div className="hidden md:flex items-center gap-3 px-4 py-4 border-b border-white/10">
         <Link
-          href="/settings"
+          href={ROUTES.settings}
           className="p-2 -ml-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           aria-label="Back to settings"
         >
@@ -126,7 +126,7 @@ export default function BillingPageContent() {
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-2 py-4 lg:px-4">
           <Link
-            href="/settings"
+            href={ROUTES.settings}
             className="md:hidden inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-4 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -143,7 +143,7 @@ export default function BillingPageContent() {
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
             {isResolvingBilling ? (
               <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
                 Loading subscription details...
               </div>
             ) : isPremium && plan && accent ? (
@@ -207,7 +207,7 @@ export default function BillingPageContent() {
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {portalLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                      <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
                     ) : (
                       <CreditCard className="w-4 h-4" aria-hidden />
                     )}
@@ -242,7 +242,7 @@ export default function BillingPageContent() {
                   <button
                     type="button"
                     onClick={openPremium}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold transition-colors"
                   >
                     <Sparkles className="w-4 h-4" aria-hidden />
                     View premium plans
@@ -264,7 +264,7 @@ export default function BillingPageContent() {
             {isResolvingBilling ? (
               <div className="mt-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden />
+                  <LoaderCircle className="w-3.5 h-3.5 animate-spin" aria-hidden />
                   Checking account credit...
                 </div>
               </div>

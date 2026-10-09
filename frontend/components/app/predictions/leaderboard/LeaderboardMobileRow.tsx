@@ -25,7 +25,7 @@ interface LeaderboardMobileRowProps {
 
 function StatBox({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs">
+    <div className="rounded-lg border border-white/10 bg-white/3 px-2.5 py-2 text-xs">
       <div className="text-gray-500">{label}</div>
       <div className="font-medium tabular-nums text-gray-200">{value}</div>
     </div>

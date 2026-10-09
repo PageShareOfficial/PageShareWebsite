@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart } from 'lucide-react';
+import { Heart } from '@/constants/icons';
 import { Post, Comment } from '@/types';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from '@/components/app/post/PostHeader';
 import PostMedia from '@/components/app/post/PostMedia';
 import PostActions from '@/components/app/post/PostActions';
@@ -14,6 +14,8 @@ import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import { isTweet } from '@/utils/content/postUtils';
+import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
+import DeletedQuotedPost from '@/components/app/post/DeletedQuotedPost';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 
 interface ReplyCardProps {
@@ -53,8 +55,7 @@ export default function ReplyCard({
 
 
   const handleClick = () => {
-    const username = originalPost.author.handle;
-    router.push(`/${username}/posts/${originalPost.id}`);
+    navigateToPost(originalPost.author.handle, originalPost.id, router);
   };
 
   const handleCommentLikeClick = (e: React.MouseEvent) => {
@@ -64,15 +65,8 @@ export default function ReplyCard({
     }
   };
 
-  // Get original post for reposts
-  const getOriginalPost = (): Post | undefined => {
-    if (isTweet(originalPost) && originalPost.repostType && originalPost.originalPostId) {
-      return allPosts.find(p => p.id === originalPost.originalPostId);
-    }
-    return undefined;
-  };
-
-  const quotedPost = getOriginalPost();
+  const quotedPost = resolveRepostedPost(originalPost, allPosts);
+  const isQuote = isQuotePost(originalPost);
 
   return (
     <div className="border-b border-white/10 px-4">
@@ -83,9 +77,9 @@ export default function ReplyCard({
       >
         <div className="flex items-start space-x-3">
           {/* Left column - Original post avatar */}
-          <div className="flex flex-col items-center flex-shrink-0 w-10">
+          <div className="flex flex-col items-center shrink-0 w-10">
             {/* Original post avatar */}
-            <div className="pt-3 flex-shrink-0">
+            <div className="pt-3 shrink-0">
               <div
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={(e) => {
@@ -120,9 +114,9 @@ export default function ReplyCard({
                 {/* Original Post Content */}
                 {isTweet(originalPost) && (
                   <div className="mt-2">
-                {originalPost.repostType === 'quote' && quotedPost ? (
+                {isQuote && quotedPost ? (
                   <>
-                    <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                    <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                       {parseCashtags(originalPost.content)}
                     </p>
                     {/* Quoted post card */}
@@ -141,7 +135,7 @@ export default function ReplyCard({
                       </div>
                       {isTweet(quotedPost) && (
                         <>
-                          <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
+                          <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                             {parseCashtags(quotedPost.content)}
                           </p>
                           <PostMedia
@@ -172,7 +166,7 @@ export default function ReplyCard({
                   </>
                 ) : originalPost.repostType === 'normal' && quotedPost ? (
                   <>
-                    <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                    <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                       {parseCashtags(quotedPost.content)}
                     </p>
                     <PostMedia
@@ -200,7 +194,7 @@ export default function ReplyCard({
                   </>
                 ) : (
                   <>
-                    <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                    <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                       {parseCashtags(originalPost.content)}
                     </p>
                     <PostMedia
@@ -225,6 +219,7 @@ export default function ReplyCard({
                         onVote={() => {}}
                       />
                     )}
+                    {isQuote && <DeletedQuotedPost />}
                   </>
                 )}
               </div>
@@ -286,7 +281,7 @@ export default function ReplyCard({
         <div className="flex items-start space-x-3 py-3">
           {/* Reply avatar */}
           <div
-            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               navigateToProfile(reply.author.handle, router);
@@ -339,7 +334,7 @@ export default function ReplyCard({
               />
             </div>
             {reply.content && (
-              <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-2">
+              <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word mb-2">
                 {parseCashtags(reply.content)}
               </p>
             )}

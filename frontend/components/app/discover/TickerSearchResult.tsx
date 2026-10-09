@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { StockData } from '@/utils/api/stockApi';
 import { WatchlistItem } from '@/types';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/constants/icons';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 
 interface TickerSearchResultProps {
@@ -91,7 +91,7 @@ export default function TickerSearchResult({
           <button
             onClick={handleAddToWatchlist}
             disabled={isInWatchlist}
-            className={`ml-4 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 flex-shrink-0 ${
+            className={`ml-4 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 shrink-0 ${
               isInWatchlist
                 ? 'bg-white/10 text-gray-400 cursor-not-allowed'
                 : 'bg-white text-black hover:bg-gray-100'

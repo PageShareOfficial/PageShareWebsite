@@ -8,6 +8,7 @@
 import * as Sentry from '@sentry/nextjs';
 import NextError from 'next/error';
 import { useEffect } from 'react';
+import { ROUTES } from '@/constants/routes';
 
 export default function GlobalError({
   error,
@@ -36,7 +37,7 @@ export default function GlobalError({
             </button>
             <button
               type="button"
-              onClick={() => (window.location.href = '/')}
+              onClick={() => window.location.assign(ROUTES.landing)}
               className="px-6 py-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors font-medium border border-white/20"
             >
               Go home

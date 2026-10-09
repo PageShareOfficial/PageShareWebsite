@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { LoaderCircle } from '@/constants/icons';
 import { NewsCategory, NewsArticle } from '@/types/discover';
 import { useNewsFeed } from '@/hooks/discover/useNewsFeed';
 import NewsCard from './NewsCard';
@@ -159,8 +159,8 @@ export default function NewsSection({
             >
               <div className="flex gap-4">
                 {/* Image skeleton */}
-                <Skeleton variant="rectangular" width={128} height={128} rounded="rounded-lg" className="flex-shrink-0 hidden md:block" />
-                <Skeleton variant="rectangular" width={96} height={96} rounded="rounded-lg" className="flex-shrink-0 md:hidden" />
+                <Skeleton variant="rectangular" width={128} height={128} rounded="rounded-lg" className="shrink-0 hidden md:block" />
+                <Skeleton variant="rectangular" width={96} height={96} rounded="rounded-lg" className="shrink-0 md:hidden" />
                 {/* Content skeleton */}
                 <div className="flex-1 min-w-0 space-y-3">
                   {/* Category + Source skeleton */}
@@ -213,7 +213,7 @@ export default function NewsSection({
       {/* Loading More Indicator */}
       {isLoading && articles.length > 0 && (
         <div className="text-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+          <LoaderCircle className="w-6 h-6 animate-spin mx-auto text-gray-400" />
         </div>
       )}
 

@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HiOutlinePhotograph, HiOutlineEmojiHappy, HiX } from 'react-icons/hi';
-import { RiFileGifLine, RiBarChartLine } from 'react-icons/ri';
+import {
+  HiOutlinePhotograph,
+  HiOutlineEmojiHappy,
+  X,
+  RiFileGifLine,
+  RiBarChartLine,
+} from '@/constants/icons';
 import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
@@ -235,7 +240,7 @@ export default function TweetComposer({
     <form onSubmit={handleSubmit}>
       <div className="flex space-x-2 sm:space-x-3 md:space-x-3 lg:space-x-4">
         {/* User Avatar */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <AvatarWithFallback
             src={currentUser.avatar}
             alt={currentUser.displayName}
@@ -261,7 +266,7 @@ export default function TweetComposer({
                 resizeComposerTextarea(e.target);
               }}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : (originalPost ? "Add a comment..." : "What's happening?"))}
-              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
+              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-hidden overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
@@ -312,7 +317,7 @@ export default function TweetComposer({
                     onClick={() => setSelectedGif(null)}
                     className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
                   >
-                    <HiX className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   </button>
                 </div>
               )}
@@ -331,7 +336,7 @@ export default function TweetComposer({
                   }}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="space-y-2 mb-3">
@@ -342,7 +347,7 @@ export default function TweetComposer({
                       value={option}
                       onChange={(e) => updatePollOption(index, e.target.value)}
                       placeholder={`Choice ${index + 1}`}
-                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500"
                       maxLength={25}
                     />
                     {pollOptions.length > 2 && (
@@ -351,7 +356,7 @@ export default function TweetComposer({
                         onClick={() => removePollOption(index)}
                         className="p-2 text-gray-400 hover:text-white"
                       >
-                        <HiX className="w-4 h-4" />
+                        <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -372,7 +377,7 @@ export default function TweetComposer({
                   <select
                     value={pollDuration}
                     onChange={(e) => setPollDuration(Number(e.target.value))}
-                    className="px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none cursor-pointer pr-10"
+                    className="px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-sm sm:text-base focus:outline-hidden focus:ring-2 focus:ring-cyan-500 appearance-none cursor-pointer pr-10"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                       backgroundRepeat: 'no-repeat',
@@ -403,7 +408,7 @@ export default function TweetComposer({
                   }}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               {/* GIF Search */}
@@ -413,7 +418,7 @@ export default function TweetComposer({
                   value={gifSearchQuery}
                   onChange={(e) => setGifSearchQuery(e.target.value)}
                   placeholder="Search for GIFs..."
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm sm:text-base"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500 text-sm sm:text-base"
                 />
               </div>
               {(() => {
@@ -487,7 +492,7 @@ export default function TweetComposer({
               {/* Render content based on post type */}
               {isTweet(originalPost) ? (
                 <>
-                  <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
+                  <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                     {originalPost.content}
                   </p>
                   {/* Original tweet media */}
@@ -597,10 +602,10 @@ export default function TweetComposer({
               </button>
             </div>
             
-            <div className="flex flex-row items-center justify-end gap-2 md:gap-3 flex-shrink-0">
+            <div className="flex flex-row items-center justify-end gap-2 md:gap-3 shrink-0">
               {/* Character Counter - Always show circle, show number only when 30 or less characters remaining */}
               {tweetText.length > 0 && (
-                <div className="relative w-8 h-8 md:w-10 md:h-10 flex-shrink-0">
+                <div className="relative w-8 h-8 md:w-10 md:h-10 shrink-0">
                   <svg className="transform -rotate-90 w-8 h-8 md:w-10 md:h-10" viewBox="0 0 36 36">
                     <circle
                       cx="18"
@@ -662,7 +667,7 @@ export default function TweetComposer({
                   (tweetText.trim().length === 0 && mediaFiles.length === 0 && !selectedGif && !(showPoll && pollOptions.filter((o) => o.trim()).length >= 2)) ||
                   (tweetText.length > 0 && isOverLimit)
                 }
-                className="px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                className="px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 {isPosting ? 'Posting...' : 'Post'}
               </button>
@@ -697,7 +702,7 @@ export default function TweetComposer({
                 className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
                 aria-label="Close"
               >
-                <HiX className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-2 sm:p-4">
@@ -707,7 +712,7 @@ export default function TweetComposer({
         </div>
         {/* Emoji Picker Portal for Mobile */}
         {showEmojiPicker && isModal && typeof window !== 'undefined' && window.innerWidth < 640 && (
-          <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black bg-opacity-80" onClick={() => setShowEmojiPicker(false)}>
+          <div className="fixed inset-0 z-60 flex items-end justify-center bg-black bg-opacity-80" onClick={() => setShowEmojiPicker(false)}>
             <div className="w-full max-w-md bg-black border-t border-white/10 rounded-t-xl" onClick={(e) => e.stopPropagation()}>
               <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <span className="text-white font-medium">Choose an emoji</span>
@@ -715,7 +720,7 @@ export default function TweetComposer({
                   onClick={() => setShowEmojiPicker(false)}
                   className="text-gray-400 hover:text-white"
                 >
-                  <HiX className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <div className="max-h-[60vh] overflow-y-auto">

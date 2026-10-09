@@ -36,7 +36,7 @@ export default function AccountSearchResult({
           src={user.avatar}
           alt={user.displayName}
           size={40}
-          className="flex-shrink-0"
+          className="shrink-0"
         />
         
         <div className="flex-1 min-w-0">

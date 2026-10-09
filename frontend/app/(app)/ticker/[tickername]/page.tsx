@@ -35,7 +35,12 @@ export default function TickerDetailPage() {
     ticker: tickername,
   });
 
-  const { data: chartData, isLoading: isChartLoading, error: chartError } = useTickerChart({
+  const {
+    data: chartData,
+    isLoading: isChartLoading,
+    error: chartError,
+    refetch: refetchChart,
+  } = useTickerChart({
     ticker: tickername,
     tickerType: type,
     timeRange: chartTimeRange,
@@ -145,6 +150,7 @@ export default function TickerDetailPage() {
                 error={chartError}
                 timeRange={chartTimeRange}
                 onTimeRangeChange={setChartTimeRange}
+                onRetry={() => void refetchChart()}
               />
 
               {/* Overview */}

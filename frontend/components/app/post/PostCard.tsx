@@ -4,13 +4,15 @@ import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
 import { useState, useEffect } from 'react';
 import { isTweet } from '@/utils/content/postUtils';
+import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
 import { parseCashtags } from '@/utils/core/textFormatting';
-import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
 import PostAuthorMeta from './PostAuthorMeta';
 import PostActions from './PostActions';
 import PostMedia from './PostMedia';
 import PollComponent from './PollComponent';
+import DeletedQuotedPost from './DeletedQuotedPost';
 import ImageViewerModal from '../modals/ImageViewerModal';
 import AvatarWithFallback from '../common/AvatarWithFallback';
 
@@ -48,17 +50,7 @@ export default function PostCard({
 }: PostCardProps) {
   const router = useRouter();
   
-  // Helper function to get original post by ID (use embedded quotedPost from API when present, else find in allPosts)
-  const getOriginalPost = (): Post | undefined => {
-    if (isTweet(post) && post.repostType && post.originalPostId) {
-      if (post.quotedPost) return post.quotedPost;
-      return allPosts.find(p => p.id === post.originalPostId);
-    }
-    return undefined;
-  };
-  
-  // Get original post for reposts
-  const originalPost = getOriginalPost();
+  const originalPost = resolveRepostedPost(post, allPosts);
   
   // Navigate to user profile
   const handleProfileClick = (e: React.MouseEvent, handle: string) => {
@@ -69,7 +61,7 @@ export default function PostCard({
   // Navigate to quoted post detail page
   const handleQuotedPostClick = (e: React.MouseEvent, originalPost: Post) => {
     e.stopPropagation();
-    router.push(`/${originalPost.author.handle}/posts/${originalPost.id}`);
+    navigateToPost(originalPost.author.handle, originalPost.id, router);
   };
   
   // For normal reposts, check if original post is liked
@@ -167,13 +159,9 @@ export default function PostCard({
 
   const handleCommentClick = () => {
     // For normal reposts, navigate to original post's comment page
-    if (isTweet(post) && post.repostType === 'normal' && originalPost) {
-      const username = originalPost.author.handle;
-      router.push(`/${username}/posts/${originalPost.id}`);
-    } else {
-      const username = post.author.handle;
-      router.push(`/${username}/posts/${post.id}`);
-    }
+    const targetPost =
+      isTweet(post) && post.repostType === 'normal' && originalPost ? originalPost : post;
+    navigateToPost(targetPost.author.handle, targetPost.id, router);
   };
 
   // Render content based on post type
@@ -181,11 +169,10 @@ export default function PostCard({
     if (isTweet(post)) {
       return (
         <>
-          {/* Quote repost: show when repostType is 'quote' OR we have originalPostId (profile list from API) */}
-          {(post.repostType === 'quote' || (post.originalPostId && post.repostType !== 'normal')) ? (
+          {isQuotePost(post) ? (
             <>
               {/* User's quote comment – always show (text, media, gif from the quote post) */}
-              <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+              <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                 {parseCashtags(typeof post.content === 'string' ? post.content : '')}
               </p>
               {post.media && post.media.length > 0 && (
@@ -240,7 +227,7 @@ export default function PostCard({
                   </div>
                   {originalPost && isTweet(originalPost) && (
                     <>
-                      <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
+                      <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                         {parseCashtags(originalPost.content)}
                       </p>
                       <PostMedia
@@ -268,9 +255,9 @@ export default function PostCard({
                     </>
                   )}
                 </div>
-              ) : post.originalPostId ? (
-                <p className="text-sm text-gray-500 italic">Quoted post</p>
-              ) : null}
+              ) : (
+                <DeletedQuotedPost />
+              )}
             </>
           ) : (
             <>
@@ -278,7 +265,7 @@ export default function PostCard({
               {post.repostType === 'normal' && originalPost && isTweet(originalPost) ? (
                 // Normal repost - show original post content
                 <>
-                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                     {parseCashtags(originalPost.content)}
                   </p>
                   
@@ -310,7 +297,7 @@ export default function PostCard({
               ) : (
                 // Normal tweet - show regular content
                 <>
-                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                     {parseCashtags(post.content)}
                   </p>
 
@@ -361,8 +348,7 @@ export default function PostCard({
     ) {
       return;
     }
-    const username = post.author.handle;
-    router.push(`/${username}/posts/${post.id}`);
+    navigateToPost(post.author.handle, post.id, router);
   };
 
   return (
@@ -373,7 +359,7 @@ export default function PostCard({
       >
         <div className="flex items-start space-x-3">
           <div
-            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               const authorHandle = (isTweet(post) && post.repostType === 'normal' && originalPost) 

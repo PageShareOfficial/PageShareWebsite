@@ -12,16 +12,6 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next/image', () => ({
-  default: ({ alt, src }: { alt: string; src: string }) => (
-    <img alt={alt} src={src} />
-  ),
-}));
-
-vi.mock('./UnauthSidebar', () => ({
-  default: () => <div data-testid="unauth-sidebar">Sidebar</div>,
-}));
-
 vi.mock('@/components/app/post/PostCard', () => ({
   default: () => <div data-testid="post-card">PostCard</div>,
 }));
@@ -60,12 +50,5 @@ describe('UnauthPostView', () => {
     const headings = screen.getAllByRole('heading', { name: /Post/i });
     expect(headings.length).toBeGreaterThanOrEqual(1);
     expect(headings[0]).toBeInTheDocument();
-  });
-
-  it('includes sidebar', () => {
-    render(<UnauthPostView post={mockPost as never} />);
-    const sidebars = screen.getAllByTestId('unauth-sidebar');
-    expect(sidebars.length).toBeGreaterThanOrEqual(1);
-    expect(sidebars[0]).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, ShieldCheck } from 'lucide-react';
+import { ExternalLink, ShieldCheck } from '@/constants/icons';
 import { polygonExplorerTxUrl } from '@/utils/predictions/polygonExplorer';
 
 interface PredictionOnChainProofProps {

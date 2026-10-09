@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { MdLeaderboard } from 'react-icons/md';
+import { ROUTES } from '@/constants/routes';
+import { Plus, MdLeaderboard } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 import Loading from '@/components/app/common/Loading';
 import PredictionsDashboard from '@/components/app/predictions/PredictionsDashboard';
@@ -46,7 +46,7 @@ export default function PredictionsPage() {
             </div>
             {header.showSubmit &&
               (header.submitAsLink ? (
-                <Link href="/submit-prediction" prefetch className={submitButtonClass}>
+                <Link href={ROUTES.submitPrediction} prefetch className={submitButtonClass}>
                   <Plus className="w-4 h-4" aria-hidden />
                   Submit
                 </Link>

@@ -28,7 +28,7 @@ export default function Loading({ text = 'Loading...', size = 'md' }: LoadingPro
           alt="PageShare Logo"
           width={64}
           height={64}
-          className={`${logoSize[size]} rounded animate-pulse`}
+          className={`${logoSize[size]} rounded-sm animate-pulse`}
           priority
         />
         {/* Spinning overlay for loading effect */}

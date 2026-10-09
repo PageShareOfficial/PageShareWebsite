@@ -58,7 +58,7 @@ export default function TickerKeyMetrics({ data }: TickerKeyMetricsProps) {
           className="p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl min-w-0 overflow-hidden"
         >
           <div className="text-xs text-gray-400 mb-1 truncate">{metric.label}</div>
-          <div className="text-sm md:text-base lg:text-lg font-semibold text-white break-words overflow-wrap-anywhere leading-tight">
+          <div className="text-sm md:text-base lg:text-lg font-semibold text-white wrap-break-word overflow-wrap-anywhere leading-tight">
             {metric.value}
           </div>
         </div>

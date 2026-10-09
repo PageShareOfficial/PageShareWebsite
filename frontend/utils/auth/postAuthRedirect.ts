@@ -1,4 +1,7 @@
 import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
+import { ROUTES } from '@/constants/routes';
+
+type PostAuthPath = typeof ROUTES.onboarding | typeof ROUTES.home;
 
 export function needsOnboarding(username: string): boolean {
   return username.startsWith('user_');
@@ -7,7 +10,7 @@ export function needsOnboarding(username: string): boolean {
 export async function resolvePostAuthPath(
   accessToken: string,
   options?: { recordSessionStart?: boolean }
-): Promise<'/onboarding' | '/home'> {
+): Promise<PostAuthPath> {
   const apiUrl = getBaseUrl();
 
   if (options?.recordSessionStart && apiUrl) {
@@ -19,13 +22,13 @@ export async function resolvePostAuthPath(
   }
 
   if (!apiUrl) {
-    return '/onboarding';
+    return ROUTES.onboarding;
   }
 
   try {
     const user = await apiGet<{ username: string }>('/users/me', accessToken);
-    return needsOnboarding(user.username) ? '/onboarding' : '/home';
+    return needsOnboarding(user.username) ? ROUTES.onboarding : ROUTES.home;
   } catch {
-    return '/onboarding';
+    return ROUTES.onboarding;
   }
 }

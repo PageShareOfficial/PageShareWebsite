@@ -38,12 +38,12 @@ export default function LeaderboardDesktopTable({
         <colgroup>
           <col className="w-14" />
           <col />
-          <col className="w-[6.5rem]" />
-          <col className="w-[5.5rem]" />
-          <col className={showAnalytics || showSaveAnalyst ? 'w-[9rem]' : 'w-[5.5rem]'} />
+          <col className="w-26" />
+          <col className="w-22" />
+          <col className={showAnalytics || showSaveAnalyst ? 'w-36' : 'w-22'} />
         </colgroup>
         <thead>
-          <tr className="border-b border-white/10 bg-white/[0.04] text-xs uppercase tracking-wide text-gray-400">
+          <tr className="border-b border-white/10 bg-white/4 text-xs uppercase tracking-wide text-gray-400">
             <th className="px-2 py-3 font-medium">Rank</th>
             <th className="px-2 py-3 font-medium">Analyst/Trader</th>
             <th className="whitespace-nowrap px-2 py-3 text-right font-medium tabular-nums tracking-normal">

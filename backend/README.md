@@ -136,7 +136,9 @@ backend/
 │
 ├── alembic/                 # Database migrations
 ├── docs/                    # Architecture, schema, API, deployment
-├── requirements.txt
+├── pyproject.toml           # Dependencies (source of truth, managed by uv)
+├── uv.lock                  # Exact locked versions (commit this)
+├── requirements.txt         # Generated from uv.lock for Vercel – do not edit by hand
 ├── Dockerfile
 ├── alembic.ini
 └── .env.example
@@ -146,7 +148,10 @@ backend/
 
 ## Prerequisites
 
-- **Python 3.12**
+- **Python 3.12** (uv can install it for you: `uv python install 3.12`)
+- **[uv](https://docs.astral.sh/uv/)** – Python package and environment manager
+  (`powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows,
+  `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS/Linux)
 - **PostgreSQL** (or Supabase project)
 - **Docker** (optional, for containerized runs)
 
@@ -160,35 +165,35 @@ backend/
 cd backend
 ```
 
-### 2. Create virtual environment
+### 2. Install dependencies
 
 ```bash
-python -m venv venv
+uv sync
 ```
 
-**Activate it:**
+This creates `.venv/` with the exact versions from `uv.lock` (including dev tools like pytest).
+No manual activation is needed: prefix commands with `uv run`. If you prefer an activated shell:
 
-- Windows (PowerShell): `.\venv\Scripts\Activate.ps1`
-- Windows (CMD): `.\venv\Scripts\activate.bat`
-- macOS/Linux: `source venv/bin/activate`
+- Windows (PowerShell): `.\.venv\Scripts\Activate.ps1`
+- macOS/Linux: `source .venv/bin/activate`
 
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure environment
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
 # Edit .env with your Supabase credentials and other vars
 ```
 
-### 5. Run locally
+### 4. Run locally
 
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
+```
+
+**Run tests:**
+
+```bash
+uv run pytest
 ```
 
 **Endpoints:**
@@ -268,19 +273,19 @@ Migrations are managed with **Alembic**.
 **Create a migration:**
 
 ```bash
-alembic revision --autogenerate -m "description"
+uv run alembic revision --autogenerate -m "description"
 ```
 
 **Apply migrations:**
 
 ```bash
-alembic upgrade head
+uv run alembic upgrade head
 ```
 
 **Downgrade one revision:**
 
 ```bash
-alembic downgrade -1
+uv run alembic downgrade -1
 ```
 
 `DATABASE_URL` in `.env` must point to your target database.
@@ -289,11 +294,20 @@ alembic downgrade -1
 
 ## Development
 
-### Adding a new package
+### Managing packages
 
 ```bash
-pip install <package>
-pip freeze > requirements.txt
+uv add <package>             # runtime dependency
+uv add --dev <package>       # dev-only tool (tests, linters)
+uv remove <package>
+uv lock --upgrade-package <package>   # upgrade one package within its allowed range
+```
+
+After any dependency change, regenerate the Vercel requirements file and commit
+`pyproject.toml`, `uv.lock` and `requirements.txt` together:
+
+```bash
+uv export --frozen --no-dev --no-hashes --no-emit-project --format requirements-txt -o requirements.txt
 ```
 
 ### Code organization

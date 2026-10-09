@@ -86,17 +86,17 @@ export function AnalyticsScaledMetricBarSkeleton({
   return (
     <div className={ANALYTICS_CHART_BORDER_CLASS} aria-hidden>
       <div
-        className="mb-3 h-3 rounded bg-white/10"
+        className="mb-3 h-3 rounded-sm bg-white/10"
         style={{ width: titleWidth }}
       />
       <div className="mb-1 flex justify-between">
-        <div className="h-3 w-24 rounded bg-white/10" />
-        <div className="h-3 w-10 rounded bg-white/10" />
+        <div className="h-3 w-24 rounded-sm bg-white/10" />
+        <div className="h-3 w-10 rounded-sm bg-white/10" />
       </div>
       <div className="h-3 rounded-full bg-white/10" />
       <div className="mt-1 flex justify-between">
-        <div className="h-2.5 w-6 rounded bg-white/10" />
-        <div className="h-2.5 w-6 rounded bg-white/10" />
+        <div className="h-2.5 w-6 rounded-sm bg-white/10" />
+        <div className="h-2.5 w-6 rounded-sm bg-white/10" />
       </div>
     </div>
   );

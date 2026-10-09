@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Check, Share2 } from 'lucide-react';
+import { Plus, Check, Share2 } from '@/constants/icons';
 import { shareContent } from '@/utils/core/clipboardUtils';
 
 interface TickerActionsProps {

@@ -1,6 +1,6 @@
 'use client';
 
-import { WifiOff, RefreshCw } from 'lucide-react';
+import { WifiOff, RefreshCw } from '@/constants/icons';
 
 /**
  * Custom offline page (YouTube-style). Shown when the user has no connection

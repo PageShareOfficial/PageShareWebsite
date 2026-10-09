@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { LogOut, Trash2 } from 'lucide-react';
+import { LogOut, Trash } from '@/constants/icons';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -14,6 +14,7 @@ import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useSubscription } from '@/hooks/billing/useSubscription';
+import { ROUTES, settingsDeleteAccountPath } from '@/constants/routes';
 
 export default function Topbar() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function Topbar() {
       return;
     }
     if (isPremium) {
-      router.push('/settings/billing');
+      router.push(ROUTES.billing);
       return;
     }
     if (isSubscriptionLoading) {
@@ -63,7 +64,7 @@ export default function Topbar() {
       <div className="px-4">
         <div className="flex items-center justify-between h-16">
           {/* Left: Profile Image */}
-          <div className="flex-shrink-0 relative" ref={profileMenuRef}>
+          <div className="shrink-0 relative" ref={profileMenuRef}>
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className="flex items-center"
@@ -89,11 +90,11 @@ export default function Topbar() {
                   <div className="text-gray-400 text-xs">@{currentUser.handle}</div>
                 </div>
                 <Link
-                  href="/settings?action=delete"
+                  href={settingsDeleteAccountPath()}
                   onClick={() => setIsProfileMenuOpen(false)}
                   className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash className="w-4 h-4" />
                   <span className="text-sm">Delete account</span>
                 </Link>
                 <button
@@ -112,19 +113,19 @@ export default function Topbar() {
 
           {/* Center: App Logo */}
           <div className="flex-1 flex items-center justify-center">
-            <Link href="/home" prefetch={true} className="flex items-center">
+            <Link href={ROUTES.home} prefetch={true} className="flex items-center">
               <Image
                 src="/pageshare_final.png"
                 alt="PageShare Logo"
                 width={32}
                 height={32}
-                className="w-12 h-12 rounded"
+                className="w-12 h-12 rounded-sm"
               />
             </Link>
           </div>
 
           {/* Right: Upgrade / Manage */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <button
               type="button"
               onClick={handleBillingButtonClick}

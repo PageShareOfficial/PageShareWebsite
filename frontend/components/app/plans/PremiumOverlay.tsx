@@ -2,7 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from '@/constants/icons';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import BillingIntervalToggle from '@/components/app/plans/BillingIntervalToggle';
 import PlansPageContent from '@/components/app/plans/PlansPageContent';
@@ -38,7 +38,7 @@ export default function PremiumOverlay() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex flex-col bg-black"
+      className="fixed inset-0 z-200 flex flex-col bg-black"
       role="dialog"
       aria-modal="true"
       aria-label="Premium plans"

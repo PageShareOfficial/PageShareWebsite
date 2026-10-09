@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from '@/constants/icons';
 
 interface LandingFormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -28,7 +28,7 @@ const LandingFormInput = forwardRef<HTMLInputElement, LandingFormInputProps>(
             type={inputType}
             className={`w-full pl-10 pr-10 py-3 bg-white/5 border ${
               error ? 'border-red-500' : 'border-white/10'
-            } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/30 transition-all ${className}`}
+            } rounded-xl text-white placeholder-gray-500 focus:outline-hidden focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/30 transition-all ${className}`}
             {...props}
           />
           {isPassword && showPasswordToggle && (

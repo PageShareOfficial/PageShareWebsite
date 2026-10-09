@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isReservedRoute } from '@/utils/core/routeUtils';
-import { updateSession } from '@/lib/supabase/middleware';
+import { isPublicAssetPath, isReservedRoute } from '@/utils/core/routeUtils';
+import { updateSession } from '@/lib/supabase/proxy';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Early exit for static files and internal Next.js routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.') // Static files like favicon.ico, images, etc.
-  ) {
+  // A missing "file" falls through to dynamic routes, so only skip auth outside protected sections.
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || isPublicAssetPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -46,9 +42,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico (favicon)
-     * - public folder files (images, fonts, etc.)
-     * Optimized to skip static assets faster
+     * - public folder files (images, fonts, etc.), except under AUTH_PROTECTED_ROUTES
+     *   (kept in sync by proxy.test.ts) so a fake extension cannot bypass sign-in
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot|json)$|_next).*)',
+    '/((?!_next/static|_next/image|favicon.ico|_next|(?!(?:home|predictions|submit-prediction|analytics|myanalysts|onboarding|settings|bookmarks|watchlist|ticker)(?:/|$)).*\\.(?:ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot|json)$).*)',
   ],
 };

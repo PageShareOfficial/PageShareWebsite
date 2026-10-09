@@ -14,6 +14,7 @@ interface TickerPriceChartProps {
   error: string | null;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
+  onRetry: () => void;
 }
 
 const TIME_RANGES: Array<{ value: TimeRange; label: string }> = [
@@ -38,6 +39,7 @@ export default function TickerPriceChart({
   error,
   timeRange,
   onTimeRangeChange,
+  onRetry,
 }: TickerPriceChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; price: number; date: string } | null>(null);
 
@@ -91,7 +93,8 @@ export default function TickerPriceChart({
         <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
           <p className="text-gray-400 mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            type="button"
+            onClick={onRetry}
             className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-100 transition-colors"
           >
             Retry
@@ -104,7 +107,7 @@ export default function TickerPriceChart({
   if (isLoading || aggregatedData.length === 0) {
     return (
       <div className="p-6 bg-white/5 border border-white/10 rounded-xl mb-6">
-        <div className="h-64 w-full rounded bg-white/5 skeleton-shimmer" />
+        <div className="h-64 w-full rounded-sm bg-white/5 skeleton-shimmer" />
       </div>
     );
   }
@@ -128,7 +131,7 @@ export default function TickerPriceChart({
             <button
               key={range.value}
               onClick={() => onTimeRangeChange(range.value)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex-shrink-0 ${
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors shrink-0 ${
                 timeRange === range.value
                   ? 'bg-white text-black font-medium'
                   : 'bg-white/10 text-gray-300 hover:bg-white/20'

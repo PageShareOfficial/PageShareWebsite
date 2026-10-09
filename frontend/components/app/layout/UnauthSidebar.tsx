@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 import {
   UNAUTH_LOGO_SIZE_DESKTOP,
@@ -13,13 +14,13 @@ const LOGO_SRC = '/pageshare_final.png';
 
 const asideClasses = [
   'hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10',
-  'bg-black flex-shrink-0 z-10 w-[200px] lg:w-[275px]',
+  'bg-black shrink-0 z-10 w-[200px] lg:w-[275px]',
   'md:min-w-[200px] lg:min-w-[275px]',
 ].join(' ');
 
 const headerClasses = [
-  'md:hidden sticky top-0 z-20 bg-black/95 backdrop-blur-sm',
-  'border-b border-white/10 flex items-center justify-between px-4 h-14 flex-shrink-0',
+  'md:hidden sticky top-0 z-20 bg-black/95 backdrop-blur-xs',
+  'border-b border-white/10 flex items-center justify-between px-4 h-14 shrink-0',
 ].join(' ');
 
 /**
@@ -32,13 +33,13 @@ export default function UnauthSidebar() {
   return (
     <div
       className={
-        'flex flex-col md:flex-row flex-shrink-0 md:w-[200px] lg:w-[275px] md:min-w-0'
+        'flex flex-col md:flex-row shrink-0 md:w-[200px] lg:w-[275px] md:min-w-0'
       }
     >
       <aside className={asideClasses} aria-label="Sign in or sign up">
         <div className="p-4 lg:pl-2 lg:pr-2 flex flex-col items-center lg:items-stretch gap-6 pt-8 min-w-0">
           <Link
-            href="/"
+            href={ROUTES.landing}
             className="flex items-center justify-center lg:justify-start lg:px-6 shrink-0"
             aria-label="PageShare home"
           >
@@ -47,7 +48,7 @@ export default function UnauthSidebar() {
               alt="PageShare"
               width={UNAUTH_LOGO_SIZE_DESKTOP}
               height={UNAUTH_LOGO_SIZE_DESKTOP}
-              className="w-12 h-12 rounded"
+              className="w-12 h-12 rounded-sm"
             />
           </Link>
           <AuthCtaButtons variant="sidebar" />
@@ -55,13 +56,13 @@ export default function UnauthSidebar() {
       </aside>
 
       <header className={headerClasses} aria-label="Sign in or sign up">
-        <Link href="/" className="flex items-center shrink-0" aria-label="PageShare home">
+        <Link href={ROUTES.landing} className="flex items-center shrink-0" aria-label="PageShare home">
           <Image
             src={LOGO_SRC}
             alt="PageShare"
             width={UNAUTH_LOGO_SIZE_MOBILE}
             height={UNAUTH_LOGO_SIZE_MOBILE}
-            className="w-10 h-10 rounded"
+            className="w-10 h-10 rounded-sm"
           />
         </Link>
         <AuthCtaButtons variant="mobile" />

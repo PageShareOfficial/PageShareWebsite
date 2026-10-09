@@ -3,14 +3,18 @@
  * Centralized navigation helpers for consistent routing across the app
  */
 
+import { postPath, profilePath, tickerPath } from '@/constants/routes';
+
+type PushRouter = { push: (path: string) => void };
+
 /**
  * Navigate to a user's profile page
  * @param handle - User's handle/username
  * @param router - Next.js router instance from useRouter()
  */
-export function navigateToProfile(handle: string, router: { push: (path: string) => void }): void {
+export function navigateToProfile(handle: string, router: PushRouter): void {
   if (!handle) return;
-  router.push(`/${handle}`);
+  router.push(profilePath(handle));
 }
 
 /**
@@ -18,9 +22,9 @@ export function navigateToProfile(handle: string, router: { push: (path: string)
  * @param ticker - Ticker symbol
  * @param router - Next.js router instance from useRouter()
  */
-export function navigateToTicker(ticker: string, router: { push: (path: string) => void }): void {
+export function navigateToTicker(ticker: string, router: PushRouter): void {
   if (!ticker) return;
-  router.push(`/ticker/${ticker}`);
+  router.push(tickerPath(ticker));
 }
 
 /**
@@ -29,11 +33,7 @@ export function navigateToTicker(ticker: string, router: { push: (path: string) 
  * @param postId - Post ID
  * @param router - Next.js router instance from useRouter()
  */
-export function navigateToPost(
-  username: string,
-  postId: string,
-  router: { push: (path: string) => void }
-): void {
+export function navigateToPost(username: string, postId: string, router: PushRouter): void {
   if (!username || !postId) return;
-  router.push(`/${username}/posts/${postId}`);
+  router.push(postPath(username, postId));
 }

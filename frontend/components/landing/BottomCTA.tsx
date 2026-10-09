@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/constants/icons';
 
 const GET_STARTED_BUTTON_CLASS =
   'mt-6 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition-colors w-full sm:w-auto shadow-[0_0_20px_rgba(34,211,238,0.25)]';
@@ -34,14 +34,14 @@ export default function BottomCTA() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           <div
             id="for-analysts"
-            className="rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/10 to-transparent p-6 sm:p-8 flex flex-col"
+            className="rounded-2xl border border-cyan-500/20 bg-linear-to-b from-cyan-500/10 to-transparent p-6 sm:p-8 flex flex-col"
           >
             <h2 className="text-xl sm:text-2xl font-bold text-white">For analysts</h2>
             <p className="mt-3 text-sm text-gray-400 leading-relaxed">
               Put your calls on the record. Build a track record investors can evaluate
               with evidence - not follower counts.
             </p>
-            <div className="relative mt-6 w-full aspect-[4/3] max-h-48 sm:max-h-56">
+            <div className="relative mt-6 w-full aspect-4/3 max-h-48 sm:max-h-56">
               <Image
                 src="/story/Analyst_persona.png"
                 alt="Analyst persona illustration"
@@ -62,14 +62,14 @@ export default function BottomCTA() {
 
           <div
             id="for-investors"
-            className="rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/10 to-transparent p-6 sm:p-8 flex flex-col"
+            className="rounded-2xl border border-cyan-500/20 bg-linear-to-b from-cyan-500/10 to-transparent p-6 sm:p-8 flex flex-col"
           >
             <h2 className="text-xl sm:text-2xl font-bold text-white">For investors</h2>
             <p className="mt-3 text-sm text-gray-400 leading-relaxed">
               Compare analysts on settled history, scorecards, and diligence-style
               summaries - decision support, not hype.
             </p>
-            <div className="relative mt-6 w-full aspect-[4/3] max-h-48 sm:max-h-56">
+            <div className="relative mt-6 w-full aspect-4/3 max-h-48 sm:max-h-56">
               <Image
                 src="/story/Investor_persona.png"
                 alt="Investor persona illustration"

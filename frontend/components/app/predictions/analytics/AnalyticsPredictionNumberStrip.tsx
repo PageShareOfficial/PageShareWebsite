@@ -61,14 +61,14 @@ function PredictionCallChip({
     <button
       type="button"
       onClick={() => onSelect(item.id)}
-      className={`group relative flex h-[8.25rem] w-[6.75rem] shrink-0 flex-col items-center overflow-visible rounded-2xl border px-2.5 pb-2.5 pt-2 text-center transition-all duration-200 ${
+      className={`group relative flex h-33 w-27 shrink-0 flex-col items-center overflow-visible rounded-2xl border px-2.5 pb-2.5 pt-2 text-center transition-all duration-200 ${
         isSelected
-          ? `border-white/25 bg-gradient-to-b from-white/15 to-white/[0.06] text-white shadow-lg ring-2 ${status.ring}`
-          : 'border-white/10 bg-black/25 text-gray-300 hover:border-white/20 hover:bg-white/[0.06]'
+          ? `border-white/25 bg-linear-to-b from-white/15 to-white/6 text-white shadow-lg ring-2 ${status.ring}`
+          : 'border-white/10 bg-black/25 text-gray-300 hover:border-white/20 hover:bg-white/6'
       }`}
     >
       <span
-        className={`mb-1 inline-flex min-h-[1.125rem] items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+        className={`mb-1 inline-flex min-h-4.5 items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
           isLatest
             ? 'bg-sky-500 text-white'
             : 'invisible pointer-events-none select-none'

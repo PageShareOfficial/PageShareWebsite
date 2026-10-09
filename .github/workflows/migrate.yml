@@ -23,16 +23,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.11'
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: uv sync --frozen --no-dev
 
       - name: Run migrations
         env:
           APP_ENV: prod
           DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
-        run: alembic upgrade head
+        run: uv run --frozen --no-dev alembic upgrade head

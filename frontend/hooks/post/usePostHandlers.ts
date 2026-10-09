@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Post } from '@/types';
 import { isTweet } from '@/utils/content/postUtils';
+import { removeDeletedPost } from '@/utils/content/quotedPostUtils';
 import { createNormalRepost, createQuoteRepost, incrementRepostCount } from '@/utils/content/repostHelpers';
 import { User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -254,15 +255,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
 
     try {
       await deletePost(postId, token);
-      setPosts((prev) => {
-        const filtered = prev.filter((p) => p.id !== postId);
-        return filtered.filter((p) => {
-          if (isTweet(p) && p.repostType && p.originalPostId) {
-            return p.originalPostId !== postId;
-          }
-          return true;
-        });
-      });
+      setPosts((prev) => removeDeletedPost(prev, postId));
 
       onDeleteSuccess?.();
       if (onDeleteRedirect) {

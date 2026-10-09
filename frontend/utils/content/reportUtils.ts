@@ -1,4 +1,5 @@
 import { createReport, type BackendReportType } from '@/lib/api/reportApi';
+import { postPath } from '@/constants/routes';
 
 export type ReportReason =
   | 'spam'
@@ -19,6 +20,20 @@ export interface Report {
   description?: string; // For 'other' reason
   timestamp: string;
 }
+
+type ReportLocation = Pick<Report, 'contentType' | 'contentId' | 'postId' | 'reportedUserHandle'>;
+
+/**
+ * Path to view reported content. Returns null for a comment report without its parent
+ * post id, since a comment has no page of its own.
+ */
+export const getReportedContentPath = (report: ReportLocation): string | null => {
+  if (report.contentType === 'post') {
+    return postPath(report.reportedUserHandle, report.contentId);
+  }
+  if (!report.postId) return null;
+  return postPath(report.reportedUserHandle, report.postId, report.contentId);
+};
 
 // In-memory cache of reports made in this session.
 // Backend remains the source of truth; this is only for client-side UX (auto-hide).

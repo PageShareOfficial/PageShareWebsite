@@ -1,4 +1,4 @@
-import { FaMedal } from 'react-icons/fa';
+import { FaMedal } from '@/constants/icons';
 import {
   getMedalColor,
   getRankBadgeClass,

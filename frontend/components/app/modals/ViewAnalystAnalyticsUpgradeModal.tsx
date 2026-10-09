@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart3, Bookmark, UserRoundSearch } from 'lucide-react';
+import { ChartColumn, Bookmark, UserRoundSearch } from '@/constants/icons';
 import Modal from '@/components/app/common/Modal';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
@@ -23,7 +23,7 @@ const INVESTOR_PERKS = [
     description: 'Shortlist top performers from the leaderboard in one tap.',
   },
   {
-    icon: BarChart3,
+    icon: ChartColumn,
     title: 'Open detailed analytics',
     description: 'Scorecards, outcomes, and performance beyond a single win rate.',
   },
@@ -68,7 +68,7 @@ export default function ViewAnalystAnalyticsUpgradeModal({
             return (
               <li
                 key={perk.title}
-                className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3"
+                className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/3 p-3"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/40">
                   <Icon className="h-4 w-4 text-emerald-400" aria-hidden />

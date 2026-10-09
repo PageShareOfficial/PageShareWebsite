@@ -13,7 +13,7 @@ Use this together with **quality_code** when generating or editing code. This fi
 
 ## Stack
 
-- **Frontend:** Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS. Forms: React Hook Form + Zod. Icons: Lucide React. Tests: Vitest.
+- **Frontend:** Next.js 16 (App Router, Turbopack; request interception lives in `proxy.ts`, not `middleware.ts`), React 19, TypeScript, Tailwind CSS 4 (no `tailwind.config`; theme/utilities in `app/globals.css`). Forms: React Hook Form + Zod. Icons: Lucide React. Tests: Vitest.
 - **Backend:** FastAPI, SQLAlchemy 2, PostgreSQL (Supabase), Pydantic v2. Auth: Supabase JWT. Tests: pytest.
 - **Monorepo:** `frontend/` and `backend/` at repo root. Frontend calls backend at `NEXT_PUBLIC_API_URL` when set; otherwise uses Next.js API routes (e.g. `/api/news`).
 
