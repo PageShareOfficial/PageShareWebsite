@@ -59,7 +59,8 @@ PageShare is a social platform for financial markets discussions. This document 
 ## Tech Stack
 
 ### Backend Runtime
-- **FastAPI** (Python 3.11+) - Web framework
+- **FastAPI** (Python 3.12) - Web framework
+- **uv** - Python version, virtual environment and dependency management (`pyproject.toml` + `uv.lock`)
 - **Vercel Serverless Functions** - Deployment platform
 - **Supabase Python Client** - Database & storage access
 
@@ -80,19 +81,37 @@ PageShare is a social platform for financial markets discussions. This document 
 - **MaxMind GeoIP2** - Premium option (paid)
 
 ### Key Dependencies
+
+Declared in `backend/pyproject.toml` (source of truth) and pinned exactly in `backend/uv.lock`.
+`requirements.txt` is generated from the lock for Vercel and must not be edited by hand.
+
 ```
-fastapi>=0.104.0
-uvicorn>=0.24.0
-sqlalchemy>=2.0.0
-alembic>=1.12.0
-pydantic>=2.5.0
-supabase>=2.0.0
-python-multipart>=0.0.6
-pillow>=10.0.0
-pyjwt>=2.8.0
-python-dotenv>=1.0.0
-sentry-sdk>=1.38.0  # Error tracking
-httpx>=0.25.0  # For IP geolocation API calls
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+sqlalchemy==2.0.36
+alembic==1.14.0
+pydantic>=2.5.0,<3
+supabase>=2.0.0,<3
+python-multipart>=0.0.6,<0.0.8
+pillow>=10.0.0,<11
+pyjwt>=2.8.0,<3
+python-dotenv==1.0.1
+sentry-sdk>=1.38.0,<2  # Error tracking
+httpx>=0.25.0,<0.28    # For IP geolocation API calls
+stripe>=11.0.0,<12     # Billing
+web3>=7.0.0,<8         # On-chain prediction proofs
+
+# dev group (uv sync installs it locally; never deployed)
+pytest>=7.0.0
+```
+
+Common commands (run from `backend/`):
+
+```bash
+uv sync                                  # create/update .venv from uv.lock
+uv run uvicorn app.main:app --reload     # run the API locally
+uv run pytest                            # run tests
+uv add <package>                         # add a runtime dependency (uv add --dev for tools)
 ```
 
 ---
@@ -202,7 +221,11 @@ backend/
 │   └── test_services.py
 │
 ├── vercel.json                    # Vercel deployment config
-├── requirements.txt               # Python dependencies
+├── pyproject.toml                 # Dependencies (source of truth, managed by uv)
+├── uv.lock                        # Exact locked versions (committed)
+├── .python-version                # Python version uv uses (3.12)
+├── requirements.txt               # Generated from uv.lock for Vercel (do not edit)
+├── Dockerfile                     # Local container image (installs via uv sync)
 ├── alembic.ini                    # Alembic config
 ├── .env.example                   # Environment variables template
 └── README.md                      # Backend README
