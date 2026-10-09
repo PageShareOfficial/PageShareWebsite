@@ -172,7 +172,7 @@ export default function PostCard({
           {isQuotePost(post) ? (
             <>
               {/* User's quote comment – always show (text, media, gif from the quote post) */}
-              <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+              <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                 {parseCashtags(typeof post.content === 'string' ? post.content : '')}
               </p>
               {post.media && post.media.length > 0 && (
@@ -227,7 +227,7 @@ export default function PostCard({
                   </div>
                   {originalPost && isTweet(originalPost) && (
                     <>
-                      <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
+                      <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                         {parseCashtags(originalPost.content)}
                       </p>
                       <PostMedia
@@ -265,7 +265,7 @@ export default function PostCard({
               {post.repostType === 'normal' && originalPost && isTweet(originalPost) ? (
                 // Normal repost - show original post content
                 <>
-                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                     {parseCashtags(originalPost.content)}
                   </p>
                   
@@ -297,7 +297,7 @@ export default function PostCard({
               ) : (
                 // Normal tweet - show regular content
                 <>
-                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                  <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                     {parseCashtags(post.content)}
                   </p>
 
@@ -359,7 +359,7 @@ export default function PostCard({
       >
         <div className="flex items-start space-x-3">
           <div
-            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               const authorHandle = (isTweet(post) && post.repostType === 'normal' && originalPost) 

@@ -323,7 +323,7 @@ export default function OnboardingPage() {
               id="bio"
               rows={4}
               maxLength={200}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
               placeholder="Tell us about yourself..."
             />
             <FormErrorMessage message={errors.bio?.message} className="mt-1" />

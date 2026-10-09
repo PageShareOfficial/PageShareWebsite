@@ -148,7 +148,7 @@ export default function Sidebar() {
           aria-expanded={isPremiumOpen}
           title={item.name}
         >
-          <Icon className="w-5 h-5 flex-shrink-0" />
+          <Icon className="w-5 h-5 shrink-0" />
           <span className="hidden lg:inline">{item.name}</span>
         </button>
       );
@@ -166,7 +166,7 @@ export default function Sidebar() {
         aria-current={isActive ? 'page' : undefined}
         title={item.name}
       >
-        <Icon className="w-5 h-5 flex-shrink-0" />
+        <Icon className="w-5 h-5 shrink-0" />
         <span className="hidden lg:inline">{item.name}</span>
       </Link>
     );
@@ -175,7 +175,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop & Tablet Sidebar */}
-      <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] flex-shrink-0 z-10">
+      <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] shrink-0 z-10">
         {/* Logo Header */}
         <div className="p-4 lg:pl-2 lg:pr-2 flex items-center justify-center lg:justify-start">
           <Link href={ROUTES.home} prefetch={true} className="flex items-center lg:px-6">
@@ -184,7 +184,7 @@ export default function Sidebar() {
               alt="PageShare Logo"
               width={48}
               height={48}
-              className="w-12 h-12 rounded"
+              className="w-12 h-12 rounded-sm"
             />
           </Link>
         </div>
@@ -205,7 +205,7 @@ export default function Sidebar() {
             className="w-full flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group bg-white text-black font-semibold hover:bg-gray-100 mt-2"
             title="Post"
           >
-            <Pencil className="w-5 h-5 flex-shrink-0" />
+            <Pencil className="w-5 h-5 shrink-0" />
             <span className="hidden lg:inline">Post</span>
           </button>
         </nav>
@@ -221,8 +221,8 @@ export default function Sidebar() {
               <>
                 <Skeleton variant="circular" width={40} height={40} />
                 <div className="flex-1 min-w-0 hidden lg:block space-y-2">
-                  <Skeleton variant="text" width={120} height={14} className="rounded" />
-                  <Skeleton variant="text" width={80} height={12} className="rounded" />
+                  <Skeleton variant="text" width={120} height={14} className="rounded-sm" />
+                  <Skeleton variant="text" width={80} height={12} className="rounded-sm" />
                 </div>
               </>
             ) : (
@@ -231,7 +231,7 @@ export default function Sidebar() {
                   src={currentUser.avatar}
                   alt={currentUser.displayName}
                   size={40}
-                  className="flex-shrink-0"
+                  className="shrink-0"
                 />
                 <div className="flex-1 min-w-0 text-left hidden lg:block">
                   <div className="flex items-center gap-1 min-w-0">
@@ -244,7 +244,7 @@ export default function Sidebar() {
                     @{currentUser.handle}
                   </div>
                 </div>
-                <Ellipsis className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
+                <Ellipsis className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors shrink-0 hidden lg:block" />
               </>
             )}
           </button>
@@ -312,7 +312,7 @@ export default function Sidebar() {
                         : 'text-gray-400'
                     }`}
                   >
-                    <Icon className="w-5 h-5 mb-1 flex-shrink-0" />
+                    <Icon className="w-5 h-5 mb-1 shrink-0" />
                     <span className="text-[10px] font-medium truncate px-1">{item.name}</span>
                   </button>
                   
@@ -397,7 +397,7 @@ export default function Sidebar() {
                 }`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className="w-5 h-5 mb-1 flex-shrink-0" />
+                <Icon className="w-5 h-5 mb-1 shrink-0" />
                 <span className="text-[10px] font-medium truncate px-1">{item.name}</span>
               </Link>
             );
@@ -414,7 +414,7 @@ export default function Sidebar() {
         }`}
         aria-label="Watchlist"
       >
-        <List className="w-5 h-5 flex-shrink-0" />
+        <List className="w-5 h-5 shrink-0" />
         <span className="text-sm font-medium whitespace-nowrap">
           Watchlist
         </span>

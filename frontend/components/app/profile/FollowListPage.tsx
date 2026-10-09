@@ -197,7 +197,7 @@ export default function FollowListPage({ username, initialTab }: FollowListPageP
 
           <div className="flex-1 flex pb-16 md:pb-0">
             <div className="w-full border-l border-r border-white/10">
-              <div className="hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10">
+              <div className="hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-xs border-b border-white/10">
                 <DesktopHeader
                   title={displayName}
                   subtitle={`@${handle}`}

@@ -107,7 +107,7 @@ export default function TickerPriceChart({
   if (isLoading || aggregatedData.length === 0) {
     return (
       <div className="p-6 bg-white/5 border border-white/10 rounded-xl mb-6">
-        <div className="h-64 w-full rounded bg-white/5 skeleton-shimmer" />
+        <div className="h-64 w-full rounded-sm bg-white/5 skeleton-shimmer" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function TickerPriceChart({
             <button
               key={range.value}
               onClick={() => onTimeRangeChange(range.value)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex-shrink-0 ${
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors shrink-0 ${
                 timeRange === range.value
                   ? 'bg-white text-black font-medium'
                   : 'bg-white/10 text-gray-300 hover:bg-white/20'

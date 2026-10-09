@@ -17,7 +17,7 @@ const outerClasses = [
 ].join(' ');
 
 const wrapperClasses = [
-  'flex flex-col md:flex-row md:flex-shrink-0',
+  'flex flex-col md:flex-row md:shrink-0',
   'md:max-w-[800px] lg:max-w-[875px] w-full md:w-auto',
 ].join(' ');
 
@@ -32,7 +32,7 @@ const midrailInnerClasses = [
 ].join(' ');
 
 const stickyHeaderClasses = [
-  'sticky top-0 z-20 bg-black/80 backdrop-blur-sm',
+  'sticky top-0 z-20 bg-black/80 backdrop-blur-xs',
   'border-b border-white/10 md:top-0',
 ].join(' ');
 

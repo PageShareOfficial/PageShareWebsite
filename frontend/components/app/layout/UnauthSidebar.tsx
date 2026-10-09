@@ -14,13 +14,13 @@ const LOGO_SRC = '/pageshare_final.png';
 
 const asideClasses = [
   'hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10',
-  'bg-black flex-shrink-0 z-10 w-[200px] lg:w-[275px]',
+  'bg-black shrink-0 z-10 w-[200px] lg:w-[275px]',
   'md:min-w-[200px] lg:min-w-[275px]',
 ].join(' ');
 
 const headerClasses = [
-  'md:hidden sticky top-0 z-20 bg-black/95 backdrop-blur-sm',
-  'border-b border-white/10 flex items-center justify-between px-4 h-14 flex-shrink-0',
+  'md:hidden sticky top-0 z-20 bg-black/95 backdrop-blur-xs',
+  'border-b border-white/10 flex items-center justify-between px-4 h-14 shrink-0',
 ].join(' ');
 
 /**
@@ -33,7 +33,7 @@ export default function UnauthSidebar() {
   return (
     <div
       className={
-        'flex flex-col md:flex-row flex-shrink-0 md:w-[200px] lg:w-[275px] md:min-w-0'
+        'flex flex-col md:flex-row shrink-0 md:w-[200px] lg:w-[275px] md:min-w-0'
       }
     >
       <aside className={asideClasses} aria-label="Sign in or sign up">
@@ -48,7 +48,7 @@ export default function UnauthSidebar() {
               alt="PageShare"
               width={UNAUTH_LOGO_SIZE_DESKTOP}
               height={UNAUTH_LOGO_SIZE_DESKTOP}
-              className="w-12 h-12 rounded"
+              className="w-12 h-12 rounded-sm"
             />
           </Link>
           <AuthCtaButtons variant="sidebar" />
@@ -62,7 +62,7 @@ export default function UnauthSidebar() {
             alt="PageShare"
             width={UNAUTH_LOGO_SIZE_MOBILE}
             height={UNAUTH_LOGO_SIZE_MOBILE}
-            className="w-10 h-10 rounded"
+            className="w-10 h-10 rounded-sm"
           />
         </Link>
         <AuthCtaButtons variant="mobile" />

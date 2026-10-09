@@ -79,7 +79,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <details className="mt-4 text-left text-sm text-gray-500">
                 <summary className="cursor-pointer mb-2">Error Details (Dev Only)</summary>
-                <pre className="bg-gray-900 p-4 rounded overflow-auto text-xs">
+                <pre className="bg-gray-900 p-4 rounded-sm overflow-auto text-xs">
                   {this.state.error?.stack}
                   {'\n\n'}
                   {this.state.errorInfo.componentStack}

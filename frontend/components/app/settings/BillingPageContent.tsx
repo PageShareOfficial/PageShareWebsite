@@ -242,7 +242,7 @@ export default function BillingPageContent() {
                   <button
                     type="button"
                     onClick={openPremium}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold transition-colors"
                   >
                     <Sparkles className="w-4 h-4" aria-hidden />
                     View premium plans

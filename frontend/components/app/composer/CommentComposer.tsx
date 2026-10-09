@@ -163,7 +163,7 @@ export default function CommentComposer({
           src={currentUser.avatar}
           alt={currentUser.displayName}
           size={40}
-          className="flex-shrink-0"
+          className="shrink-0"
         />
         <div className="flex-1 min-w-0 relative">
           <div className="relative">
@@ -181,7 +181,7 @@ export default function CommentComposer({
                 resizeComposerTextarea(e.target);
               }}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
-              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-none overflow-y-auto overflow-x-hidden ${
+              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-hidden overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
               }`}
               style={{ 
@@ -261,7 +261,7 @@ export default function CommentComposer({
                       value={option}
                       onChange={(e) => updatePollOption(index, e.target.value)}
                       placeholder={`Choice ${index + 1}`}
-                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500"
                       maxLength={25}
                     />
                     {pollOptions.length > 2 && (
@@ -290,7 +290,7 @@ export default function CommentComposer({
                 <select
                   value={pollDuration}
                   onChange={(e) => setPollDuration(Number(e.target.value))}
-                  className="px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none cursor-pointer pr-10"
+                  className="px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-cyan-500 appearance-none cursor-pointer pr-10"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
@@ -327,7 +327,7 @@ export default function CommentComposer({
                   value={gifSearchQuery}
                   onChange={(e) => setGifSearchQuery(e.target.value)}
                   placeholder="Search for GIFs..."
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500 text-sm"
                 />
               </div>
               {(() => {
@@ -442,10 +442,10 @@ export default function CommentComposer({
               </button>
             </div>
             
-            <div className="flex flex-row items-center justify-end gap-2 flex-shrink-0">
+            <div className="flex flex-row items-center justify-end gap-2 shrink-0">
               {/* Character Counter - Always show circle, show number only when 30 or less characters remaining */}
               {commentText.length > 0 && (
-                <div className="relative w-8 h-8 flex-shrink-0">
+                <div className="relative w-8 h-8 shrink-0">
                   <svg className="transform -rotate-90 w-8 h-8" viewBox="0 0 36 36">
                     <circle
                       cx="18"
@@ -508,7 +508,7 @@ export default function CommentComposer({
                   handleCommentSubmit(commentText, mediaFiles, selectedGif || undefined, poll);
                 }}
                 disabled={isOverLimit || (!commentText.trim() && mediaPreviews.length === 0 && !selectedGif && !(showPoll && pollOptions.filter(opt => opt.trim()).length >= 2))}
-                className="px-4 py-1.5 bg-white text-black rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                className="px-4 py-1.5 bg-white text-black rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 Reply
               </button>

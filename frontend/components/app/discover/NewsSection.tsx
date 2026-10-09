@@ -159,8 +159,8 @@ export default function NewsSection({
             >
               <div className="flex gap-4">
                 {/* Image skeleton */}
-                <Skeleton variant="rectangular" width={128} height={128} rounded="rounded-lg" className="flex-shrink-0 hidden md:block" />
-                <Skeleton variant="rectangular" width={96} height={96} rounded="rounded-lg" className="flex-shrink-0 md:hidden" />
+                <Skeleton variant="rectangular" width={128} height={128} rounded="rounded-lg" className="shrink-0 hidden md:block" />
+                <Skeleton variant="rectangular" width={96} height={96} rounded="rounded-lg" className="shrink-0 md:hidden" />
                 {/* Content skeleton */}
                 <div className="flex-1 min-w-0 space-y-3">
                   {/* Category + Source skeleton */}

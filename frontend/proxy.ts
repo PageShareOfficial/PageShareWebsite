@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isReservedRoute } from '@/utils/core/routeUtils';
-import { updateSession } from '@/lib/supabase/middleware';
+import { updateSession } from '@/lib/supabase/proxy';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Early exit for static files and internal Next.js routes

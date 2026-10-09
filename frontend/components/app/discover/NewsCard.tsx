@@ -34,7 +34,7 @@ export default function NewsCard({
       <div className="flex gap-4">
         {/* Image */}
         {article.imageUrl && (
-          <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-white/5 relative">
+          <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-white/5 relative">
             <img
               src={article.imageUrl}
               alt={article.title}

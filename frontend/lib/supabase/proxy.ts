@@ -6,7 +6,7 @@ import { AUTH_PROTECTED_ROUTES, RESERVED_ROUTES } from '@/utils/core/routeConsta
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /**
- * Creates a Supabase client for use in Next.js middleware.
+ * Creates a Supabase client for use in the Next.js proxy (formerly middleware).
  * Handles cookie refresh so the session stays valid.
  */
 export async function updateSession(request: NextRequest) {

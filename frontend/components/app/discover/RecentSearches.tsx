@@ -138,7 +138,7 @@ export default function RecentSearches({
                     </div>
                     <button
                       onClick={(e) => handleRemoveClick(e, search.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded-sm transition-all"
                       aria-label="Remove search"
                     >
                       <X className="w-3 h-3 text-gray-400" />
@@ -178,7 +178,7 @@ export default function RecentSearches({
                     </div>
                     <button
                       onClick={(e) => handleRemoveClick(e, search.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded-sm transition-all"
                       aria-label="Remove search"
                     >
                       <X className="w-3 h-3 text-gray-400" />

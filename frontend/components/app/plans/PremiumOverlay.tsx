@@ -38,7 +38,7 @@ export default function PremiumOverlay() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex flex-col bg-black"
+      className="fixed inset-0 z-200 flex flex-col bg-black"
       role="dialog"
       aria-modal="true"
       aria-label="Premium plans"

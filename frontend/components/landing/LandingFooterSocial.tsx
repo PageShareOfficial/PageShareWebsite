@@ -26,7 +26,7 @@ const SOCIAL_LINKS: SocialLink[] = [
 ];
 
 const SOCIAL_ICON_CLASS =
-  'inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-500 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50';
+  'inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-500 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-cyan-400/50';
 
 export default function LandingFooterSocial() {
   return (

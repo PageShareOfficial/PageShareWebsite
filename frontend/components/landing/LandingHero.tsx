@@ -44,7 +44,7 @@ export default function LandingHero({ compact = false, showLogo = false }: Landi
               compact ? 'mx-auto lg:mx-0' : ''
             }`}
           >
-            <span className="text-xs sm:text-sm font-semibold leading-snug bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
+            <span className="text-xs sm:text-sm font-semibold leading-snug bg-linear-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
               The Trust Layer for Crypto Market Intelligence
             </span>
           </div>
@@ -56,7 +56,7 @@ export default function LandingHero({ compact = false, showLogo = false }: Landi
           }
         >
           <span className="block">Evidence Based Crypto Predictions</span>
-          <span className="block pb-3 bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
+          <span className="block pb-3 bg-linear-to-r from-teal-400 via-cyan-400 to-teal-500 bg-clip-text text-transparent">
             Proof over Hype
           </span>
         </h1>

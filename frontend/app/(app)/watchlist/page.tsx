@@ -50,7 +50,7 @@ export default function WatchlistPage() {
                             <Skeleton variant="text" width={140} height={14} />
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
+                        <div className="text-right shrink-0">
                           <Skeleton variant="text" width={88} height={22} className="mb-2" />
                           <Skeleton variant="text" width={92} height={14} />
                         </div>
@@ -154,7 +154,7 @@ export default function WatchlistPage() {
                           </div>
                         </div>
 
-                        <div className="text-right flex-shrink-0">
+                        <div className="text-right shrink-0">
                           <div className="text-xs text-gray-500 mb-1">Price</div>
                           <div className="text-white font-semibold text-lg leading-tight">
                             ${item.price.toFixed(2)}

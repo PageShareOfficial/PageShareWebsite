@@ -97,7 +97,7 @@ export default function TickerMetricsGrid({ data }: TickerMetricsGridProps) {
                   {section.metrics.map((metric, index) => (
                     <div key={index} className="min-w-0 overflow-hidden">
                       <div className="text-xs text-gray-400 mb-1 truncate">{metric.label}</div>
-                      <div className="text-sm md:text-base text-white font-medium break-words overflow-wrap-anywhere leading-tight">
+                      <div className="text-sm md:text-base text-white font-medium wrap-break-word overflow-wrap-anywhere leading-tight">
                         {metric.value}
                       </div>
                     </div>

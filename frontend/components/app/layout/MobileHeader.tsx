@@ -39,7 +39,7 @@ const MobileHeader = forwardRef<HTMLDivElement, MobileHeaderProps>(function Mobi
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         <h1 className="text-lg font-semibold text-white truncate flex-1">{title}</h1>
-        {rightContent ? <div className="flex-shrink-0">{rightContent}</div> : null}
+        {rightContent ? <div className="shrink-0">{rightContent}</div> : null}
       </div>
     </div>
   );

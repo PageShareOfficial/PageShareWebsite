@@ -43,11 +43,11 @@ export default function MyAnalystsPage() {
           {isLoading ? (
             <p className="text-sm text-gray-500">Loading saved analysts…</p>
           ) : loadError ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.03]">
+            <div className="rounded-xl border border-white/10 bg-white/3">
               <ErrorState message={loadError} onRetry={() => void refreshSavedAnalysts()} />
             </div>
           ) : savedAnalysts.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-12 text-center">
+            <div className="rounded-xl border border-white/10 bg-white/3 px-4 py-12 text-center">
               <div className="mx-auto flex max-w-xs flex-col items-center gap-3">
                 <span className="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
                   <UserPlus className="h-10 w-10 text-emerald-400/90" aria-hidden />

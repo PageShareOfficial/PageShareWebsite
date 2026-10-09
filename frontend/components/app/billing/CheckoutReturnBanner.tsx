@@ -57,7 +57,7 @@ export default function CheckoutReturnBanner() {
 
   return (
     <div
-      className={`fixed top-4 left-1/2 z-[220] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl border px-4 py-3 shadow-lg ${
+      className={`fixed top-4 left-1/2 z-220 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl border px-4 py-3 shadow-lg ${
         isSuccess
           ? 'border-emerald-500/30 bg-emerald-500/10'
           : 'border-amber-500/30 bg-amber-500/10'

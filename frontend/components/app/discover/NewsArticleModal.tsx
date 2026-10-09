@@ -171,7 +171,7 @@ export default function NewsArticleModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/90 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/90 backdrop-blur-xs"
       onClick={onClose}
     >
       <div
@@ -179,7 +179,7 @@ export default function NewsArticleModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Mobile optimized with close button */}
-        <div className="flex items-start justify-between p-4 md:p-6 border-b border-white/10 bg-black/95 backdrop-blur-sm sticky top-0 z-10 flex-shrink-0">
+        <div className="flex items-start justify-between p-4 md:p-6 border-b border-white/10 bg-black/95 backdrop-blur-xs sticky top-0 z-10 shrink-0">
           <div className="flex-1 min-w-0 pr-4">
             {/* Date and source - prominently displayed on mobile */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
@@ -189,7 +189,7 @@ export default function NewsArticleModal({
               </div>
               {/* Date/Time - More visible on mobile */}
               <div className="flex items-center gap-1.5 text-sm md:text-xs text-gray-300 font-medium">
-                <Calendar className="w-4 h-4 md:w-3 md:h-3 flex-shrink-0" />
+                <Calendar className="w-4 h-4 md:w-3 md:h-3 shrink-0" />
                 <span className="whitespace-nowrap">{formatDateTime(article.publishedAt)}</span>
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function NewsArticleModal({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 ml-2"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors shrink-0 ml-2"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
@@ -207,7 +207,7 @@ export default function NewsArticleModal({
 
         {/* Image */}
         {article.imageUrl && !useIframe && !iframeFailed && (
-          <div className="w-full h-48 md:h-64 lg:h-80 bg-white/5 overflow-hidden flex-shrink-0">
+          <div className="w-full h-48 md:h-64 lg:h-80 bg-white/5 overflow-hidden shrink-0">
             <img
               src={article.imageUrl}
               alt={article.title}
@@ -221,7 +221,7 @@ export default function NewsArticleModal({
 
         {/* Read Full Article Button - Below Image or Header if no image */}
         {!isLoadingContent && (
-          <div className={`px-4 md:px-6 ${article.imageUrl && !useIframe && !iframeFailed ? 'pt-4 pb-2' : 'py-4'} flex-shrink-0 border-b border-white/10`}>
+          <div className={`px-4 md:px-6 ${article.imageUrl && !useIframe && !iframeFailed ? 'pt-4 pb-2' : 'py-4'} shrink-0 border-b border-white/10`}>
             <a
               href={article.url}
               target="_blank"
@@ -321,9 +321,9 @@ export default function NewsArticleModal({
         </div>
 
         {/* Footer - Minimal, just source info */}
-        <div className="p-3 md:p-4 border-t border-white/10 bg-black/95 backdrop-blur-sm flex items-center text-xs md:text-sm text-gray-400 flex-shrink-0">
+        <div className="p-3 md:p-4 border-t border-white/10 bg-black/95 backdrop-blur-xs flex items-center text-xs md:text-sm text-gray-400 shrink-0">
           <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 flex-shrink-0" />
+            <Globe className="w-4 h-4 shrink-0" />
             <span className="truncate">{article.source}</span>
           </div>
         </div>

@@ -123,7 +123,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
   } = props;
 
   const stickyHeaderClasses = [
-    'sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10',
+    'sticky top-0 z-20 bg-black/80 backdrop-blur-xs border-b border-white/10',
   ].join(' ');
 
   return (
@@ -220,7 +220,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                           src={comment.author.avatar}
                           alt={comment.author.displayName}
                           size={40}
-                          className="flex-shrink-0"
+                          className="shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1 w-full">
@@ -281,7 +281,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                             />
                           </div>
                           {comment.content && (
-                            <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-2">
+                            <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word mb-2">
                               {parseCashtags(comment.content)}
                             </p>
                           )}

@@ -9,14 +9,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ComingSoonPage({
+export default async function ComingSoonPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
-  const pageName = searchParams.page
-    ? decodeURIComponent(searchParams.page).replace(/-/g, ' ')
-    : 'This page';
+  const { page } = await searchParams;
+  const pageName = page ? decodeURIComponent(page).replace(/-/g, ' ') : 'This page';
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4">

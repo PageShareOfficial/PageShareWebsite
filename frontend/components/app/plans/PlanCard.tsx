@@ -22,7 +22,7 @@ interface PlanCardProps {
 const THEME_STYLES = {
   analyst: {
     border: 'border-blue-500/40 shadow-[0_0_24px_rgba(59,130,246,0.12)]',
-    glow: 'from-blue-500/[0.08]',
+    glow: 'from-blue-500/8',
     tick: 'text-blue-400',
     badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
     checkRing: 'bg-blue-600 border-transparent',
@@ -32,7 +32,7 @@ const THEME_STYLES = {
   },
   investor: {
     border: 'border-emerald-500/40 shadow-[0_0_24px_rgba(16,185,129,0.12)]',
-    glow: 'from-emerald-500/[0.08]',
+    glow: 'from-emerald-500/8',
     tick: 'text-emerald-400',
     badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
     checkRing: 'bg-emerald-600 border-transparent',
@@ -206,7 +206,7 @@ export default function PlanCard({
 
   return (
     <article
-      className={`relative flex flex-col rounded-2xl border bg-gradient-to-b ${styles.glow} to-black/40 pt-6 pb-5 px-5 sm:px-6 transition-colors ${styles.border} ${className} ${lockedOpacity}`}
+      className={`relative flex flex-col rounded-2xl border bg-linear-to-b ${styles.glow} to-black/40 pt-6 pb-5 px-5 sm:px-6 transition-colors ${styles.border} ${className} ${lockedOpacity}`}
     >
       <PlanTickRibbon theme={plan.theme} />
       <PlanCardHeader plan={plan} styles={styles} isCurrentBilling={isCurrentBilling} />

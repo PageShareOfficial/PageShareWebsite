@@ -64,7 +64,7 @@ export default function Topbar() {
       <div className="px-4">
         <div className="flex items-center justify-between h-16">
           {/* Left: Profile Image */}
-          <div className="flex-shrink-0 relative" ref={profileMenuRef}>
+          <div className="shrink-0 relative" ref={profileMenuRef}>
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className="flex items-center"
@@ -119,13 +119,13 @@ export default function Topbar() {
                 alt="PageShare Logo"
                 width={32}
                 height={32}
-                className="w-12 h-12 rounded"
+                className="w-12 h-12 rounded-sm"
               />
             </Link>
           </div>
 
           {/* Right: Upgrade / Manage */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <button
               type="button"
               onClick={handleBillingButtonClick}

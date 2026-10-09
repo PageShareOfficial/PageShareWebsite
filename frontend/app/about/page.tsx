@@ -66,7 +66,7 @@ export default function AboutPage() {
                 href={FOUNDER_LINKEDIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 rounded-full overflow-hidden border-2 border-slate-400 hover:border-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                className="shrink-0 rounded-full overflow-hidden border-2 border-slate-400 hover:border-slate-300 transition-colors focus:outline-hidden focus:ring-2 focus:ring-cyan-400/50"
                 aria-label="Rahul Naik on LinkedIn"
               >
                 <Image
@@ -91,7 +91,7 @@ export default function AboutPage() {
                   href={FOUNDER_LINKEDIN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-white/5 transition-colors focus:outline-hidden focus:ring-2 focus:ring-cyan-400/50"
                   aria-label="Connect on LinkedIn"
                 >
                   <FaLinkedinIn className="w-5 h-5" />

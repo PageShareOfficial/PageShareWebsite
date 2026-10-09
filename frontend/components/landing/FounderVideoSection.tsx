@@ -26,7 +26,7 @@ export default function FounderVideoSection() {
           </p>
         </header>
 
-        <div className="mx-auto max-w-3xl rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/10 to-transparent p-2 sm:p-3 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-cyan-500/20 bg-linear-to-b from-cyan-500/10 to-transparent p-2 sm:p-3 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
           <div className="relative w-full aspect-video overflow-hidden rounded-xl bg-black">
             <iframe
               src={FOUNDER_VIDEO_EMBED_URL}

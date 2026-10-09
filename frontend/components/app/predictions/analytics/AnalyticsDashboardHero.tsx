@@ -48,7 +48,7 @@ function RankBlock({
           className={
             isStacked
               ? 'text-center text-sm font-medium text-gray-400'
-              : 'max-w-[5.5rem] text-right text-xs font-medium leading-tight text-gray-400'
+              : 'max-w-22 text-right text-xs font-medium leading-tight text-gray-400'
           }
         >
           {rankTotalLabel}
@@ -82,7 +82,7 @@ export default function AnalyticsDashboardHero({
     'rounded-xl border border-white/15 bg-white/10 px-3 py-2.5 hover:bg-white/15';
 
   return (
-    <section className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-transparent to-emerald-500/5 p-4 sm:p-6">
+    <section className="rounded-xl border border-white/10 bg-linear-to-br from-blue-500/10 via-transparent to-emerald-500/5 p-4 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <AvatarWithFallback

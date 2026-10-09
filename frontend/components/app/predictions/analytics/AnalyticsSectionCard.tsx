@@ -14,7 +14,7 @@ export default function AnalyticsSectionCard({
   children,
 }: AnalyticsSectionCardProps) {
   return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+    <section className="rounded-xl border border-white/10 bg-white/3 p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 className="text-sm font-semibold text-white">{title}</h2>
         {titleMeta}

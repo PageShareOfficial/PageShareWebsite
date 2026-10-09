@@ -560,7 +560,7 @@ sentry_sdk.init(
 
 **Setup:**
 ```javascript
-// frontend/sentry.client.config.ts
+// frontend/instrumentation-client.ts (server/edge: instrumentation.ts -> sentry.server/edge.config.ts)
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({

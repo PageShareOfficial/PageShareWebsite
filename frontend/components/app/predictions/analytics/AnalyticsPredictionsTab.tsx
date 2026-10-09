@@ -70,7 +70,7 @@ export default function AnalyticsPredictionsTab({
 
   if (indexItems.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-16 text-center">
+      <div className="rounded-xl border border-dashed border-white/10 bg-white/3 px-4 py-16 text-center">
         <p className="text-sm font-medium text-white">No predictions yet</p>
         <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
           Locked calls will appear here newest first, one at a time.
@@ -81,7 +81,7 @@ export default function AnalyticsPredictionsTab({
 
   return (
     <div className="space-y-5">
-      <section className="overflow-visible rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4">
+      <section className="overflow-visible rounded-2xl border border-white/10 bg-white/3 p-3 sm:p-4">
         <AnalyticsPredictionNumberStrip
           items={indexItems}
           selectedId={selectedId}

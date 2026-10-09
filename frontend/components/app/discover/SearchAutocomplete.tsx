@@ -152,7 +152,7 @@ export default function SearchAutocomplete({
           }}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${inputClassName}`}
+          className={`w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${inputClassName}`}
         />
 
         {/* Autocomplete Suggestions Dropdown */}
@@ -184,17 +184,17 @@ export default function SearchAutocomplete({
                             src={recent.image}
                             alt={recent.resultName || recent.query}
                             size={40}
-                            className="flex-shrink-0"
+                            className="shrink-0"
                             fallbackText={getInitials(recent.resultName || recent.query)}
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden">
                             <ImageWithFallback
                               src={recent.image}
                               alt={recent.resultName || recent.query}
                               className="w-full h-full"
                               fallback={
-                                <div className="w-full h-full flex items-center justify-center p-1.5 rounded bg-purple-500/20 text-purple-400">
+                                <div className="w-full h-full flex items-center justify-center p-1.5 rounded-sm bg-purple-500/20 text-purple-400">
                                   {getRecentSearchIcon(recent.type)}
                                 </div>
                               }
@@ -232,7 +232,7 @@ export default function SearchAutocomplete({
                               onRemoveRecentSearch(recent.id);
                             }
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-opacity ml-2 cursor-pointer"
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded-sm transition-opacity ml-2 cursor-pointer"
                           aria-label="Remove search"
                         >
                           <X className="w-4 h-4 text-gray-400" />
@@ -258,7 +258,7 @@ export default function SearchAutocomplete({
                       >
                         <div className="flex items-center gap-3">
                           {/* Avatar skeleton */}
-                          <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="flex-shrink-0" />
+                          <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="shrink-0" />
                           <div className="flex-1 min-w-0 space-y-2">
                             {/* Name skeleton */}
                             <Skeleton variant="text" width="75%" height={16} />
@@ -276,7 +276,7 @@ export default function SearchAutocomplete({
                       >
                         <div className="flex items-center gap-3">
                           {/* Image skeleton */}
-                          <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="flex-shrink-0" />
+                          <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="shrink-0" />
                           <div className="flex-1 min-w-0 space-y-2">
                             {/* Ticker + badge skeleton */}
                             <div className="flex items-center gap-2">
@@ -309,7 +309,7 @@ export default function SearchAutocomplete({
                           } ${index > 0 || tickerSuggestions.length > 0 || recentSearches.length > 0 ? 'border-t border-white/5' : ''}`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden">
+                            <div className="relative w-10 h-10 rounded-lg shrink-0 overflow-hidden">
                               <ImageWithFallback
                                 src={user.avatar}
                                 alt={user.displayName}
@@ -357,7 +357,7 @@ export default function SearchAutocomplete({
                           } ${index > 0 || accountSuggestions.length > 0 || recentSearches.length > 0 ? 'border-t border-white/5' : ''}`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden bg-white/5">
+                            <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-white/5">
                               <ImageWithFallback
                                 src={suggestion.image}
                                 alt={suggestion.name}

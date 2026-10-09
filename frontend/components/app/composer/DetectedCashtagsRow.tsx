@@ -37,7 +37,7 @@ export default function DetectedCashtagsRow({ text }: DetectedCashtagsRowProps) 
             src={imageByTicker[symbol]}
             ticker={symbol}
             size="sm"
-            className="!w-6 !h-6 !rounded-md !border-0"
+            className="w-6! h-6! rounded-md! border-0!"
           />
           <span className="text-xs font-semibold text-white">{symbol}</span>
         </Link>

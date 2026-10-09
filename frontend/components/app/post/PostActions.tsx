@@ -105,7 +105,7 @@ export default function PostActions({
           showCount={false}
         />
         {isSharing && (
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black text-xs text-white shadow">
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-1 rounded-sm bg-black text-xs text-white shadow-sm">
             Link copied
           </div>
         )}

@@ -49,7 +49,7 @@ export default function RightRail({
     <aside className="hidden lg:flex flex-col w-[350px] sticky top-0 h-screen pt-6 overflow-y-auto">
       <div className="flex flex-col gap-6 pb-6">
         {/* Watchlist Card */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5 flex-shrink-0">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-5 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <Link
               href={ROUTES.watchlist}
@@ -83,7 +83,7 @@ export default function RightRail({
                     <Skeleton variant="text" width={60} height={16} className="mb-2" />
                     <Skeleton variant="text" width="80%" height={12} />
                   </div>
-                  <div className="text-right flex-shrink-0 ml-2">
+                  <div className="text-right shrink-0 ml-2">
                     <Skeleton variant="text" width={50} height={16} className="mb-1" />
                     <Skeleton variant="text" width={40} height={12} />
                   </div>
@@ -126,7 +126,7 @@ export default function RightRail({
                     <div className="font-medium text-white truncate">{item.ticker}</div>
                     <div className="text-xs text-gray-400 truncate">{item.name}</div>
                   </div>
-                  <div className="text-right flex-shrink-0 ml-2">
+                  <div className="text-right shrink-0 ml-2">
                     <div className="font-medium text-white">${item.price.toFixed(2)}</div>
                     <PriceChangeDisplay 
                       change={(item.price * item.change) / 100} 
@@ -142,12 +142,12 @@ export default function RightRail({
         </div>
 
         {isSubscriptionLoading ? (
-          <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
+          <div className="bg-linear-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 shrink-0">
             <LoadingState size="sm" className="py-6" />
           </div>
         ) : (
           showPremiumUpgradeCard && (
-          <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 flex-shrink-0">
+          <div className="bg-linear-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 shrink-0">
             <h2 className="text-lg font-semibold text-white mb-2">Premium</h2>
             <p className="text-sm text-gray-300 mb-4">
               Premium AI tools, deeper filters, and credibility analytics.

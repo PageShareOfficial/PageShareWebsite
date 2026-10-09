@@ -19,7 +19,7 @@ function SectionShell({
 }) {
   return (
     <section
-      className={`rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 ${className}`}
+      className={`rounded-xl border border-white/10 bg-white/3 p-4 sm:p-5 ${className}`}
     >
       {children}
     </section>
@@ -81,7 +81,7 @@ export default function AnalyticsDashboardSkeleton({
 }) {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading analytics dashboard">
-      <section className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/5 via-transparent to-emerald-500/5 p-4 sm:p-6">
+      <section className="rounded-xl border border-white/10 bg-linear-to-br from-blue-500/5 via-transparent to-emerald-500/5 p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <AvatarSkeleton size={56} />
@@ -170,7 +170,7 @@ export default function AnalyticsDashboardSkeleton({
 export function AnalyticsPredictionsTabSkeleton() {
   return (
     <div
-      className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
+      className="rounded-xl border border-white/10 bg-white/3 p-4 sm:p-5"
       aria-busy="true"
       aria-label="Loading predictions"
     >

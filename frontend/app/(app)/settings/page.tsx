@@ -355,7 +355,7 @@ function SettingsContent() {
                                 src={user.profile_picture_url ?? undefined}
                                 alt={user.display_name}
                                 size={48}
-                                className="flex-shrink-0"
+                                className="shrink-0"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -420,7 +420,7 @@ function SettingsContent() {
                                 src={user.profile_picture_url ?? undefined}
                                 alt={user.display_name}
                                 size={48}
-                                className="flex-shrink-0"
+                                className="shrink-0"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">

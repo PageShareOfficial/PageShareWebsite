@@ -183,7 +183,7 @@ export default function EditProfileModal({
               <button
                 type="button"
                 onClick={() => setSaveError(null)}
-                className="flex-shrink-0 p-1 rounded-full hover:bg-red-500/20 transition-colors"
+                className="shrink-0 p-1 rounded-full hover:bg-red-500/20 transition-colors"
                 aria-label="Dismiss"
               >
                 <X className="w-4 h-4" />
@@ -260,7 +260,7 @@ export default function EditProfileModal({
               id="bio"
               rows={4}
               maxLength={200}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all resize-none"
               placeholder="Tell us about yourself..."
             />
             <FormErrorMessage message={errors.bio?.message} className="mt-1" />

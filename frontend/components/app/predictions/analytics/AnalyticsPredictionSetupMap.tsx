@@ -101,11 +101,11 @@ function SetupLegendChip({
   return (
     <button
       type="button"
-      className={`flex min-w-0 flex-1 flex-col rounded-lg border px-2.5 py-2 text-left transition-all duration-150 outline-none sm:min-w-[7rem] sm:flex-none ${
+      className={`flex min-w-0 flex-1 flex-col rounded-lg border px-2.5 py-2 text-left transition-all duration-150 outline-hidden sm:min-w-28 sm:flex-none ${
         isActive
           ? `z-10 scale-[1.02] opacity-100 ring-2 ${toneActiveRing(tone)} ${toneBadgeClass(tone)}`
           : isDimmed
-            ? 'border-white/5 bg-white/[0.02] opacity-40'
+            ? 'border-white/5 bg-white/2 opacity-40'
             : `border-white/10 bg-black/20 opacity-100 hover:border-white/20 ${toneBadgeClass(tone)}`
       }`}
       aria-label={`${label}, ${priceText}`}
@@ -209,7 +209,7 @@ export default function AnalyticsPredictionSetupMap({
 
       <div className="relative px-0.5 pt-1 pb-1">
         <div
-          className={`relative h-3.5 rounded-full bg-gradient-to-r ${trackGradient} ring-1 ring-white/10`}
+          className={`relative h-3.5 rounded-full bg-linear-to-r ${trackGradient} ring-1 ring-white/10`}
           aria-hidden
         >
           {markers.map((marker) => {

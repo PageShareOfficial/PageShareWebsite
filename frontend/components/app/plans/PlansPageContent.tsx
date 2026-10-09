@@ -47,7 +47,7 @@ function PlansHero() {
       </p>
       <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">
         Upgrade Your{' '}
-        <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+        <span className="bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
           Edge.
         </span>
       </h1>
