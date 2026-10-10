@@ -4,9 +4,12 @@ from pydantic import BaseModel, EmailStr, Field, constr, validator
 
 UsernameStr = constr(pattern=r"^[a-z0-9_]{3,50}$")  # type: ignore[call-arg]
 
+DISPLAY_NAME_MAX_LENGTH = 100  # users.display_name is VARCHAR(100)
+DisplayNameStr = constr(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)  # type: ignore[call-arg]
+
 class UserBase(BaseModel):
     username: UsernameStr
-    display_name: constr(min_length=1, max_length=100)  # type: ignore[call-arg]
+    display_name: DisplayNameStr
     bio: Optional[str] = None
     profile_picture_url: Optional[str] = None
     timezone: Optional[str] = None
@@ -50,7 +53,7 @@ class PublicUserResponse(BaseModel):
     created_at: datetime
 
 class UpdateUserRequest(BaseModel):
-    display_name: Optional[constr(min_length=1, max_length=100)] = None  # type: ignore[call-arg]
+    display_name: Optional[DisplayNameStr] = None
     bio: Optional[str] = None
     interests: Optional[List[constr(min_length=1, max_length=50)]] = None  # type: ignore[call-arg]
     timezone: Optional[str] = None
@@ -67,7 +70,7 @@ class UpdateUserRequest(BaseModel):
 
 class OnboardingRequest(BaseModel):
     username: UsernameStr
-    display_name: constr(min_length=1, max_length=100)  # type: ignore[call-arg]
+    display_name: DisplayNameStr
     bio: Optional[str] = None
     date_of_birth: Optional[date] = None
     interests: List[constr(min_length=1, max_length=50)] = []  # type: ignore[call-arg]

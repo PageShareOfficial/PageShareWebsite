@@ -6,7 +6,9 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from app.models.user import User
 from app.services.auth_service import CurrentUser
-from app.services.user_service import DISPLAY_NAME_MAX_LENGTH, get_or_create_user_for_auth
+from pydantic import ValidationError
+from app.schemas.user import DISPLAY_NAME_MAX_LENGTH, OnboardingRequest, UpdateUserRequest
+from app.services.user_service import get_or_create_user_for_auth
 
 def _current_user(**claims) -> CurrentUser:
     return CurrentUser(auth_user_id=str(uuid4()), claims=claims)
@@ -47,6 +49,18 @@ def test_truncates_long_display_name_to_column_limit():
     user = get_or_create_user_for_auth(db, _current_user(name="x" * 250))
 
     assert len(user.display_name) == DISPLAY_NAME_MAX_LENGTH
+
+@pytest.mark.parametrize(
+    "build_request",
+    [
+        lambda name: OnboardingRequest(username="alice_1", display_name=name),
+        lambda name: UpdateUserRequest(display_name=name),
+    ],
+)
+def test_user_supplied_display_name_is_rejected_over_column_limit(build_request):
+    with pytest.raises(ValidationError):
+        build_request("x" * (DISPLAY_NAME_MAX_LENGTH + 1))
+    assert build_request("x" * DISPLAY_NAME_MAX_LENGTH).display_name
 
 def test_returns_row_created_by_concurrent_request():
     db = MagicMock()

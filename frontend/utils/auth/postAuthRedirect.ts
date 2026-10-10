@@ -1,5 +1,6 @@
 import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
 import { ROUTES } from '@/constants/routes';
+import { AccountLoadError, reportAccountLoadFailure } from '@/utils/auth/accountLoadError';
 
 type PostAuthPath = typeof ROUTES.onboarding | typeof ROUTES.home;
 
@@ -8,26 +9,29 @@ export function needsOnboarding(username: string): boolean {
 }
 
 /** Session tracking is best-effort; it must never block or fail sign-in. */
-async function recordSessionStart(accessToken: string): Promise<void> {
+export async function recordSessionStart(accessToken: string): Promise<void> {
   try {
     await apiPost('/session/start', {}, accessToken);
-  } catch {
-    // Best-effort.
+  } catch (err) {
+    console.warn('[session] start failed', err);
   }
 }
 
 async function resolveDestinationFromProfile(accessToken: string): Promise<PostAuthPath> {
+  let user: { username: string };
   try {
-    const user = await apiGet<{ username: string }>('/users/me', accessToken);
-    return needsOnboarding(user.username) ? ROUTES.onboarding : ROUTES.home;
-  } catch {
-    return ROUTES.onboarding;
+    user = await apiGet<{ username: string }>('/users/me', accessToken);
+  } catch (err) {
+    reportAccountLoadFailure(err, 'auth_callback');
+    throw new AccountLoadError();
   }
+  return needsOnboarding(user.username) ? ROUTES.onboarding : ROUTES.home;
 }
 
 /**
  * Picks where to send a freshly signed-in user. Session start and the profile lookup run in
  * parallel (both bootstrap the `users` row server-side), saving a backend round trip.
+ * @throws AccountLoadError when the account cannot be loaded (never guesses onboarding).
  */
 export async function resolvePostAuthPath(
   accessToken: string,

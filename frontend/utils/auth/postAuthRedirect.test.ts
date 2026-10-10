@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { needsOnboarding, resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
 import { ROUTES } from '@/constants/routes';
+import { AccountLoadError } from '@/utils/auth/accountLoadError';
 
 const api = vi.hoisted(() => ({
   apiGet: vi.fn(),
@@ -9,6 +10,12 @@ const api = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/api/client', () => api);
+
+const reportAccountLoadFailure = vi.hoisted(() => vi.fn());
+vi.mock('@/utils/auth/accountLoadError', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/utils/auth/accountLoadError')>()),
+  reportAccountLoadFailure,
+}));
 
 const TOKEN = 'token';
 
@@ -61,11 +68,17 @@ describe('resolvePostAuthPath', () => {
     );
   });
 
-  it('falls back to onboarding without an API or when the profile fails', async () => {
-    api.apiGet.mockRejectedValue(new Error('down'));
-    await expect(resolvePostAuthPath(TOKEN)).resolves.toBe(ROUTES.onboarding);
+  it('reports and throws instead of guessing onboarding when the profile fails', async () => {
+    const failure = new Error('down');
+    api.apiGet.mockRejectedValue(failure);
 
+    await expect(resolvePostAuthPath(TOKEN)).rejects.toBeInstanceOf(AccountLoadError);
+    expect(reportAccountLoadFailure).toHaveBeenCalledWith(failure, 'auth_callback');
+  });
+
+  it('goes to onboarding when no backend is configured', async () => {
     api.getBaseUrl.mockReturnValue('');
     await expect(resolvePostAuthPath(TOKEN)).resolves.toBe(ROUTES.onboarding);
+    expect(api.apiGet).not.toHaveBeenCalled();
   });
 });

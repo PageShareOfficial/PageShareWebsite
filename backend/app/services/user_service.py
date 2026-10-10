@@ -8,13 +8,16 @@ from app.models.user import User
 from app.models.follow import Follow
 from app.models.post import Post
 from app.models.user_interest import UserInterest
-from app.schemas.user import OnboardingRequest, UpdateUserRequest, UsernameStr
+from app.schemas.user import (
+    DISPLAY_NAME_MAX_LENGTH,
+    OnboardingRequest,
+    UpdateUserRequest,
+    UsernameStr,
+)
 from app.services.auth_service import CurrentUser, AuthException, AuthErrorCode
 from app.services.storage_service import delete_profile_picture
 
 logger = logging.getLogger("pageshare.user")
-
-DISPLAY_NAME_MAX_LENGTH = 100  # users.display_name is VARCHAR(100)
 
 def _normalize_username(username: str) -> str:
     return username.strip().lower()
@@ -32,6 +35,7 @@ def _build_placeholder_user(current: CurrentUser) -> User:
     """
     Minimal bootstrap row; onboarding fills in the rest.
     The user_{id} username lets the frontend detect users who still need onboarding.
+    The name comes from OAuth claims we cannot reject, so it is truncated rather than validated.
     """
     display_name = current.claims.get("name") or current.claims.get("email") or "New User"
     return User(
