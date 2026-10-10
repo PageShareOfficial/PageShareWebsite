@@ -32,7 +32,7 @@ export function ShowMoreToggleButton({ expanded, onToggle }: ShowMoreToggleButto
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className="w-full rounded-lg bg-white/5 py-2 text-center text-sm font-medium text-cyan-400 transition-colors hover:bg-white/10 hover:text-cyan-300"
+      className="w-full rounded-lg bg-white/5 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-white/10 hover:text-white"
     >
       {expanded ? 'Show less' : 'Show more'}
     </button>
