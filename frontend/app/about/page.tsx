@@ -74,18 +74,17 @@ export default function AboutPage() {
                   alt="Rahul Naik"
                   width={240}
                   height={240}
-                  className="object-cover w-240 h-240"
+                  className="object-cover w-60 h-60"
                 />
               </a>
               <div className="space-y-2 min-w-0">
                 <p className="text-white font-medium">Rahul Naik</p>
                 <p className="text-gray-300">
                   Rahul is the founder of {siteConfig.name} and a multi-domain expert with
-                  expertise in software development, AI, analytics &amp; quantitative finance. He
-                  is CTO of Martian Data, a business consultancy. An alumnus of the Indian Institute
-                  of Technology Jodhpur, he is deeply interested in business, entrepreneurship,
+                  expertise in software development, AI, analytics &amp; quantitative finance. An alumnus of the Indian Institute
+                  of Technology Jodhpur 2025, he is deeply interested in business, entrepreneurship,
                   and finance, and has worked with companies across the globe. Beyond work, he
-                  enjoys singing and playing the piano and harmonica.
+                  enjoys singing and playing the piano, harmonica and flute.
                 </p>
                 <a
                   href={FOUNDER_LINKEDIN_URL}

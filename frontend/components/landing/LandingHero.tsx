@@ -20,7 +20,7 @@ export default function LandingHero({ compact = false, showLogo = false }: Landi
     <div className={compact ? 'space-y-4 text-center lg:text-left' : 'space-y-6 sm:space-y-8'}>
       {showLogo && (
         <div className={compact ? 'mb-2 flex justify-center lg:justify-start' : 'mb-4 sm:mb-6'}>
-          <Link href={ROUTES.landing} className="block">
+          <Link href={ROUTES.landing} className="inline-flex">
             <Image
               src="/pageshare_final.png"
               alt="PageShare Logo"
