@@ -10,6 +10,8 @@ import HowWeWorkSection from '@/components/landing/HowWeWorkSection';
 import FounderVideoSection from '@/components/landing/FounderVideoSection';
 import BottomCTA from '@/components/landing/BottomCTA';
 import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
+import CryptoTickerBar from '@/components/landing/CryptoTickerBar';
+import type { TopCrypto } from '@/utils/api/topCryptosApi';
 import {
   AUTH_ERROR_CODES,
   ROUTES,
@@ -23,7 +25,9 @@ const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   [AUTH_ERROR_CODES.resetExpired]: 'Password reset link expired. Please request a new one.',
 };
 
-function HomeContent() {
+type LandingPageProps = Readonly<{ topCryptos: readonly TopCrypto[] }>;
+
+function HomeContent({ topCryptos }: LandingPageProps) {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get('error');
 
@@ -34,6 +38,8 @@ function HomeContent() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <div className="fixed inset-0 pointer-events-none z-0 bg-black" aria-hidden />
+
+      <CryptoTickerBar cryptos={topCryptos} />
 
       <header className="relative z-10 lg:hidden flex justify-center items-center py-6 sm:py-8 border-b border-white/10">
         <Link href={ROUTES.landing} className="block">
@@ -171,10 +177,10 @@ function HomeFallback() {
   );
 }
 
-export default function LandingPage() {
+export default function LandingPage({ topCryptos }: LandingPageProps) {
   return (
     <Suspense fallback={<HomeFallback />}>
-      <HomeContent />
+      <HomeContent topCryptos={topCryptos} />
     </Suspense>
   );
 }

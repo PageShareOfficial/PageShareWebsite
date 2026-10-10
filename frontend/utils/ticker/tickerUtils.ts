@@ -49,6 +49,20 @@ export function formatCurrency(value: number | null, currency: string = 'USD'): 
 }
 
 /**
+ * Format a USD crypto price: 2 decimals from $1 up, 4 significant digits below
+ * so sub-dollar coins (e.g. DOGE, SHIB) don't collapse to $0.09 / $0.00.
+ */
+export function formatCryptoPrice(value: number): string {
+  if (!Number.isFinite(value)) return 'N/A';
+  if (Math.abs(value) >= 1) return formatCurrency(value);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumSignificantDigits: 4,
+  }).format(value);
+}
+
+/**
  * Format percentage values
  */
 export function formatPercentage(value: number | null, decimals: number = 2): string {

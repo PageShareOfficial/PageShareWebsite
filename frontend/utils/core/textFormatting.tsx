@@ -1,67 +1,69 @@
 import React from 'react';
+import Link from 'next/link';
+import { profilePath, tickerPath } from '@/constants/routes';
 
 /** Cashtags end at space, newline, or end of string. */
-export const CASHTAG_REGEX = /\$[A-Za-z0-9_]+(?=\s|$|\n)/g;
-
+const CASHTAG_PATTERN = String.raw`\$[A-Za-z0-9_]+(?=\s|$)`;
 /**
- * Extract unique cashtags from plain text (order preserved, case-insensitive dedupe).
+ * Mentions start a word (so emails like a@b.com are skipped), match the username rules
+ * (3-50 of a-z, 0-9, _) and may be followed by punctuation, e.g. "thanks @alice!".
  */
-export function extractCashtags(text: string): string[] {
-  if (!text) return [];
+const MENTION_PATTERN = String.raw`(?<=^|\s)@[A-Za-z0-9_]{3,50}(?=$|\s|[.,!?;:)])`;
 
-  const matches = text.match(CASHTAG_REGEX) ?? [];
-  const seen = new Set<string>();
-  return matches.filter((tag) => {
-    const key = tag.toUpperCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+export const CONTENT_TAG_REGEX = new RegExp(`${CASHTAG_PATTERN}|${MENTION_PATTERN}`, 'g');
+
+/** `$btc` opens the ticker page, `@Alice` opens the profile (usernames are lowercase). */
+export function contentTagHref(tag: string): string {
+  const name = tag.slice(1);
+  return tag.startsWith('$') ? tickerPath(name.toUpperCase()) : profilePath(name.toLowerCase());
+}
+
+/** Cards open the post on click; a tag link must not trigger that as well. */
+function stopCardClick(event: React.MouseEvent) {
+  event.stopPropagation();
+}
+
+function renderContentTag(tag: string, key: number, interactive: boolean): React.ReactElement {
+  if (!interactive) {
+    return (
+      <span key={key} className="text-cyan-400 font-medium">
+        {tag}
+      </span>
+    );
+  }
+  return (
+    <Link
+      key={key}
+      href={contentTagHref(tag)}
+      onClick={stopCardClick}
+      className="text-cyan-400 font-medium hover:underline"
+    >
+      {tag}
+    </Link>
+  );
 }
 
 /**
- * Parses text and highlights cashtags (words starting with $)
- * Cashtags end at: space, newline, or end of string
- * @param text - The text content to parse
- * @param interactive - If true, adds hover effects and cursor pointer (default: true)
- * @returns Array of React elements with cashtags highlighted
+ * Highlights `$cashtags` and `@mentions` in post text.
+ * @param interactive - If true, tags link to the ticker or profile page (default: true)
  */
-export function parseCashtags(text: string, interactive: boolean = true): (string | React.ReactElement)[] {
+export function highlightContentTags(
+  text: string,
+  interactive: boolean = true
+): (string | React.ReactElement)[] {
   if (!text) return [];
 
-  const cashtagRegex = new RegExp(CASHTAG_REGEX.source, CASHTAG_REGEX.flags);
   const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
-  let match;
 
-  while ((match = cashtagRegex.exec(text)) !== null) {
-    // Add text before the cashtag
-    if (match.index > lastIndex) {
-      parts.push(text.substring(lastIndex, match.index));
-    }
-
-    // Add the highlighted cashtag
-    const cashtag = match[0];
-    const className = interactive 
-      ? "text-cyan-400 font-medium hover:underline cursor-pointer"
-      : "text-cyan-400 font-medium";
-    
-    parts.push(
-      <span key={match.index} className={className}>
-        {cashtag}
-      </span>
-    );
-
+  for (const match of text.matchAll(CONTENT_TAG_REGEX)) {
+    if (match.index > lastIndex) parts.push(text.substring(lastIndex, match.index));
+    parts.push(renderContentTag(match[0], match.index, interactive));
     lastIndex = match.index + match[0].length;
   }
 
-  // Add remaining text after the last cashtag
-  if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex));
-  }
-
-  // If no cashtags were found, return the original text
-  return parts.length > 0 ? parts : [text];
+  if (lastIndex < text.length) parts.push(text.substring(lastIndex));
+  return parts;
 }
 
 /**
@@ -71,16 +73,16 @@ export function parseCashtags(text: string, interactive: boolean = true): (strin
  */
 export function getInitials(name: string): string {
   if (!name || name.trim().length === 0) return '';
-  
+
   const words = name.trim().split(/\s+/);
   if (words.length === 0) return '';
-  
+
   // Get first letter of each word, up to 2 words
   const initials = words
     .slice(0, 2)
-    .map(word => word[0])
+    .map((word) => word[0])
     .join('')
     .toUpperCase();
-  
+
   return initials;
 }

@@ -19,7 +19,7 @@ import AuthorBadges from '@/components/app/common/AuthorBadges';
 import LoadingState from '@/components/app/common/LoadingState';
 import ErrorState from '@/components/app/common/ErrorState';
 import { formatDateTime } from '@/utils/core/dateUtils';
-import { parseCashtags } from '@/utils/core/textFormatting';
+import { highlightContentTags } from '@/utils/core/textFormatting';
 import type { Comment, Post, User} from '@/types';
 
 export type AuthenticatedPostDetailProps = {
@@ -282,7 +282,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                           </div>
                           {comment.content && (
                             <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word mb-2">
-                              {parseCashtags(comment.content)}
+                              {highlightContentTags(comment.content)}
                             </p>
                           )}
                           {comment.media && comment.media.length > 0 && (

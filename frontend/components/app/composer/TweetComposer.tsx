@@ -21,7 +21,8 @@ import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
 import { resizeComposerTextarea } from '@/hooks/composer/composerTextareaResize';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
-import DetectedCashtagsRow from '@/components/app/composer/DetectedCashtagsRow';
+import ComposerTagSuggestions from '@/components/app/composer/ComposerTagSuggestions';
+import { useComposerTagging } from '@/hooks/composer/useComposerTagging';
 import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import {
   FREE_CONTENT_MAX_LENGTH,
@@ -113,6 +114,7 @@ export default function TweetComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
   const exceedsFreeLimit = !isPremium && tweetText.length > FREE_CONTENT_MAX_LENGTH;
+  const tagging = useComposerTagging({ text: tweetText, setText: setTweetText, textareaRef });
 
   // Use hooks
   const {
@@ -264,7 +266,11 @@ export default function TweetComposer({
                 const newValue = e.target.value;
                 setTweetText(newValue);
                 resizeComposerTextarea(e.target);
+                tagging.trackCaret(e);
               }}
+              onSelect={tagging.trackCaret}
+              onBlur={tagging.clearCaret}
+              onKeyDown={tagging.handleKeyDown}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : (originalPost ? "Add a comment..." : "What's happening?"))}
               className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-base md:text-lg lg:text-xl resize-none focus:outline-hidden overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
@@ -279,7 +285,7 @@ export default function TweetComposer({
               autoFocus={isModal}
             />
           </div>
-          <DetectedCashtagsRow text={tweetText} />
+          <ComposerTagSuggestions tagging={tagging} />
           {exceedsFreeLimit && (
             <div className="flex items-center justify-center mt-2">
               <button

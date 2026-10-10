@@ -10,7 +10,6 @@ import { useClickOutside } from '@/hooks/common/useClickOutside';
 import Modal from '@/components/app/common/Modal';
 import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
-import EmptyState from '@/components/app/common/EmptyState';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
@@ -314,11 +313,7 @@ export default function ManageWatchlistModal({
             <span className="font-normal text-gray-500">({watchlist.length})</span>
           </h3>
           {watchlist.length === 0 ? (
-            <EmptyState
-              icon="inbox"
-              title="Your watchlist is empty"
-              description="Add tickers above to track cryptocurrencies"
-            />
+            <p className="py-8 text-center text-sm text-gray-400">Add tickers to track</p>
           ) : (
             <ul className="max-h-[min(24rem,45vh)] space-y-2.5 overflow-y-auto pr-0.5 [-webkit-overflow-scrolling:touch]">
               {watchlist.map((item) => {
