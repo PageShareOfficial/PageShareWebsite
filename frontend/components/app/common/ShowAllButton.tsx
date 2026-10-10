@@ -19,3 +19,22 @@ export default function ShowAllButton({ href, label = 'Show all' }: ShowAllButto
     </div>
   );
 }
+
+interface ShowMoreToggleButtonProps {
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+/** In-place expand/collapse text row; a native button element for keyboard/screen-reader support. */
+export function ShowMoreToggleButton({ expanded, onToggle }: ShowMoreToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      className="w-full rounded-lg bg-white/5 py-2 text-center text-sm font-medium text-cyan-400 transition-colors hover:bg-white/10 hover:text-cyan-300"
+    >
+      {expanded ? 'Show less' : 'Show more'}
+    </button>
+  );
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { useRouter } from 'next/navigation';
@@ -14,6 +15,10 @@ import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import { useSubscription } from '@/hooks/billing/useSubscription';
+import { ShowMoreToggleButton } from '@/components/app/common/ShowAllButton';
+
+/** Rows shown in the rail until the user expands the watchlist card. */
+const RAIL_WATCHLIST_PREVIEW_COUNT = 2;
 
 interface RightRailProps {
   watchlist: WatchlistItem[];
@@ -34,6 +39,11 @@ export default function RightRail({
   const { openPremium } = usePremiumOverlay();
   const { isPremium, isLoading: isSubscriptionLoading } = useSubscription();
   const showPremiumUpgradeCard = !isSubscriptionLoading && !isPremium;
+  const [isWatchlistExpanded, setIsWatchlistExpanded] = useState(false);
+  const hasHiddenWatchlistItems = watchlist.length > RAIL_WATCHLIST_PREVIEW_COUNT;
+  const visibleWatchlist = isWatchlistExpanded
+    ? watchlist
+    : watchlist.slice(0, RAIL_WATCHLIST_PREVIEW_COUNT);
 
   const handleUpgradeClick = () => {
     if (isOnline) openPremium();
@@ -91,21 +101,10 @@ export default function RightRail({
               ))}
             </div>
           ) : watchlist.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p className="text-sm mb-2">Your watchlist is empty</p>
-              <button
-                type="button"
-                onClick={onManageWatchlist}
-                disabled={!isOnline}
-                title={!isOnline ? 'Connect to the internet to continue' : undefined}
-                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
-              >
-                Add tickers to track
-              </button>
-            </div>
+            <p className="py-8 text-center text-sm text-gray-400">Add tickers to track</p>
           ) : (
             <div className="space-y-3">
-              {watchlist.map((item) => (
+              {visibleWatchlist.map((item) => (
                 <div
                   key={item.ticker}
                   role="button"
@@ -137,6 +136,12 @@ export default function RightRail({
                   </div>
                 </div>
               ))}
+              {hasHiddenWatchlistItems && (
+                <ShowMoreToggleButton
+                  expanded={isWatchlistExpanded}
+                  onToggle={() => setIsWatchlistExpanded((expanded) => !expanded)}
+                />
+              )}
             </div>
           )}
         </div>

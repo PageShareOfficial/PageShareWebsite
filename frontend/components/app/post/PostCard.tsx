@@ -5,7 +5,7 @@ import { Post } from '@/types';
 import { useState, useEffect } from 'react';
 import { isTweet } from '@/utils/content/postUtils';
 import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
-import { parseCashtags } from '@/utils/core/textFormatting';
+import { highlightContentTags } from '@/utils/core/textFormatting';
 import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from './PostHeader';
 import PostAuthorMeta from './PostAuthorMeta';
@@ -173,7 +173,7 @@ export default function PostCard({
             <>
               {/* User's quote comment – always show (text, media, gif from the quote post) */}
               <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
-                {parseCashtags(typeof post.content === 'string' ? post.content : '')}
+                {highlightContentTags(typeof post.content === 'string' ? post.content : '')}
               </p>
               {post.media && post.media.length > 0 && (
                 <PostMedia
@@ -228,7 +228,7 @@ export default function PostCard({
                   {originalPost && isTweet(originalPost) && (
                     <>
                       <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
-                        {parseCashtags(originalPost.content)}
+                        {highlightContentTags(originalPost.content)}
                       </p>
                       <PostMedia
                         media={originalPost.media || []}
@@ -266,7 +266,7 @@ export default function PostCard({
                 // Normal repost - show original post content
                 <>
                   <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
-                    {parseCashtags(originalPost.content)}
+                    {highlightContentTags(originalPost.content)}
                   </p>
                   
                   <PostMedia
@@ -298,7 +298,7 @@ export default function PostCard({
                 // Normal tweet - show regular content
                 <>
                   <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
-                    {parseCashtags(post.content)}
+                    {highlightContentTags(post.content)}
                   </p>
 
                   <PostMedia

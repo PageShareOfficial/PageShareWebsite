@@ -6,6 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Search, LoaderCircle, CircleAlert, Calendar, WifiOff, Upload } from '@/constants/icons';
+import CoinbaseLogo from '@/components/app/common/CoinbaseLogo';
 import { type SearchSuggestion } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -738,6 +739,13 @@ export default function SubmitPredictionForm({
                   <p className="text-xs text-gray-500">≥ 0.5% required</p>
                 </div>
               </div>
+
+              <p className="flex items-center justify-end gap-1.5 text-right text-xs text-gray-500">
+                <CoinbaseLogo className="h-6 w-6 shrink-0" />
+                <span>
+                  Market data provided by Coinbase. Outcomes are verified against Coinbase prices.
+                </span>
+              </p>
             </div>
           </PredictionFormSection>
 

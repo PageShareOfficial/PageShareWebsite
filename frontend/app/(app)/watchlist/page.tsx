@@ -8,6 +8,7 @@ import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
 import TickerImage from '@/components/app/ticker/TickerImage';
 import Skeleton from '@/components/app/common/Skeleton';
 import { useWatchlist } from '@/hooks/features/useWatchlist';
+import { PrimaryButton } from '@/components/app/common/Button';
 
 export default function WatchlistPage() {
   const router = useRouter();
@@ -73,24 +74,9 @@ export default function WatchlistPage() {
               <div className="hidden md:flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-white">Watchlist</h1>
                 <div className="flex items-center gap-2">
-                  {/* Manage button - Desktop (lg and above) with Plus icon and Manage text */}
-                  <button
-                    onClick={openManageModal}
-                    className="hidden lg:flex p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors items-center gap-2"
-                    aria-label="Manage watchlist"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Manage</span>
-                  </button>
-                  {/* Manage button - Tablet (md to lg) with Plus icon and Manage text */}
-                  <button
-                    onClick={openManageModal}
-                    className="hidden md:flex lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors items-center gap-2"
-                    aria-label="Manage watchlist"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Manage</span>
-                  </button>
+                  <PrimaryButton type="button" onClick={openManageModal}>
+                    Manage
+                  </PrimaryButton>
                 </div>
               </div>
 
@@ -98,14 +84,9 @@ export default function WatchlistPage() {
               <div className="md:hidden flex items-center justify-between mb-6">
                 <h1 className="text-xl font-bold text-white">Watchlist</h1>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={openManageModal}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2"
-                    aria-label="Manage watchlist"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span className="text-sm">Manage</span>
-                  </button>
+                  <PrimaryButton type="button" onClick={openManageModal}>
+                    Add Ticker
+                  </PrimaryButton>
                 </div>
               </div>
 
@@ -118,16 +99,9 @@ export default function WatchlistPage() {
                     </div>
                   </div>
                   <p className="text-lg text-gray-300 mb-2">Your watchlist is empty</p>
-                  <p className="text-sm text-gray-400 mb-6">
+                  <p className="text-sm text-gray-400">
                     Add tickers to track your favorite stocks
                   </p>
-                  <button
-                    onClick={openManageModal}
-                    className="px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2 mx-auto"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Add Tickers
-                  </button>
                 </div>
               ) : (
                 <div className="space-y-3">
