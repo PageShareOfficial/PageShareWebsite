@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import TickerImage from '@/components/app/ticker/TickerImage';
+import { tickerPath } from '@/constants/routes';
 import { useCashtagImages } from '@/hooks/composer/useCashtagImages';
 import { extractCashtags } from '@/utils/core/textFormatting';
 
@@ -29,14 +30,14 @@ export default function DetectedCashtagsRow({ text }: DetectedCashtagsRowProps) 
       {symbols.map((symbol) => (
         <Link
           key={symbol}
-          href={`/ticker/${symbol}`}
+          href={tickerPath(symbol)}
           className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 pl-1 pr-2.5 py-1 hover:bg-white/10 transition-colors"
         >
           <TickerImage
             src={imageByTicker[symbol]}
             ticker={symbol}
             size="sm"
-            className="!w-6 !h-6 !rounded-md !border-0"
+            className="w-6! h-6! rounded-md! border-0!"
           />
           <span className="text-xs font-semibold text-white">{symbol}</span>
         </Link>

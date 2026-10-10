@@ -1,8 +1,8 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@/constants/icons';
+import { useSafeBack } from '@/hooks/common/useSafeBack';
 import { ReactNode } from 'react';
 
 interface DesktopHeaderProps {
@@ -21,20 +21,20 @@ const DesktopHeader = forwardRef<HTMLDivElement, DesktopHeaderProps>(function De
   { title, subtitle, onBack, withSideBorders = true, rightContent },
   ref,
 ) {
-  const router = useRouter();
+  const goBack = useSafeBack();
 
   const handleBack = () => {
     if (onBack) {
       onBack();
     } else {
-      router.back();
+      goBack();
     }
   };
 
   return (
     <div
       ref={ref}
-      className={`hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10 ${
+      className={`hidden md:block sticky top-0 z-20 bg-black/80 backdrop-blur-xs border-b border-white/10 ${
         withSideBorders ? 'border-l border-r border-white/10' : ''
       }`}
     >
@@ -43,7 +43,7 @@ const DesktopHeader = forwardRef<HTMLDivElement, DesktopHeaderProps>(function De
           <div className="flex items-center gap-4 min-w-0 flex-1">
             <button
               onClick={handleBack}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
@@ -55,7 +55,7 @@ const DesktopHeader = forwardRef<HTMLDivElement, DesktopHeaderProps>(function De
               )}
             </div>
           </div>
-          {rightContent ? <div className="flex-shrink-0 whitespace-nowrap">{rightContent}</div> : null}
+          {rightContent ? <div className="shrink-0 whitespace-nowrap">{rightContent}</div> : null}
         </div>
       </div>
     </div>

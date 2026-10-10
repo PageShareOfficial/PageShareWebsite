@@ -25,6 +25,9 @@ export const RESERVED_ROUTES = new Set<string>([
   'watchlist',
   'myanalysts',
   'offline',
+  'ticker',
+  'disclaimer',
+  'coming-soon',
 
   // Future routes (reserve them now to prevent username conflicts)
   'discover',
@@ -65,6 +68,7 @@ export const AUTH_PROTECTED_ROUTES = new Set<string>([
   'settings',
   'bookmarks',
   'watchlist',
+  'ticker',
 ]);
 
 /**

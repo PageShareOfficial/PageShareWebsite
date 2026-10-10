@@ -8,8 +8,8 @@ export const STORY_STACK_SCALE_MAX = 0.15;
 export const STORY_STACK_TRANSLATE_Y_MAX = 20;
 export const STORY_STACK_TRANSLATE_X_MAX = -10;
 
-export const STORY_STACK_CARD_GAP_CLASS = 'mt-[70vh] md:mt-[30rem]';
-export const STORY_STACK_CONTAINER_END_CLASS = 'mb-[10rem]';
+export const STORY_STACK_CARD_GAP_CLASS = 'mt-[70vh] md:mt-120';
+export const STORY_STACK_CONTAINER_END_CLASS = 'mb-40';
 
 export function getStoryStackZIndex(index: number): number {
   return index + 1;

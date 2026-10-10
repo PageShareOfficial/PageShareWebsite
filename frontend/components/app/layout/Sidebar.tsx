@@ -3,8 +3,21 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Search, FlaskConical, User, MoreHorizontal, LogOut, Pencil, List, Bookmark, Settings, Trash2 } from 'lucide-react';
-import { MdOutlineWorkspacePremium } from 'react-icons/md';
+import {
+  House,
+  Search,
+  FlaskConical,
+  User,
+  Ellipsis,
+  LogOut,
+  Pencil,
+  List,
+  Bookmark,
+  Settings,
+  Trash,
+  MdOutlineWorkspacePremium,
+  LuChartCandlestick,
+} from '@/constants/icons';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
@@ -14,7 +27,7 @@ import { useClickOutside } from '@/hooks/common/useClickOutside';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import Skeleton from '@/components/app/common/Skeleton';
-import { LuChartCandlestick } from 'react-icons/lu';
+import { ROUTES, profilePath, settingsDeleteAccountPath } from '@/constants/routes';
 
 const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
 
@@ -74,17 +87,18 @@ export default function Sidebar() {
 
   // All nav items including watchlist for mobile and tablet
   // Profile uses prefetch={false} to avoid compiling /[username] before login (prevents 401s)
-  const profileHref = currentUser?.handle ? `/${currentUser.handle}` : '/home';
+  const hasProfile = Boolean(currentUser?.handle);
+  const profileHref = currentUser?.handle ? profilePath(currentUser.handle) : ROUTES.home;
   const allNavItems = [
-    { name: 'Home', icon: Home, href: '/home', prefetch: true },
-    { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
-    { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
-    { name: 'Labs', icon: FlaskConical, href: '/labs', prefetch: true },
-    { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
-    { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks', prefetch: true },
-    { name: 'Settings', icon: Settings, href: '/settings', prefetch: true },
+    { name: 'Home', icon: House, href: ROUTES.home, prefetch: true },
+    { name: 'Predictions', icon: LuChartCandlestick, href: ROUTES.predictions, prefetch: true },
+    { name: 'Discover', icon: Search, href: ROUTES.discover, prefetch: true },
+    { name: 'Labs', icon: FlaskConical, href: ROUTES.labs, prefetch: true },
+    { name: 'Watchlist', icon: List, href: ROUTES.watchlist, prefetch: true },
+    { name: 'Bookmarks', icon: Bookmark, href: ROUTES.bookmarks, prefetch: true },
+    { name: 'Settings', icon: Settings, href: ROUTES.settings, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
-    { name: 'Premium', icon: MdOutlineWorkspacePremium, href: '/plans', prefetch: true },
+    { name: 'Premium', icon: MdOutlineWorkspacePremium, href: ROUTES.plans, prefetch: true },
   ];
 
   // Desktop nav items (without watchlist since it's in right rail, but with Premium and Settings)
@@ -92,11 +106,11 @@ export default function Sidebar() {
   
   // Mobile nav items: Home, Discover, Labs, Watchlist, More, Profile (More will have dropdown with Settings and Bookmarks)
   const mobileNavItems = [
-    { name: 'Home', icon: Home, href: '/home', prefetch: true },
-    { name: 'Predictions', icon: LuChartCandlestick, href: '/predictions', prefetch: true },
-    { name: 'Discover', icon: Search, href: '/discover', prefetch: true },
-    { name: 'Watchlist', icon: List, href: '/watchlist', prefetch: true },
-    { name: 'More', icon: MoreHorizontal, href: '#', isMore: true, prefetch: true },
+    { name: 'Home', icon: House, href: ROUTES.home, prefetch: true },
+    { name: 'Predictions', icon: LuChartCandlestick, href: ROUTES.predictions, prefetch: true },
+    { name: 'Discover', icon: Search, href: ROUTES.discover, prefetch: true },
+    { name: 'Watchlist', icon: List, href: ROUTES.watchlist, prefetch: true },
+    { name: 'More', icon: Ellipsis, href: '#', isMore: true, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
   ];
   
@@ -106,10 +120,10 @@ export default function Sidebar() {
   // Determine active nav based on current pathname
   const getActiveNav = (href: string) => {
     if (href === '#') return false;
-    if (href === '/settings') {
-      return pathname === '/settings' || pathname.startsWith('/settings/');
+    if (href === ROUTES.settings) {
+      return pathname === ROUTES.settings || pathname.startsWith(`${ROUTES.settings}/`);
     }
-    return pathname === href || (href === '/home' && pathname === '/');
+    return pathname === href || (href === ROUTES.home && pathname === ROUTES.landing);
   };
 
   const renderNavItem = (item: (typeof allNavItems)[0]) => {
@@ -134,7 +148,7 @@ export default function Sidebar() {
           aria-expanded={isPremiumOpen}
           title={item.name}
         >
-          <Icon className="w-5 h-5 flex-shrink-0" />
+          <Icon className="w-5 h-5 shrink-0" />
           <span className="hidden lg:inline">{item.name}</span>
         </button>
       );
@@ -145,14 +159,14 @@ export default function Sidebar() {
         key={item.name}
         href={item.href}
         prefetch={item.prefetch !== false}
-        onMouseEnter={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-        onFocus={isProfile && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+        onMouseEnter={isProfile && hasProfile ? () => router.prefetch(profileHref) : undefined}
+        onFocus={isProfile && hasProfile ? () => router.prefetch(profileHref) : undefined}
         onClick={() => setActiveNav(item.name)}
         className={itemClassName}
         aria-current={isActive ? 'page' : undefined}
         title={item.name}
       >
-        <Icon className="w-5 h-5 flex-shrink-0" />
+        <Icon className="w-5 h-5 shrink-0" />
         <span className="hidden lg:inline">{item.name}</span>
       </Link>
     );
@@ -161,16 +175,16 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop & Tablet Sidebar */}
-      <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] flex-shrink-0 z-10">
+      <aside className="hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 bg-black transition-all duration-300 md:w-20 lg:w-[275px] shrink-0 z-10">
         {/* Logo Header */}
         <div className="p-4 lg:pl-2 lg:pr-2 flex items-center justify-center lg:justify-start">
-          <Link href="/home" prefetch={true} className="flex items-center lg:px-6">
+          <Link href={ROUTES.home} prefetch={true} className="flex items-center lg:px-6">
             <Image
               src="/pageshare_final.png"
               alt="PageShare Logo"
               width={48}
               height={48}
-              className="w-12 h-12 rounded"
+              className="w-12 h-12 rounded-sm"
             />
           </Link>
         </div>
@@ -191,7 +205,7 @@ export default function Sidebar() {
             className="w-full flex items-center justify-center lg:justify-start lg:space-x-3 px-2 lg:px-4 py-3 rounded-xl transition-colors group bg-white text-black font-semibold hover:bg-gray-100 mt-2"
             title="Post"
           >
-            <Pencil className="w-5 h-5 flex-shrink-0" />
+            <Pencil className="w-5 h-5 shrink-0" />
             <span className="hidden lg:inline">Post</span>
           </button>
         </nav>
@@ -207,8 +221,8 @@ export default function Sidebar() {
               <>
                 <Skeleton variant="circular" width={40} height={40} />
                 <div className="flex-1 min-w-0 hidden lg:block space-y-2">
-                  <Skeleton variant="text" width={120} height={14} className="rounded" />
-                  <Skeleton variant="text" width={80} height={12} className="rounded" />
+                  <Skeleton variant="text" width={120} height={14} className="rounded-sm" />
+                  <Skeleton variant="text" width={80} height={12} className="rounded-sm" />
                 </div>
               </>
             ) : (
@@ -217,7 +231,7 @@ export default function Sidebar() {
                   src={currentUser.avatar}
                   alt={currentUser.displayName}
                   size={40}
-                  className="flex-shrink-0"
+                  className="shrink-0"
                 />
                 <div className="flex-1 min-w-0 text-left hidden lg:block">
                   <div className="flex items-center gap-1 min-w-0">
@@ -230,7 +244,7 @@ export default function Sidebar() {
                     @{currentUser.handle}
                   </div>
                 </div>
-                <MoreHorizontal className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
+                <Ellipsis className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors shrink-0 hidden lg:block" />
               </>
             )}
           </button>
@@ -250,11 +264,11 @@ export default function Sidebar() {
                 </div>
               </div>
               <Link
-                href="/settings?action=delete"
+                href={settingsDeleteAccountPath()}
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left text-red-400 hover:text-red-300"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash className="w-4 h-4" />
                 <span className="text-sm">Delete account</span>
               </Link>
               <button
@@ -298,7 +312,7 @@ export default function Sidebar() {
                         : 'text-gray-400'
                     }`}
                   >
-                    <Icon className="w-5 h-5 mb-1 flex-shrink-0" />
+                    <Icon className="w-5 h-5 mb-1 shrink-0" />
                     <span className="text-[10px] font-medium truncate px-1">{item.name}</span>
                   </button>
                   
@@ -306,7 +320,7 @@ export default function Sidebar() {
                   {isMoreMenuOpen && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
                       <Link
-                        href="/labs"
+                        href={ROUTES.labs}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
@@ -320,7 +334,7 @@ export default function Sidebar() {
                         <span className="text-sm">Labs</span>
                       </Link>
                       <Link
-                        href="/bookmarks"
+                        href={ROUTES.bookmarks}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
@@ -348,14 +362,14 @@ export default function Sidebar() {
                         <span className="text-sm">Premium</span>
                       </button>
                       <Link
-                        href="/settings"
+                        href={ROUTES.settings}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Settings');
                         }}
                         className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
-                          getActiveNav('/settings') ? 'bg-white/10 text-white' : 'text-white'
+                          getActiveNav(ROUTES.settings) ? 'bg-white/10 text-white' : 'text-white'
                         }`}
                       >
                         <Settings className="w-4 h-4" />
@@ -373,8 +387,8 @@ export default function Sidebar() {
                 key={item.name}
                 href={item.href}
                 prefetch={(item as { prefetch?: boolean }).prefetch !== false}
-                onMouseEnter={isProfileNav && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
-                onFocus={isProfileNav && profileHref !== '/home' ? () => router.prefetch(profileHref) : undefined}
+                onMouseEnter={isProfileNav && hasProfile ? () => router.prefetch(profileHref) : undefined}
+                onFocus={isProfileNav && hasProfile ? () => router.prefetch(profileHref) : undefined}
                 onClick={() => setActiveNav(item.name)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors min-w-0 ${
                   isActive
@@ -383,7 +397,7 @@ export default function Sidebar() {
                 }`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className="w-5 h-5 mb-1 flex-shrink-0" />
+                <Icon className="w-5 h-5 mb-1 shrink-0" />
                 <span className="text-[10px] font-medium truncate px-1">{item.name}</span>
               </Link>
             );
@@ -393,14 +407,14 @@ export default function Sidebar() {
 
       {/* Tablet Floating Watchlist Button - Opens Watchlist Page */}
       <Link
-        href="/watchlist"
+        href={ROUTES.watchlist}
         prefetch={true}
         className={`hidden md:flex lg:hidden fixed bottom-6 right-6 z-40 items-center space-x-2 px-4 py-3 bg-white text-black rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 ${
           isScrolling ? 'opacity-30' : 'opacity-100'
         }`}
         aria-label="Watchlist"
       >
-        <List className="w-5 h-5 flex-shrink-0" />
+        <List className="w-5 h-5 shrink-0" />
         <span className="text-sm font-medium whitespace-nowrap">
           Watchlist
         </span>

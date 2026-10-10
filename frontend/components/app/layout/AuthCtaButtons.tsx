@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 
 export type AuthCtaVariant = 'sidebar' | 'mobile';
 
-const SIGN_IN_HREF = '/';
-const SIGN_UP_HREF = '/';
+/** The landing page hosts both the sign-in and sign-up forms. */
+const SIGN_IN_HREF = ROUTES.landing;
+const SIGN_UP_HREF = ROUTES.landing;
 
 const baseSignIn =
   'font-semibold transition-colors text-center';

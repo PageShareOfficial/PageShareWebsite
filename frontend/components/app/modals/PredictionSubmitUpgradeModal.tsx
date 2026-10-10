@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, LineChart, Users } from 'lucide-react';
+import { BadgeCheck, ChartLine, Users } from '@/constants/icons';
 import Modal from '@/components/app/common/Modal';
 import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
 import VerifiedTickIcon from '@/components/app/common/VerifiedTickIcon';
@@ -13,7 +13,7 @@ interface PredictionSubmitUpgradeModalProps {
 
 const ANALYST_PERKS = [
   {
-    icon: LineChart,
+    icon: ChartLine,
     title: 'Publish Your Predictions',
     description: 'Lock in your market calls with a permanent, trackable record.',
   },
@@ -67,7 +67,7 @@ export default function PredictionSubmitUpgradeModal({
             return (
               <li
                 key={perk.title}
-                className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3"
+                className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/3 p-3"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/40">
                   <Icon className="h-4 w-4 text-blue-400" aria-hidden />

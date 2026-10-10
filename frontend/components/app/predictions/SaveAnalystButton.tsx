@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark } from 'lucide-react';
+import { Bookmark } from '@/constants/icons';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useSavedAnalysts } from '@/hooks/predictions/useSavedAnalysts';
 import type { SavedAnalyst } from '@/types/savedAnalyst';

@@ -1,30 +1,22 @@
 import { MetadataRoute } from 'next';
+import { SITEMAP_PATHS } from '@/lib/seo/crawlPaths';
+import { siteConfig } from '@/lib/seo/metadata';
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pageshare.io';
+type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>;
 
-function getChangeFrequency(
-  path: string
-): 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never' {
-  if (path === '') return 'weekly';
-  if (path === '/discover') return 'daily';
-  return 'monthly';
+function getChangeFrequency(path: string): ChangeFrequency {
+  return path === '' ? 'weekly' : 'monthly';
+}
+
+function getPriority(path: string): number {
+  return path === '' ? 1 : 0.7;
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = [
-    '',
-    '/discover',
-    '/plans',
-    '/privacy',
-    '/terms',
-    '/cookies',
-    '/disclaimer',
-  ];
-
-  return staticRoutes.map((path) => ({
-    url: `${baseUrl}${path}`,
+  return SITEMAP_PATHS.map((path) => ({
+    url: `${siteConfig.url}${path}`,
     lastModified: new Date(),
     changeFrequency: getChangeFrequency(path),
-    priority: path === '' ? 1 : path === '/discover' ? 0.9 : 0.7,
+    priority: getPriority(path),
   }));
 }

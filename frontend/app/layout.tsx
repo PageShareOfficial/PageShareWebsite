@@ -4,13 +4,14 @@ import ErrorBoundaryWrapper from "@/components/ErrorBoundaryWrapper";
 import OfflineBanner from "@/components/OfflineBanner";
 import OfflineOverlay from "@/components/OfflineOverlay";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import NavigationHistoryTracker from "@/components/NavigationHistoryTracker";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { OfflineOverlayProvider } from "@/contexts/OfflineOverlayContext";
 import { BookmarkProvider } from "@/contexts/BookmarkContext";
 import { ContentFiltersProvider } from "@/contexts/ContentFiltersContext";
 import { WatchlistProvider } from "@/contexts/WatchlistContext";
-import { siteConfig } from "@/lib/seo/metadata";
+import { siteConfig, versionedIconPath } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -68,15 +69,17 @@ export const metadata: Metadata = {
   // Favicons: 48x48 and 96x96 are required by Google for search result display.
   icons: {
     icon: [
-      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: versionedIconPath("/favicon-48x48.png"), sizes: "48x48", type: "image/png" },
+      { url: versionedIconPath("/favicon-96x96.png"), sizes: "96x96", type: "image/png" },
+      { url: versionedIconPath("/favicon.ico"), sizes: "any" },
+      { url: versionedIconPath("/favicon-16x16.png"), sizes: "16x16", type: "image/png" },
+      { url: versionedIconPath("/favicon-32x32.png"), sizes: "32x32", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      { url: versionedIconPath("/apple-touch-icon.png"), sizes: "180x180", type: "image/png" },
+    ],
   },
-  manifest: "/site.webmanifest",
+  manifest: versionedIconPath("/site.webmanifest"),
 };
 
 export default function RootLayout({
@@ -89,6 +92,7 @@ export default function RootLayout({
       <body className="bg-black">
         <ErrorBoundaryWrapper>
           <ServiceWorkerRegistration />
+          <NavigationHistoryTracker />
           <OfflineBanner />
           <OfflineOverlayProvider>
             <OfflineOverlay />

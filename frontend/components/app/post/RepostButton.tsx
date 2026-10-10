@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Repeat2, PencilLine } from 'lucide-react';
+import { Repeat2, PencilLine } from '@/constants/icons';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
 
 interface RepostButtonProps {

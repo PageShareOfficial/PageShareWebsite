@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Calendar, UserPlus, UserMinus } from 'lucide-react';
+import { Calendar, UserPlus, UserMinus } from '@/constants/icons';
 import { User } from '@/types';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import Skeleton from '@/components/app/common/Skeleton';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { formatJoinedDate } from '@/utils/core/dateUtils';
+import { followersPath } from '@/constants/routes';
 
 interface ProfileUser extends User {
   joinedDate: string;
@@ -38,7 +39,7 @@ export function ProfileHeaderSkeleton() {
   return (
     <div className="px-4 py-6 md:px-6 md:py-8">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <Skeleton variant="circular" width={128} height={128} className="w-24 h-24 md:w-32 md:h-32" />
         </div>
         <div className="flex-1 min-w-0 space-y-3">
@@ -81,17 +82,17 @@ export default function ProfileHeader({
   const isOnline = useOnlineStatus();
 
   const handleFollowersClick = () => {
-    router.push(`/${profileUser.handle}/followers`);
+    router.push(followersPath(profileUser.handle));
   };
 
   const handleFollowingClick = () => {
-    router.push(`/${profileUser.handle}/followers?tab=following`);
+    router.push(followersPath(profileUser.handle, 'following'));
   };
   return (
     <div className="px-4 py-6 md:px-6 md:py-8">
       {/* Top row: Avatar + Name, handle, button, stats */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <AvatarWithFallback
             src={profileUser.avatar}
             alt={profileUser.displayName}
@@ -116,7 +117,7 @@ export default function ProfileHeader({
                     onClick={onEditProfile}
                     disabled={!isOnline}
                     title={!isOnline ? 'Connect to the internet to continue' : undefined}
-                    className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-black rounded-lg font-semibold hover:bg-gray-100 transition-colors text-xs md:text-sm flex-shrink-0 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-black rounded-lg font-semibold hover:bg-gray-100 transition-colors text-xs md:text-sm shrink-0 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                   >
                     Edit Profile
                   </button>
@@ -125,7 +126,7 @@ export default function ProfileHeader({
                     onClick={onFollow}
                     disabled={followLoading || !isOnline}
                     title={!isOnline ? 'Connect to the internet to continue' : undefined}
-                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold transition-colors text-xs md:text-sm flex-shrink-0 flex items-center gap-1.5 md:gap-2 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${
+                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold transition-colors text-xs md:text-sm shrink-0 flex items-center gap-1.5 md:gap-2 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${
                       isFollowing
                         ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
                         : 'bg-white text-black hover:bg-gray-100'
@@ -178,7 +179,7 @@ export default function ProfileHeader({
       {/* Full-width below image: Bio, interests, joined date */}
       <div className="mt-6 w-full space-y-4">
         {profileUser.bio && (
-          <p className="text-white text-sm md:text-base leading-relaxed whitespace-pre-wrap break-words">
+          <p className="text-white text-sm md:text-base leading-relaxed whitespace-pre-wrap wrap-break-word">
             {profileUser.bio}
           </p>
         )}
@@ -195,7 +196,7 @@ export default function ProfileHeader({
           </div>
         )}
         <div className="flex items-center gap-2 text-gray-400 text-sm">
-          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <Calendar className="w-4 h-4 shrink-0" />
           <span>
             {formatJoinedDate(profileUser.joinedDate)}
           </span>

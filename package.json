@@ -6,6 +6,6 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build:frontend": "cd frontend && npm run build",
     "start:frontend": "cd frontend && npm start",
-    "lint:frontend": "cd frontend && npm run lint"
+    "typecheck:frontend": "cd frontend && npm run typecheck"
   }
 }

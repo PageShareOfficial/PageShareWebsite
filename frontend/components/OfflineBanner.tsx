@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { WifiOff } from 'lucide-react';
+import { WifiOff } from '@/constants/icons';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { subscribeOfflineBannerPulse } from '@/utils/offline/pulseOfflineBanner';
 
@@ -27,12 +27,12 @@ export default function OfflineBanner() {
     <div
       key={pulseGeneration}
       role="alert"
-      className={`fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center gap-2 bg-amber-500/95 text-black px-4 py-2.5 text-sm font-medium shadow-md ${
+      className={`fixed top-0 left-0 right-0 z-9999 flex items-center justify-center gap-2 bg-amber-500/95 text-black px-4 py-2.5 text-sm font-medium shadow-md ${
         pulseGeneration > 0 ? 'animate-pulse' : ''
       }`}
       aria-live="polite"
     >
-      <WifiOff className="w-4 h-4 flex-shrink-0" aria-hidden />
+      <WifiOff className="w-4 h-4 shrink-0" aria-hidden />
       <span>You&apos;re offline. Check your connection and try again.</span>
     </div>
   );

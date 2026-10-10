@@ -1,10 +1,11 @@
 'use client';
 
-import { Bookmark, UserPlus } from 'lucide-react';
+import { Bookmark, UserPlus } from '@/constants/icons';
 import SavedAnalystsCarousel from '@/components/app/predictions/saved-analysts/SavedAnalystsCarousel';
 import ShowAllButton from '@/components/app/common/ShowAllButton';
 import LoadingState from '@/components/app/common/LoadingState';
 import ErrorState from '@/components/app/common/ErrorState';
+import { ROUTES } from '@/constants/routes';
 import { useSavedAnalysts } from '@/hooks/predictions/useSavedAnalysts';
 
 interface SavedAnalystsSectionProps {
@@ -27,18 +28,18 @@ export default function SavedAnalystsSection({
       </h2>
 
       {isPendingList ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03]">
+        <div className="rounded-xl border border-white/10 bg-white/3">
           <LoadingState text="Loading saved analysts…" size="sm" />
         </div>
       ) : loadError ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03]">
+        <div className="rounded-xl border border-white/10 bg-white/3">
           <ErrorState
             message={loadError}
             onRetry={() => void refreshSavedAnalysts()}
           />
         </div>
       ) : savedAnalysts.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-8 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/3 px-4 py-8 text-center">
           <div className="mx-auto flex max-w-xs flex-col items-center gap-2">
             <span className="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
               <UserPlus className="h-10 w-10 text-emerald-400/90" aria-hidden />
@@ -49,7 +50,7 @@ export default function SavedAnalystsSection({
       ) : (
         <SavedAnalystsCarousel analysts={savedAnalysts} />
       )}
-      {!isPendingList && <ShowAllButton href="/myanalysts" />}
+      {!isPendingList && <ShowAllButton href={ROUTES.myAnalysts} />}
     </section>
   );
 }

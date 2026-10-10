@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,9 @@ import Loading from '@/components/app/common/Loading';
 import { PrimaryButton } from '@/components/app/common/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { AUTH_ERROR_CODES, ROUTES, landingWithError } from '@/constants/routes';
+
+const SUCCESS_REDIRECT_DELAY_MS = 2000;
 
 const resetSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -28,6 +31,13 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const successRedirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successRedirectTimerRef.current) clearTimeout(successRedirectTimerRef.current);
+    };
+  }, []);
 
   const {
     register,
@@ -40,7 +50,7 @@ export default function ResetPasswordPage() {
   // Redirect if no session after loading (invalid/expired link)
   useEffect(() => {
     if (!loading && !session) {
-      router.replace('/?error=reset_expired');
+      router.replace(landingWithError(AUTH_ERROR_CODES.resetExpired));
     }
   }, [loading, session, router]);
 
@@ -50,7 +60,10 @@ export default function ResetPasswordPage() {
     try {
       await updatePassword(data.password);
       setSuccess(true);
-      setTimeout(() => router.push('/home'), 2000);
+      successRedirectTimerRef.current = setTimeout(
+        () => router.replace(ROUTES.home),
+        SUCCESS_REDIRECT_DELAY_MS
+      );
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to update password'));
     } finally {
@@ -123,7 +136,7 @@ export default function ResetPasswordPage() {
         </form>
 
         <p className="text-sm text-gray-500 text-center mt-6">
-          <Link href="/" className="text-cyan-400 hover:underline">
+          <Link href={ROUTES.landing} className="text-cyan-400 hover:underline">
             ← Back to sign in
           </Link>
         </p>

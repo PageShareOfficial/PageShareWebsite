@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { WifiOff } from 'lucide-react';
+import { WifiOff } from '@/constants/icons';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useOfflineOverlay } from '../contexts/OfflineOverlayContext';
 
@@ -26,7 +26,7 @@ export default function OfflineOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-10000 flex items-center justify-center bg-black/80 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="offline-overlay-title"

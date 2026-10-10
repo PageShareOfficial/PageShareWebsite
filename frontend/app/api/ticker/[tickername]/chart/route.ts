@@ -4,10 +4,10 @@ import { fetchTickerChart } from '@/utils/api/chartApi';
 /** GET /api/ticker/[tickername]/chart – crypto only (CoinGecko). */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tickername: string } }
+  { params }: { params: Promise<{ tickername: string }> }
 ) {
   try {
-    const { tickername } = params;
+    const { tickername } = await params;
     const searchParams = request.nextUrl.searchParams;
     const rangeParam = searchParams.get('range') || '30d';
     

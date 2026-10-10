@@ -2,7 +2,7 @@
 
 import { TickerDetailData } from '@/types/ticker';
 import { formatCurrency, formatPercentage, getChangeColorClass, isPositive } from '@/utils/ticker/tickerUtils';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown } from '@/constants/icons';
 import TickerImage from '@/components/app/ticker/TickerImage';
 
 interface TickerHeaderProps {

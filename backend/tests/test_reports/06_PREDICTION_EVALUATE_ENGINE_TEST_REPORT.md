@@ -11,8 +11,7 @@ Smart-search **against Coinbase** is not mocked in pytest. Use live scripts:
 
 ```bash
 cd backend
-$env:PYTHONPATH = "."
-python -m pytest tests/test_prediction_evaluate_engine.py -q
+uv run pytest tests/test_prediction_evaluate_engine.py -q
 ```
 
 ---
@@ -87,7 +86,10 @@ See `07_PREDICTION_SMART_LADDER_TEST_REPORT.md` (window length → ladder; no ma
 
 ## How to refresh
 
-1. Unit rules: `python -m pytest tests/test_prediction_evaluate_engine.py -q`
-2. Live zoom: `python tests/test_live_evaluate_zoom_trace.py`
-3. Live 30m/1h floor: `python tests/test_live_evaluate_short_window_floor.py`
-4. Smart ladder: `python -m pytest tests/test_prediction_smart_ladder.py -v`
+Run from `backend/`. The live scripts need `$env:PYTHONPATH = "."` (PowerShell) or
+`PYTHONPATH=.` (bash) so they can import `app`; pytest does not.
+
+1. Unit rules: `uv run pytest tests/test_prediction_evaluate_engine.py -q`
+2. Live zoom: `uv run python tests/test_live_evaluate_zoom_trace.py`
+3. Live 30m/1h floor: `uv run python tests/test_live_evaluate_short_window_floor.py`
+4. Smart ladder: `uv run pytest tests/test_prediction_smart_ladder.py -v`

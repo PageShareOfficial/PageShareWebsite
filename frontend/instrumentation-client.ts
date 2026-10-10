@@ -1,8 +1,16 @@
 /**
  * Client-side instrumentation (runs before React hydration).
- * Sentry init is in sentry.client.config.ts (required by @sentry/nextjs webpack plugin).
- * When migrating to Turbopack, move Sentry init here and remove sentry.client.config.ts.
+ * Sentry only initialises when NEXT_PUBLIC_SENTRY_DSN is set.
  */
 import * as Sentry from '@sentry/nextjs';
+
+const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+if (dsn) {
+  Sentry.init({
+    dsn,
+    environment: process.env.NODE_ENV ?? 'development',
+    tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
+  });
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

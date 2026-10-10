@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Search, Loader2, AlertCircle, Calendar, WifiOff, Upload } from 'lucide-react';
+import { Search, LoaderCircle, CircleAlert, Calendar, WifiOff, Upload } from '@/constants/icons';
 import { type SearchSuggestion } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
 import { useClickOutside } from '@/hooks/common/useClickOutside';
@@ -14,6 +14,7 @@ import { getInitials } from '@/utils/core/textFormatting';
 import Skeleton from '@/components/app/common/Skeleton';
 import { PrimaryButton } from '@/components/app/common/Button';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { ROUTES } from '@/constants/routes';
 import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
 import { useMediaUpload } from '@/hooks/composer/useMediaUpload';
 import {
@@ -452,11 +453,11 @@ export default function SubmitPredictionForm({
     );
 
     await refreshQuota();
-    router.push('/predictions');
+    router.replace(ROUTES.predictions);
   };
 
   const inputRowClass =
-    'h-11 min-h-[2.75rem] text-sm w-full pl-10 pr-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+    'h-11 min-h-11 text-sm w-full pl-10 pr-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   const predictionsUsed = quota?.used ?? 0;
   const riskReward = computeRiskReward(entryValue || 0, targetValue || 0, stopLossValue || 0);
@@ -490,14 +491,14 @@ export default function SubmitPredictionForm({
     <form onSubmit={onSubmit} className="mx-auto max-w-3xl">
       {!isOnline ? (
         <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          <WifiOff className="mt-0.5 h-5 w-5 flex-shrink-0" />
+          <WifiOff className="mt-0.5 h-5 w-5 shrink-0" />
           <span>You&apos;re offline. Reconnect to search assets and submit predictions.</span>
         </div>
       ) : null}
 
       {!canSubmit && !quotaLoading && quota !== null && (
         <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <CircleAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <span>
             You have submitted {predictionsUsed} predictions today (max {MAX_PREDICTIONS_PER_DAY}). Try again tomorrow.
           </span>
@@ -512,7 +513,7 @@ export default function SubmitPredictionForm({
             <div className="relative">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                 <div className="relative min-w-0 h-11 sm:w-1/2 sm:flex-none">
-                  <Search className="pointer-events-none absolute left-3 top-0 bottom-0 z-[1] my-auto h-4 w-4 text-gray-400" />
+                  <Search className="pointer-events-none absolute left-3 top-0 bottom-0 z-1 my-auto h-4 w-4 text-gray-400" />
                   <input
                     ref={inputRef}
                     id="prediction-asset"
@@ -539,7 +540,7 @@ export default function SubmitPredictionForm({
                     className={inputRowClass}
                   />
                   {isFetchingTicker && (
-                    <Loader2 className="absolute right-3 top-0 bottom-0 my-auto w-4 h-4 animate-spin text-gray-400" />
+                    <LoaderCircle className="absolute right-3 top-0 bottom-0 my-auto w-4 h-4 animate-spin text-gray-400" />
                   )}
                 </div>
                 {isFetchingTicker ? (
@@ -552,7 +553,7 @@ export default function SubmitPredictionForm({
                   </div>
                 ) : selectedTicker ? (
                   <div className="flex min-w-0 h-11 items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3 py-0 sm:w-1/2 sm:flex-none">
-                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-white/10">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/10">
                       <ImageWithFallback
                         src={selectedTickerImage}
                         alt={selectedName || selectedTicker}
@@ -604,7 +605,7 @@ export default function SubmitPredictionForm({
                           index > 0 ? 'border-t border-white/5' : ''
                         }`}
                       >
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white/5 shrink-0">
                           <ImageWithFallback
                             src={suggestion.image}
                             alt={suggestion.name}
@@ -679,7 +680,7 @@ export default function SubmitPredictionForm({
                   {...form.register('entryPrice', { valueAsNumber: true })}
                   className={`w-full h-11 px-3 rounded-lg border text-white ${
                     selectedTicker
-                      ? 'cursor-not-allowed border-white/10 bg-white/[0.03] text-gray-300'
+                      ? 'cursor-not-allowed border-white/10 bg-white/3 text-gray-300'
                       : 'border-white/10 bg-white/5'
                   }`}
                 />
@@ -767,13 +768,13 @@ export default function SubmitPredictionForm({
                   max={expiryMinMax.max}
                   onChange={(e) => setExpiryValue(e.target.value)}
                   disabled={!lockStartMs || formFieldsDisabled}
-                  className="w-full h-11 px-3 pr-10 bg-white/5 border border-white/10 rounded-lg text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-11 px-3 pr-10 bg-white/5 border border-white/10 rounded-lg text-white scheme-dark [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={openExpiryPicker}
                   disabled={!lockStartMs || formFieldsDisabled}
-                  className="absolute right-2.5 top-[2.02rem] inline-flex h-6 w-6 items-center justify-center rounded text-white/90 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="absolute right-2.5 top-[2.02rem] inline-flex h-6 w-6 items-center justify-center rounded-sm text-white/90 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Open expiry calendar"
                 >
                   <Calendar className="h-4 w-4" />
@@ -809,7 +810,7 @@ export default function SubmitPredictionForm({
                       className="flex-1 accent-cyan-500"
                     />
                     <span className="text-xs text-gray-500">{MAX_CONFIDENCE}</span>
-                    <span className="w-12 rounded border border-white/10 bg-white/5 px-2 py-1 text-center text-white tabular-nums">
+                    <span className="w-12 rounded-sm border border-white/10 bg-white/5 px-2 py-1 text-center text-white tabular-nums">
                       {(typeof field.value === 'number' ? field.value : MIN_CONFIDENCE).toFixed(2)}
                     </span>
                   </div>
@@ -886,12 +887,12 @@ export default function SubmitPredictionForm({
                   handleThesisImageFiles(dropped);
                 }}
                 onPaste={handleThesisImagePaste}
-                className={`relative flex min-h-[140px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 ${
+                className={`relative flex min-h-[140px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-cyan-500/50 ${
                   formFieldsDisabled
-                    ? 'cursor-not-allowed opacity-50 border-white/10 bg-white/[0.02]'
+                    ? 'cursor-not-allowed opacity-50 border-white/10 bg-white/2'
                     : isThesisImageDragging
                       ? 'cursor-copy border-cyan-400/60 bg-cyan-500/10'
-                      : 'border-white/20 bg-white/[0.03]'
+                      : 'border-white/20 bg-white/3'
                 }`}
               >
                 {mediaPreviews[0] ? (
@@ -949,7 +950,7 @@ export default function SubmitPredictionForm({
 
           {submitError && (
             <p className="text-sm text-red-400 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <CircleAlert className="w-4 h-4 shrink-0" />
               {submitError}
             </p>
           )}

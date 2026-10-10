@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { UserPlus } from 'lucide-react';
+import { UserPlus } from '@/constants/icons';
 import Topbar from '@/components/app/layout/Topbar';
 import MobileHeader from '@/components/app/layout/MobileHeader';
 import DesktopHeader from '@/components/app/layout/DesktopHeader';
@@ -13,6 +13,7 @@ import SaveAnalystButton from '@/components/app/predictions/SaveAnalystButton';
 import SeeAnalystAnalyticsButton from '@/components/app/predictions/SeeAnalystAnalyticsButton';
 import { useSavedAnalysts } from '@/hooks/predictions/useSavedAnalysts';
 import { navigateToProfile } from '@/utils/core/navigationUtils';
+import { ROUTES } from '@/constants/routes';
 
 const PAGE_SUBTITLE = 'Analysts you saved from the predictions leaderboard.';
 
@@ -21,7 +22,7 @@ export default function MyAnalystsPage() {
   const { savedAnalysts, loadError, isLoading, refreshSavedAnalysts } = useSavedAnalysts();
 
   const goToPredictions = () => {
-    router.push('/predictions');
+    router.push(ROUTES.predictions);
   };
 
   return (
@@ -42,18 +43,18 @@ export default function MyAnalystsPage() {
           {isLoading ? (
             <p className="text-sm text-gray-500">Loading saved analysts…</p>
           ) : loadError ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.03]">
+            <div className="rounded-xl border border-white/10 bg-white/3">
               <ErrorState message={loadError} onRetry={() => void refreshSavedAnalysts()} />
             </div>
           ) : savedAnalysts.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-12 text-center">
+            <div className="rounded-xl border border-white/10 bg-white/3 px-4 py-12 text-center">
               <div className="mx-auto flex max-w-xs flex-col items-center gap-3">
                 <span className="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
                   <UserPlus className="h-10 w-10 text-emerald-400/90" aria-hidden />
                 </span>
                 <p className="text-sm font-medium text-gray-300">Add analysts</p>
                 <Link
-                  href="/predictions"
+                  href={ROUTES.predictions}
                   className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-gray-100"
                 >
                   Browse leaderboard

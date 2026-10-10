@@ -1,4 +1,4 @@
-import { Clock, Lock } from 'lucide-react';
+import { Clock, Lock } from '@/constants/icons';
 import { LOCK_DURATION_MS } from '@/utils/predictions/predictionRules';
 
 interface PriceLockBannerProps {
@@ -28,12 +28,12 @@ export default function PriceLockBanner({
       aria-live="polite"
     >
       <div className="flex min-w-0 items-center gap-2">
-        <Lock className="h-4 w-4 flex-shrink-0 text-gray-300" />
+        <Lock className="h-4 w-4 shrink-0 text-gray-300" />
         <p className="truncate text-sm text-white">
           Current price is locked for {lockMinutes} min
         </p>
       </div>
-      <div className="flex flex-shrink-0 items-center gap-1.5 text-xs tabular-nums text-gray-300">
+      <div className="flex shrink-0 items-center gap-1.5 text-xs tabular-nums text-gray-300">
         <Clock className="h-3.5 w-3.5" />
         {countdown}
       </div>

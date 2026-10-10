@@ -28,10 +28,10 @@ This document breaks down the PageShare backend implementation into manageable p
    - [x] Create `README.md` with setup instructions
 
 2. **Python Environment Setup**
-   - [x] Setup Python 3.11+ virtual environment
-   - [x] Create `requirements.txt` with all dependencies
-   - [x] Setup `pyproject.toml` or `setup.py` (optional)
-   - [x] Document virtual environment activation commands
+   - [x] Setup Python 3.12 environment with uv (`.python-version`, `uv sync` creates `.venv/`)
+   - [x] Declare dependencies in `pyproject.toml`, lock them in `uv.lock`
+   - [x] Generate `requirements.txt` from `uv.lock` for Vercel (`uv export`)
+   - [x] Document uv commands (`uv sync`, `uv run`, `uv add`) in the backend README
 
 3. **Development Tooling**
    - [x] Configure code formatter (Black)
@@ -52,7 +52,7 @@ This document breaks down the PageShare backend implementation into manageable p
    - [x] Setup API documentation framework (FastAPI auto-docs)
 
 **Acceptance Criteria:**
-- ✅ Virtual environment can be created and activated
+- ✅ `uv sync` creates the environment from the lock file
 - ✅ Dependencies install without errors
 - ✅ Linting and formatting tools work
 - ✅ All planning documents reviewed
@@ -93,7 +93,7 @@ This document breaks down the PageShare backend implementation into manageable p
    - [x] Add database health check endpoint
 
 5. **Alembic Migration Setup**
-   - [x] Initialize Alembic (`alembic init`)
+   - [x] Initialize Alembic (`uv run alembic init`)
    - [x] Configure `alembic.ini` for Supabase PostgreSQL
    - [x] Setup `alembic/env.py` with database URL from config
    - [x] Create first empty migration to verify setup
@@ -726,7 +726,7 @@ This document breaks down the PageShare backend implementation into manageable p
 
 #### Tasks:
 1. **Testing Infrastructure**
-   - [ ] Install pytest and testing dependencies
+   - [x] Install pytest and testing dependencies (uv `dev` group: `uv add --dev <package>`)
    - [ ] Create `tests/conftest.py` with fixtures
    - [ ] Setup test database configuration
    - [ ] Create test database helpers

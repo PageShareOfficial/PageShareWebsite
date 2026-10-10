@@ -18,7 +18,7 @@ Goal: prove mid-bucket prediction starts are covered via `floor_to_interval` + *
 
 All six cases logged floored fetches and LEADING GAP zooms. Engine also **resumes** after a clean leading remainder (so later bars in the same window are not dropped).
 
-Re-run: `python tests/test_live_evaluate_short_window_floor.py` from `backend/` with `$env:PYTHONPATH = "."`.
+Re-run: `uv run python tests/test_live_evaluate_short_window_floor.py` from `backend/` with `$env:PYTHONPATH = "."`.
 
 ---
 

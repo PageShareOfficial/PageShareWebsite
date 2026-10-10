@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Trash, LoaderCircle, Search } from '@/constants/icons';
 import { WatchlistItem } from '@/types';
 import { fetchCryptoData, SearchSuggestion, StockData } from '@/utils/api/stockApi';
 import { useTickerSearch } from '@/hooks/discover/useTickerSearch';
@@ -168,7 +168,7 @@ export default function ManageWatchlistModal({
   };
 
   const inputRowClass =
-    'h-11 min-h-[2.75rem] text-sm w-full pl-10 pr-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+    'h-11 min-h-11 text-sm w-full pl-10 pr-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
     <Modal
@@ -188,7 +188,7 @@ export default function ManageWatchlistModal({
           </label>
           <div className="relative flex flex-row gap-2 items-stretch">
             <div className="flex-1 min-w-0 relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-1 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 ref={inputRef}
                 id="ticker-input"
@@ -228,7 +228,7 @@ export default function ManageWatchlistModal({
                         >
                           <div className="flex items-center gap-3">
                             {/* Image skeleton */}
-                            <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="flex-shrink-0" />
+                            <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" className="shrink-0" />
                             <div className="flex-1 min-w-0 space-y-2">
                               {/* Ticker + badge skeleton */}
                               <div className="flex items-center gap-2">
@@ -256,7 +256,7 @@ export default function ManageWatchlistModal({
                         } ${index > 0 ? 'border-t border-white/5' : ''}`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden bg-white/5">
+                          <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-white/5">
                             <ImageWithFallback
                               src={suggestion.image}
                               alt={suggestion.name}
@@ -290,10 +290,10 @@ export default function ManageWatchlistModal({
               onClick={() => handleAddTicker()}
               disabled={isLoading || !tickerSearch.query.trim() || !isOnline}
               title={!isOnline ? 'Connect to the internet to continue' : undefined}
-              className="inline-flex h-11 min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-black transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11 min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-black transition-colors hover:bg-gray-100 focus:outline-hidden focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
                 <Plus className="h-4 w-4 shrink-0" />
               )}
@@ -325,7 +325,7 @@ export default function ManageWatchlistModal({
                 return (
                   <li
                     key={item.ticker}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3.5 transition-colors hover:border-white/15 hover:bg-white/[0.07]"
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/4 p-3.5 transition-colors hover:border-white/15 hover:bg-white/[0.07]"
                   >
                     <TickerImage
                       src={item.image}
@@ -363,10 +363,10 @@ export default function ManageWatchlistModal({
                       onClick={() => handleRemoveTicker(item.ticker)}
                       disabled={!isOnline}
                       title={!isOnline ? 'Connect to the internet to continue' : 'Remove from watchlist'}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-500/15 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-500/15 hover:text-red-400 focus:outline-hidden focus:ring-2 focus:ring-red-400/50 disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label={`Remove ${item.ticker}`}
                     >
-                      <Trash2 className="h-5 w-5" strokeWidth={2} />
+                      <Trash className="h-5 w-5" strokeWidth={2} />
                     </button>
                   </li>
                 );

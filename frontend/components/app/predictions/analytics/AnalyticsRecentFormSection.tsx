@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from '@/constants/icons';
 import { useState } from 'react';
 import AnalyticsDonutChart from '@/components/app/predictions/analytics/AnalyticsDonutChart';
 import AnalyticsNetRrAreaChart from '@/components/app/predictions/analytics/AnalyticsNetRrAreaChart';

@@ -4,8 +4,10 @@ import {
   FaLinkedinIn,
   FaTelegram,
   FaYoutube,
-} from 'react-icons/fa6';
-import type { IconType } from 'react-icons';
+  FaXTwitter,
+  FaDiscord,
+  type IconType,
+} from '@/constants/icons';
 
 type SocialLink = {
   label: string;
@@ -16,13 +18,15 @@ type SocialLink = {
 const SOCIAL_LINKS: SocialLink[] = [
   { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61587705572199', Icon: FaFacebookF },
   { label: 'LinkedIn', href: 'https://www.linkedin.com/company/pageshare-io/', Icon: FaLinkedinIn },
-  { label: 'Instagram', href: 'https://www.instagram.com/pagesharehq/', Icon: FaInstagram },
+  { label: 'Instagram', href: 'https://www.instagram.com/pageshareio/', Icon: FaInstagram },
   { label: 'YouTube', href: 'https://www.youtube.com/@PageShare-Crypto', Icon: FaYoutube },
   { label: 'Telegram', href: 'https://t.me/+akC9c_yKeGdlNDM1', Icon: FaTelegram },
+  { label: 'X', href: 'https://x.com/PageShareio', Icon: FaXTwitter },
+  { label: 'Discord', href: 'https://discord.gg/jhwXvY9R6J', Icon: FaDiscord },
 ];
 
 const SOCIAL_ICON_CLASS =
-  'inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-500 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50';
+  'inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-500 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-cyan-400/50';
 
 export default function LandingFooterSocial() {
   return (

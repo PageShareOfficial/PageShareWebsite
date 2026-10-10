@@ -50,7 +50,7 @@ export default function PlanTickRibbon({ theme }: PlanTickRibbonProps) {
           variant={theme}
           color="#ffffff"
           size={TICK_ICON_SIZE_PX}
-          className="drop-shadow-sm"
+          className="drop-shadow-xs"
         />
       </div>
     </div>

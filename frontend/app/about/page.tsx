@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { Linkedin } from 'lucide-react';
+import { FaLinkedinIn } from '@/constants/icons';
 import { siteConfig } from '@/lib/seo/metadata';
+
+const FOUNDER_LINKEDIN_URL = 'https://www.linkedin.com/in/rahul-naik-rk918/';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -20,7 +23,7 @@ export default function AboutPage() {
       {/* Header */}
       <header className="border-b border-white/10 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="inline-block">
+          <Link href={ROUTES.landing} className="inline-block">
             <Image src="/pageshare_final.png" alt="PageShare Logo" width={40} height={40} />
           </Link>
         </div>
@@ -59,11 +62,11 @@ export default function AboutPage() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">Founder</h2>
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <Link
-                href="https://www.linkedin.com/in/rahul-naik-rk918/"
+              <a
+                href={FOUNDER_LINKEDIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 rounded-full overflow-hidden border-2 border-slate-400 hover:border-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                className="shrink-0 rounded-full overflow-hidden border-2 border-slate-400 hover:border-slate-300 transition-colors focus:outline-hidden focus:ring-2 focus:ring-cyan-400/50"
                 aria-label="Rahul Naik on LinkedIn"
               >
                 <Image
@@ -71,28 +74,27 @@ export default function AboutPage() {
                   alt="Rahul Naik"
                   width={240}
                   height={240}
-                  className="object-cover w-240 h-240"
+                  className="object-cover w-60 h-60"
                 />
-              </Link>
+              </a>
               <div className="space-y-2 min-w-0">
                 <p className="text-white font-medium">Rahul Naik</p>
                 <p className="text-gray-300">
                   Rahul is the founder of {siteConfig.name} and a multi-domain expert with
-                  expertise in software development, AI, analytics &amp; quantitative finance. He
-                  is CTO of Martian Data, a business consultancy. An alumnus of the Indian Institute
-                  of Technology Jodhpur, he is deeply interested in business, entrepreneurship,
+                  expertise in software development, AI, analytics &amp; quantitative finance. An alumnus of the Indian Institute
+                  of Technology Jodhpur 2025, he is deeply interested in business, entrepreneurship,
                   and finance, and has worked with companies across the globe. Beyond work, he
-                  enjoys singing and playing the piano and harmonica.
+                  enjoys singing and playing the piano, harmonica and flute.
                 </p>
-                <Link
-                  href="https://www.linkedin.com/in/rahul-naik-rk918/"
+                <a
+                  href={FOUNDER_LINKEDIN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-white/5 transition-colors focus:outline-hidden focus:ring-2 focus:ring-cyan-400/50"
                   aria-label="Connect on LinkedIn"
                 >
-                  <Linkedin className="w-5 h-5" />
-                </Link>
+                  <FaLinkedinIn className="w-5 h-5" />
+                </a>
               </div>
             </div>
           </section>
@@ -124,7 +126,7 @@ export default function AboutPage() {
 
         <div className="mt-12 pt-8 border-t border-white/10">
           <Link
-            href="/"
+            href={ROUTES.landing}
             className="text-cyan-400 hover:text-cyan-300 hover:underline"
           >
             ← Back to Home

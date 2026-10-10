@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { TriangleAlert, RefreshCw, type LucideIcon } from '@/constants/icons';
 import React from 'react';
 
 interface ErrorStateProps {
@@ -8,6 +8,9 @@ interface ErrorStateProps {
   message?: string;
   onRetry?: () => void;
   retryDisabled?: boolean;
+  /** Button text; override when the action is not a retry (e.g. navigating away). */
+  actionLabel?: string;
+  actionIcon?: LucideIcon;
   className?: string;
 }
 
@@ -19,11 +22,13 @@ export default function ErrorState({
   message = 'Please try again in a moment.',
   onRetry,
   retryDisabled = false,
+  actionLabel = 'Retry',
+  actionIcon: ActionIcon = RefreshCw,
   className = '',
 }: ErrorStateProps) {
   return (
     <div className={`flex flex-col items-center justify-center py-10 text-gray-300 ${className}`}>
-      <AlertTriangle className="w-10 h-10 mb-4 text-amber-400" />
+      <TriangleAlert className="w-10 h-10 mb-4 text-amber-400" />
       <p className="text-lg font-semibold text-white mb-1">{title}</p>
       <p className="text-sm text-gray-400 mb-4 text-center max-w-md">{message}</p>
       {onRetry && (
@@ -33,8 +38,8 @@ export default function ErrorState({
           disabled={retryDisabled}
           className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <RefreshCw className="w-4 h-4" />
-          <span>Retry</span>
+          <ActionIcon className="w-4 h-4" />
+          <span>{actionLabel}</span>
         </button>
       )}
     </div>

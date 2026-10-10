@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { Target, TrendingUp } from 'lucide-react';
-import { FaMedal } from 'react-icons/fa';
+import { Target, TrendingUp, FaMedal } from '@/constants/icons';
 import type { AnalystScoreSummary } from '@/types/predictions';
 import ShowAllButton from '@/components/app/common/ShowAllButton';
 import { getAnalyticsPath } from '@/utils/predictions/analyticsRoutes';
@@ -27,7 +26,7 @@ function StatCard({
   return (
     <div
       className={`rounded-xl border border-white/10 p-4 ${
-        gradientClass ?? 'bg-white/[0.03]'
+        gradientClass ?? 'bg-white/3'
       }`}
     >
       <div
@@ -56,7 +55,7 @@ export default function AnalystStatsSection({
           value={formatAnalystRank(score.rank)}
           icon={<FaMedal className="h-3.5 w-3.5" aria-hidden />}
           accentClass="text-amber-400/90"
-          gradientClass="bg-gradient-to-br from-amber-500/10 to-transparent"
+          gradientClass="bg-linear-to-br from-amber-500/10 to-transparent"
         />
         <StatCard
           label="Win rate"

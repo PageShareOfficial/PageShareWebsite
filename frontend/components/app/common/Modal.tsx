@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X } from '@/constants/icons';
 import { ReactNode } from 'react';
 
 interface ModalProps {
@@ -48,7 +48,7 @@ export default function Modal({
 
   return (
     <div
-      className={`fixed inset-0 flex items-center justify-center ${overlayClassName || 'bg-black/80 backdrop-blur-sm'} p-4`}
+      className={`fixed inset-0 flex items-center justify-center ${overlayClassName || 'bg-black/80 backdrop-blur-xs'} p-4`}
       style={{ zIndex }}
       onClick={closeOnOverlayClick ? onClose : undefined}
     >

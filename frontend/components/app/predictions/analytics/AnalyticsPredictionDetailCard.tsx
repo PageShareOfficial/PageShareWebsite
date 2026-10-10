@@ -1,14 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import {
-  CalendarClock,
-  Lock,
-  Sparkles,
-  Target,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react';
+import { CalendarClock, Lock, Sparkles, Target, TrendingDown, TrendingUp } from '@/constants/icons';
 import Skeleton from '@/components/app/common/Skeleton';
 import ImageWithFallback from '@/components/app/common/ImageWithFallback';
 import TickerImage from '@/components/app/ticker/TickerImage';
@@ -176,14 +169,14 @@ function PredictionTimeline({
           />
         ) : null}
         {steps.map((step) => (
-          <div key={step.label} className="relative z-[1] min-w-0">
+          <div key={step.label} className="relative z-1 min-w-0">
             <span className="flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-[#141414] text-[10px] font-bold text-gray-400 ring-4 ring-[#141414]">
               •
             </span>
             <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
               {step.label}
             </p>
-            <p className="mt-0.5 break-words text-xs tabular-nums leading-snug text-gray-300">
+            <p className="mt-0.5 wrap-break-word text-xs tabular-nums leading-snug text-gray-300">
               {step.value}
             </p>
           </div>
@@ -206,7 +199,7 @@ export default function AnalyticsPredictionDetailCard({
   if (isLoading && !detail) {
     return (
       <div
-        className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
+        className="overflow-hidden rounded-2xl border border-white/10 bg-white/3"
         aria-busy="true"
       >
         <Skeleton variant="rectangular" width="100%" height={140} rounded="rounded-none" />
@@ -245,9 +238,9 @@ export default function AnalyticsPredictionDetailCard({
         : 'negative';
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9)]">
+    <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/3 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9)]">
       <header
-        className={`relative border-b border-white/10 bg-gradient-to-br ${meta.headerGlow} px-4 pb-5 pt-4 sm:px-6 sm:pt-5`}
+        className={`relative border-b border-white/10 bg-linear-to-br ${meta.headerGlow} px-4 pb-5 pt-4 sm:px-6 sm:pt-5`}
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -295,7 +288,7 @@ export default function AnalyticsPredictionDetailCard({
             this prediction.
           </p>
         ) : isActive ? (
-          <p className="flex gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs leading-relaxed text-gray-400">
+          <p className="flex gap-2 rounded-xl border border-white/10 bg-white/2 px-3 py-2.5 text-xs leading-relaxed text-gray-400">
             <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
             Locked call — outcome updates when the analyst settles it.
           </p>
@@ -363,7 +356,7 @@ export default function AnalyticsPredictionDetailCard({
             p.thesis_image_url ? 'lg:flex-row lg:items-stretch' : ''
           }`}
         >
-          <blockquote className="relative min-w-0 flex-1 rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent px-4 py-4">
+          <blockquote className="relative min-w-0 flex-1 rounded-xl border border-white/10 bg-linear-to-br from-white/4 to-transparent px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Thesis
             </p>

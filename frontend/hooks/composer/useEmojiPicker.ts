@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 
 interface UseEmojiPickerResult {
   showEmojiPicker: boolean;
-  emojiPickerRef: React.RefObject<HTMLDivElement>;
+  emojiPickerRef: React.RefObject<HTMLDivElement | null>;
   setShowEmojiPicker: (show: boolean) => void;
-  handleEmojiClick: (emoji: string, textareaRef: React.RefObject<HTMLTextAreaElement>) => void;
+  handleEmojiClick: (emoji: string, textareaRef: React.RefObject<HTMLTextAreaElement | null>) => void;
 }
 
 /**
@@ -37,7 +37,7 @@ export function useEmojiPicker(): UseEmojiPickerResult {
 
   const handleEmojiClick = (
     emoji: string,
-    textareaRef: React.RefObject<HTMLTextAreaElement>
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>
   ) => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;

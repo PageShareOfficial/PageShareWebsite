@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil, RefreshCw } from 'lucide-react';
+import { Pencil, RefreshCw } from '@/constants/icons';
 import PostCard from '../post/PostCard';
 import TweetComposer from '../composer/TweetComposer';
 import { Post } from '@/types';

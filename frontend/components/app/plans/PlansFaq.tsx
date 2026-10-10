@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '@/constants/icons';
 import { PLAN_FAQS, type PlanFaqItem } from './planFaqs';
 
 function FaqItem({
@@ -55,7 +55,7 @@ export default function PlansFaq() {
       >
         Frequently Asked Questions
       </h2>
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 sm:px-5">
+      <div className="rounded-2xl border border-white/10 bg-white/3 px-4 sm:px-5">
         {PLAN_FAQS.map((item, index) => (
           <FaqItem
             key={item.question}

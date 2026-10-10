@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,11 +8,13 @@ import { z } from 'zod';
 import FormInput from '@/components/app/common/FormInput';
 import LandingFormInput from '@/components/auth/LandingFormInput';
 import { PrimaryButton } from '@/components/app/common/Button';
-import { ArrowRight, Lock, Mail } from 'lucide-react';
+import { ArrowRight, Lock, Mail } from '@/constants/icons';
 import LoadingState from '@/components/app/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
+import { toFriendlySignInError } from '@/utils/auth/signInErrors';
+import { ROUTES } from '@/constants/routes';
 
 const signInSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -25,12 +27,15 @@ interface EmailSignInFormProps {
   variant?: 'default' | 'landing';
   onError?: (message: string | null) => void;
   onForgotPassword?: () => void;
+  /** Pre-fills the email (e.g. remembered account) and focuses the password field. */
+  defaultEmail?: string;
 }
 
 export default function EmailSignInForm({
   variant = 'default',
   onError,
   onForgotPassword,
+  defaultEmail,
 }: EmailSignInFormProps) {
   const { signInWithEmail } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -39,10 +44,16 @@ export default function EmailSignInForm({
   const {
     register,
     handleSubmit,
+    setFocus,
     formState: { errors },
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
+    defaultValues: { email: defaultEmail ?? '' },
   });
+
+  useEffect(() => {
+    if (defaultEmail) setFocus('password');
+  }, [defaultEmail, setFocus]);
 
   const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
@@ -55,16 +66,10 @@ export default function EmailSignInForm({
         });
         router.replace(destination);
       } else {
-        router.replace('/home');
+        router.replace(ROUTES.home);
       }
     } catch (err) {
-      let msg = getErrorMessage(err, 'Sign in failed');
-      // Map Supabase auth errors to user-friendly messages
-      const lower = msg.toLowerCase();
-      if (lower.includes('email not confirmed') || lower.includes('token_not_found') || lower.includes('refresh token')) {
-        msg = 'Please check your email and click the confirmation link to activate your account, then try signing in again.';
-      }
-      onError?.(msg);
+      onError?.(toFriendlySignInError(getErrorMessage(err, 'Sign in failed')));
     } finally {
       setIsLoading(false);
     }

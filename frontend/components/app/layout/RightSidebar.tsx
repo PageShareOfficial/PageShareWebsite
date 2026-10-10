@@ -16,7 +16,7 @@ export default function RightSidebar() {
   } = useWatchlist();
 
   return (
-    <div className="hidden lg:block w-[350px] flex-shrink-0 pl-4">
+    <div className="hidden lg:block w-[350px] shrink-0 pl-4">
       <RightRail
         watchlist={watchlist}
         onManageWatchlist={openManageModal}

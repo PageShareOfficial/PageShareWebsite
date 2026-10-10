@@ -6,7 +6,12 @@ import DeleteAccountModal from '@/components/app/modals/DeleteAccountModal';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
 import { getCurrentUser } from '@/utils/user/profileUtils';
-import { Report, isAutoHideReportedEnabled, toggleAutoHideReported } from '@/utils/content/reportUtils';
+import {
+  Report,
+  getReportedContentPath,
+  isAutoHideReportedEnabled,
+  toggleAutoHideReported,
+} from '@/utils/content/reportUtils';
 import { listMyReports, type ReportHistoryItemResponse } from '@/lib/api/reportApi';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
@@ -14,10 +19,36 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import { apiDelete } from '@/lib/api/client';
+import { forgetRememberedAccount } from '@/utils/auth/rememberedAccount';
 import Link from 'next/link';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getBillingRowSubtitle } from '@/utils/billing/billingRowSubtitle';
-import { ChevronRight, CreditCard } from 'lucide-react';
+import { ChevronRight, CreditCard } from '@/constants/icons';
+import { ROUTES, SETTINGS_DELETE_ACCOUNT_QUERY } from '@/constants/routes';
+
+function ReportViewButton({
+  report,
+  onView,
+}: {
+  report: Report;
+  onView: (path: string) => void;
+}) {
+  const reportedContentPath = getReportedContentPath(report);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (reportedContentPath) onView(reportedContentPath);
+      }}
+      disabled={!reportedContentPath}
+      title={reportedContentPath ? undefined : 'The post for this comment is not available'}
+      className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white/10"
+    >
+      View
+    </button>
+  );
+}
 
 function SettingsContent() {
   const router = useRouter();
@@ -49,9 +80,10 @@ function SettingsContent() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('action') === 'delete') {
+    const { key, value } = SETTINGS_DELETE_ACCOUNT_QUERY;
+    if (searchParams.get(key) === value) {
       setIsDeleteModalOpen(true);
-      router.replace('/settings', { scroll: false });
+      router.replace(ROUTES.settings, { scroll: false });
     }
   }, [searchParams, router]);
 
@@ -130,6 +162,7 @@ function SettingsContent() {
   const handleDeleteAccount = async () => {
     if (!session?.access_token) throw new Error('Session expired. Please sign in again.');
     await apiDelete('/users/me', session.access_token);
+    forgetRememberedAccount();
     signOut();
   };
 
@@ -187,7 +220,7 @@ function SettingsContent() {
         <div className="w-full border-l border-r border-white/10">
               <div className="px-2 pt-4 lg:px-4">
                 <Link
-                  href="/settings/billing"
+                  href={ROUTES.billing}
                   className="flex items-center justify-between gap-3 px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/[0.07] transition-colors"
                 >
                   <span className="flex items-center gap-3 min-w-0">
@@ -324,7 +357,7 @@ function SettingsContent() {
                                 src={user.profile_picture_url ?? undefined}
                                 alt={user.display_name}
                                 size={48}
-                                className="flex-shrink-0"
+                                className="shrink-0"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -389,7 +422,7 @@ function SettingsContent() {
                                 src={user.profile_picture_url ?? undefined}
                                 alt={user.display_name}
                                 size={48}
-                                className="flex-shrink-0"
+                                className="shrink-0"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -472,19 +505,7 @@ function SettingsContent() {
                                     {formatTimestamp(report.timestamp)}
                                   </div>
                                 </div>
-                                <button
-                                  onClick={() => {
-                                    const url = report.contentType === 'post'
-                                      ? `/${report.reportedUserHandle}/posts/${report.contentId}`
-                                      : report.postId
-                                        ? `/${report.reportedUserHandle}/posts/${report.postId}#comment-${report.contentId}`
-                                        : `/${report.reportedUserHandle}/posts/${report.contentId}#comment-${report.contentId}`;
-                                    router.push(url);
-                                  }}
-                                  className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
-                                >
-                                  View
-                                </button>
+                                <ReportViewButton report={report} onView={(path) => router.push(path)} />
                               </div>
                               <div className="pt-2 border-t border-white/10">
                                 <div className="text-sm text-gray-400 mb-1">Reason:</div>

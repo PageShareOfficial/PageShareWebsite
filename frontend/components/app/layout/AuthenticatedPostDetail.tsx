@@ -1,8 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, Heart } from '@/constants/icons';
+import { useSafeBack } from '@/hooks/common/useSafeBack';
 const ReportModal = dynamic(
   () => import('@/components/app/modals/ReportModal'),
   { ssr: false }
@@ -80,7 +80,7 @@ export type AuthenticatedPostDetailProps = {
  * The `(app)` layout provides sidebars; this component is the center column only.
  */
 export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailProps) {
-  const router = useRouter();
+  const goBack = useSafeBack();
   const {
     post,
     posts,
@@ -123,7 +123,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
   } = props;
 
   const stickyHeaderClasses = [
-    'sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-white/10',
+    'sticky top-0 z-20 bg-black/80 backdrop-blur-xs border-b border-white/10',
   ].join(' ');
 
   return (
@@ -133,7 +133,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
               <div className={stickyHeaderClasses}>
                 <div className="flex items-center px-4 h-14">
                   <button
-                    onClick={() => router.back()}
+                    onClick={goBack}
                     className="mr-4 p-2 hover:bg-white/10 rounded-full transition-colors"
                     aria-label="Go back"
                   >
@@ -220,7 +220,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                           src={comment.author.avatar}
                           alt={comment.author.displayName}
                           size={40}
-                          className="flex-shrink-0"
+                          className="shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1 w-full">
@@ -281,7 +281,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                             />
                           </div>
                           {comment.content && (
-                            <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-2">
+                            <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word mb-2">
                               {parseCashtags(comment.content)}
                             </p>
                           )}

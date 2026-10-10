@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Modal from '@/components/app/common/Modal';
-import { PrimaryButton, SecondaryButton } from '@/components/app/common/Button';
+import { DangerButton, SecondaryButton } from '@/components/app/common/Button';
 import FormInput from '@/components/app/common/FormInput';
 import FormErrorMessage from '@/components/app/common/FormErrorMessage';
 import LoadingState from '@/components/app/common/LoadingState';
@@ -91,17 +91,17 @@ export default function DeleteAccountModal({
           >
             Cancel
           </SecondaryButton>
-          <PrimaryButton
+          <DangerButton
             type="submit"
             disabled={!isConfirmed || isSubmitting}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white border-red-600"
+            className="flex-1"
           >
             {isSubmitting ? (
               <LoadingState text="Deleting..." size="sm" inline className="text-white" />
             ) : (
               'Delete my account'
             )}
-          </PrimaryButton>
+          </DangerButton>
         </div>
       </form>
     </Modal>

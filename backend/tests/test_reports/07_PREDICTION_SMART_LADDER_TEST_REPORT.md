@@ -8,8 +8,7 @@ No Coinbase / market I/O — window length only.
 
 ```bash
 cd backend
-$env:PYTHONPATH = "."
-python -m pytest tests/test_prediction_smart_ladder.py -v
+uv run pytest tests/test_prediction_smart_ladder.py -v
 ```
 
 ---

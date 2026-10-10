@@ -1,10 +1,10 @@
 import { useEffect, RefObject } from 'react';
 
 interface UseClickOutsideOptions {
-  ref: RefObject<HTMLElement>;
+  ref: RefObject<HTMLElement | null>;
   handler: (event: MouseEvent) => void;
   enabled?: boolean;
-  additionalRefs?: RefObject<HTMLElement>[];
+  additionalRefs?: RefObject<HTMLElement | null>[];
 }
 
 /**

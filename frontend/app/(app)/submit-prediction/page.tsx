@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePredictionSubmissionQuota } from '@/hooks/predictions/usePredictionSubmissionQuota';
 import { useScrollPastAnchor } from '@/hooks/predictions/useScrollPastAnchor';
 import { MAX_PREDICTIONS_PER_DAY } from '@/utils/predictions/predictionRules';
+import { ROUTES } from '@/constants/routes';
 
 const INITIAL_LOCK_STATE: PredictionPriceLockState = {
   isVisible: false,
@@ -39,7 +40,7 @@ export default function SubmitPredictionPage() {
   const { quota, canSubmit, refresh, isLoading } = usePredictionSubmissionQuota();
 
   const goToPredictions = () => {
-    router.push('/predictions');
+    router.push(ROUTES.predictions);
   };
 
   if (authLoading) {

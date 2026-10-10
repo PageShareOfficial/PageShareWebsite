@@ -1,11 +1,13 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import Loading from '@/components/app/common/Loading';
+import AccountLoadErrorView from '@/components/auth/AccountLoadErrorView';
 import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
+import { AUTH_ERROR_CODES, landingWithError } from '@/constants/routes';
 
 const SESSION_WAIT_MS = 8000;
 
@@ -47,11 +49,33 @@ async function waitForAuthSession(
   });
 }
 
+type CallbackStatus = 'loading' | 'error' | 'account-error';
+
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'error'>('loading');
+  const [status, setStatus] = useState<CallbackStatus>('loading');
   const handled = useRef(false);
+  const signedInSession = useRef<Session | null>(null);
+
+  const routeSignedInUser = useCallback(
+    async (session: Session, recordSessionStart: boolean) => {
+      try {
+        const destination = await resolvePostAuthPath(session.access_token, {
+          recordSessionStart,
+        });
+        router.replace(destination);
+      } catch {
+        setStatus('account-error');
+      }
+    },
+    [router]
+  );
+
+  const retryAccountLoad = useCallback(async () => {
+    const session = signedInSession.current;
+    if (session) await routeSignedInUser(session, false);
+  }, [routeSignedInUser]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -62,18 +86,15 @@ function AuthCallbackContent() {
     async function completeSignIn(session: Session, recordSessionStart: boolean) {
       if (handled.current) return;
       handled.current = true;
-
-      const destination = await resolvePostAuthPath(session.access_token, {
-        recordSessionStart,
-      });
-      router.replace(destination);
+      signedInSession.current = session;
+      await routeSignedInUser(session, recordSessionStart);
     }
 
     async function failAuth() {
       if (handled.current) return;
       handled.current = true;
       setStatus('error');
-      router.replace('/?error=auth');
+      router.replace(landingWithError(AUTH_ERROR_CODES.auth));
     }
 
     async function run() {
@@ -108,10 +129,14 @@ function AuthCallbackContent() {
     }
 
     void run();
-  }, [router, searchParams]);
+  }, [router, searchParams, routeSignedInUser]);
 
   if (status === 'error') {
     return null;
+  }
+
+  if (status === 'account-error') {
+    return <AccountLoadErrorView onRetry={retryAccountLoad} className="min-h-screen" />;
   }
 
   return (

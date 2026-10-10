@@ -8,13 +8,13 @@ PageShare is built with Next.js and TypeScript, providing a comprehensive social
 
 ## Tech Stack
 
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Turbopack)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **UI**: [React 18](https://react.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI**: [React 19](https://react.dev/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) (CSS-first config in `app/globals.css`)
 - **Forms**: [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/) validation
 - **Icons**: [Lucide React](https://lucide.dev/) & [React Icons](https://react-icons.github.io/react-icons/)
-- **Runtime**: Node.js 20.x or higher
+- **Runtime**: Node.js 24.x
 
 ## Prerequisites
 
@@ -136,7 +136,8 @@ PageShareWebsite/
 - `npm run dev` - Start development server with hot reload
 - `npm run build` - Build the application for production
 - `npm start` - Start production server (requires build first)
-- `npm run lint` - Run ESLint to check code quality
+- `npm run typecheck` - Type-check the project with `tsc --noEmit`
+- `npm test` - Run the Vitest test suite
 
 ### Code Style
 
@@ -205,7 +206,7 @@ output: 'export'
 
 1. Create a feature branch from `main`
 2. Make your changes
-3. Ensure code passes linting (`npm run lint`)
+3. Ensure code type-checks and tests pass (`npm run typecheck` and `npm test`)
 4. Test thoroughly
 5. Submit a pull request
 

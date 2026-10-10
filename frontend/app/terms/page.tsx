@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 
 import type { Metadata } from 'next';
@@ -15,7 +16,7 @@ export default function TermsPage() {
       {/* Header */}
       <header className="border-b border-white/10 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="inline-block">
+          <Link href={ROUTES.landing} className="inline-block">
             <Image src="/pageshare_final.png" alt="PageShare Logo" width={40} height={40} />
           </Link>
         </div>
@@ -141,7 +142,7 @@ export default function TermsPage() {
 
         <div className="mt-12 pt-8 border-t border-white/10">
           <Link
-            href="/"
+            href={ROUTES.landing}
             className="text-cyan-400 hover:text-cyan-300 hover:underline"
           >
             ← Back to Home

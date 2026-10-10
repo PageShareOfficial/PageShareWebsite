@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 
@@ -14,7 +15,7 @@ export default function DisclaimerPage() {
       {/* Header */}
       <header className="border-b border-white/10 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="inline-block">
+          <Link href={ROUTES.landing} className="inline-block">
             <Image src="/pageshare_final.png" alt="PageShare Logo" width={40} height={40} />
           </Link>
         </div>
@@ -71,11 +72,11 @@ export default function DisclaimerPage() {
           <section>
             <p className="text-gray-400 text-sm">
               If you have questions about this disclaimer, please review our{' '}
-              <Link href="/terms" className="text-teal-400 hover:text-teal-300 underline">
+              <Link href={ROUTES.terms} className="text-teal-400 hover:text-teal-300 underline">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-teal-400 hover:text-teal-300 underline">
+              <Link href={ROUTES.privacy} className="text-teal-400 hover:text-teal-300 underline">
                 Privacy Policy
               </Link>
               .

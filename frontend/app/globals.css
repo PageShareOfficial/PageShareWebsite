@@ -1,9 +1,122 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* v3 defaults kept: inputs rely on gray-400 placeholders and buttons rarely set cursor-pointer. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility animate-fade-in-up {
+  /* Smooth fade-in animation */
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@utility animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@utility animate-delay-100 {
+  animation-delay: 0.1s;
+}
+
+@utility animate-delay-200 {
+  animation-delay: 0.2s;
+}
+
+@utility animate-delay-300 {
+  animation-delay: 0.3s;
+}
+
+@utility animate-delay-400 {
+  animation-delay: 0.4s;
+}
+
+@utility gradient-shimmer {
+  /* Gradient shimmer effect */
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 3s infinite;
+}
+
+@utility skeleton-shimmer {
+  /* Skeleton shimmer animation for loading states */
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@utility thin-scrollbar {
+  /* Thin dark scrollbar for overflow areas (panels, forms, modals). */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.85) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.85);
+    border-radius: 9999px;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@utility thin-scrollbar-gutter {
+  /* Reserve gutter so textarea layout does not shift when scrollbar appears. */
+  scrollbar-gutter: stable;
+}
+
+@utility scrollbar-hidden {
+  /* Hide scrollbar while keeping scroll (e.g. horizontal carousels). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 @layer utilities {
-  /* Smooth fade-in animation */
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -32,44 +145,6 @@
       background-position: 1000px 0;
     }
   }
-
-  .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out forwards;
-  }
-
-  .animate-delay-100 {
-    animation-delay: 0.1s;
-  }
-
-  .animate-delay-200 {
-    animation-delay: 0.2s;
-  }
-
-  .animate-delay-300 {
-    animation-delay: 0.3s;
-  }
-
-  .animate-delay-400 {
-    animation-delay: 0.4s;
-  }
-
-  /* Gradient shimmer effect */
-  .gradient-shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    );
-    background-size: 1000px 100%;
-    animation: shimmer 3s infinite;
-  }
-
-  /* Skeleton shimmer animation for loading states */
   @keyframes skeleton-shimmer {
     0% {
       background-position: -200% 0;
@@ -77,17 +152,6 @@
     100% {
       background-position: 200% 0;
     }
-  }
-
-  .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.15) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
   }
 
   /* Date input calendar icon styling */
@@ -117,43 +181,5 @@
   select option:checked {
     background-color: #1a1a1a !important;
     color: #ffffff !important;
-  }
-
-  /* Thin dark scrollbar for overflow areas (panels, forms, modals). */
-  .thin-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.85) transparent;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.85);
-    border-radius: 9999px;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-corner {
-    background: transparent;
-  }
-
-  /* Reserve gutter so textarea layout does not shift when scrollbar appears. */
-  .thin-scrollbar-gutter {
-    scrollbar-gutter: stable;
-  }
-
-  /* Hide scrollbar while keeping scroll (e.g. horizontal carousels). */
-  .scrollbar-hidden {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .scrollbar-hidden::-webkit-scrollbar {
-    display: none;
   }
 }

@@ -21,7 +21,7 @@ export default function CategoryBadge({ category, size = 'sm', className = '' }:
   const displayText = category.charAt(0).toUpperCase() + category.slice(1);
 
   return (
-    <span className={`${sizeClasses[size]} font-medium rounded ${getCategoryBadgeColor(category)} ${className}`}>
+    <span className={`${sizeClasses[size]} font-medium rounded-sm ${getCategoryBadgeColor(category)} ${className}`}>
       {displayText}
     </span>
   );

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { TickerDetailData, TickerType } from '@/types/ticker';
 import { formatDate } from '@/utils/core/dateUtils';
-import { ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronUp } from '@/constants/icons';
 
 interface TickerOverviewProps {
   data: TickerDetailData;

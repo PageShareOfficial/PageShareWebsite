@@ -28,11 +28,11 @@ export default function Skeleton({
   const variantClasses = {
     rectangular: '',
     circular: 'rounded-full',
-    text: 'rounded',
+    text: 'rounded-sm',
   };
 
   const roundedClass = rounded === true 
-    ? 'rounded' 
+    ? 'rounded-sm' 
     : rounded === false 
     ? '' 
     : rounded; // Custom rounded class

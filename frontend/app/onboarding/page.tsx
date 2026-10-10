@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Camera } from 'lucide-react';
+import { Camera } from '@/constants/icons';
 import { interestsOptions } from '@/utils/core/constants';
 import FormInput from '@/components/app/common/FormInput';
 import FormErrorMessage from '@/components/app/common/FormErrorMessage';
@@ -15,7 +15,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiPost, apiUploadProfilePicture } from '@/lib/api/client';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
+import AccountLoadErrorView from '@/components/auth/AccountLoadErrorView';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { needsOnboarding } from '@/utils/auth/postAuthRedirect';
+import { ROUTES } from '@/constants/routes';
 
 // Form validation schema
 const onboardingSchema = z.object({
@@ -43,13 +46,9 @@ const onboardingSchema = z.object({
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
-function needsOnboarding(username: string): boolean {
-  return username.startsWith('user_');
-}
-
 export default function OnboardingPage() {
   const router = useRouter();
-  const { session, backendUser, loading, refreshBackendUser } = useAuth();
+  const { session, backendUser, backendUserError, loading, refreshBackendUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -123,7 +122,7 @@ export default function OnboardingPage() {
 
       await apiPost('/users/me/onboarding', payload, session.access_token);
       await refreshBackendUser();
-      router.push('/home');
+      router.replace(ROUTES.home);
     } catch (err) {
       setSubmitError(getErrorMessage(err, 'Onboarding failed'));
     } finally {
@@ -136,7 +135,7 @@ export default function OnboardingPage() {
     if (loading) return;
     if (!session) return;
     if (backendUser && !needsOnboarding(backendUser.username)) {
-      router.replace('/home');
+      router.replace(ROUTES.home);
     }
   }, [loading, session, backendUser, router]);
 
@@ -184,6 +183,10 @@ export default function OnboardingPage() {
         <Loading />
       </div>
     );
+  }
+
+  if (backendUserError) {
+    return <AccountLoadErrorView onRetry={refreshBackendUser} className="min-h-screen" />;
   }
 
   return (
@@ -322,7 +325,7 @@ export default function OnboardingPage() {
               id="bio"
               rows={4}
               maxLength={200}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
               placeholder="Tell us about yourself..."
             />
             <FormErrorMessage message={errors.bio?.message} className="mt-1" />

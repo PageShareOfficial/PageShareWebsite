@@ -17,6 +17,18 @@ export function PrimaryButton({ children, className = '', ...props }: ButtonProp
   );
 }
 
+/** Destructive actions. Colors live here because overriding PrimaryButton's bg via className is unreliable. */
+export function DangerButton({ children, className = '', ...props }: ButtonProps) {
+  return (
+    <button
+      className={`px-4 py-2 bg-red-600 text-white rounded-lg enabled:hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function SecondaryButton({ children, className = '', ...props }: ButtonProps) {
   return (
     <button

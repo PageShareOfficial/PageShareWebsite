@@ -166,7 +166,7 @@ export default function ReportModal({
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Provide more details about why you're reporting this content..."
                       rows={4}
-                      className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
                     />
                   </div>
                 )}
@@ -190,7 +190,7 @@ export default function ReportModal({
                   <button
                     type="submit"
                     disabled={!selectedReason || isSubmitting || !isOnline}
-                    className="flex-1 rounded-xl !bg-red-500 hover:!bg-red-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2"
+                    className="flex-1 rounded-xl bg-red-500! hover:bg-red-600! text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2"
                     title={!isOnline ? 'You are offline' : undefined}
                   >
                     {isSubmitting ? 'Submitting...' : !isOnline ? 'Offline' : 'Report'}
