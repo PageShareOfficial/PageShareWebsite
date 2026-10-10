@@ -2,6 +2,7 @@ import logging
 from uuid import UUID
 from typing import Iterable, List, Optional, Tuple
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.follow import Follow
@@ -12,6 +13,8 @@ from app.services.auth_service import CurrentUser, AuthException, AuthErrorCode
 from app.services.storage_service import delete_profile_picture
 
 logger = logging.getLogger("pageshare.user")
+
+DISPLAY_NAME_MAX_LENGTH = 100  # users.display_name is VARCHAR(100)
 
 def _normalize_username(username: str) -> str:
     return username.strip().lower()
@@ -25,25 +28,39 @@ def get_user_by_username(db: Session, username: str) -> Optional[User]:
     normalized = _normalize_username(username)
     return db.execute(select(User).where(User.username == normalized)).scalars().first()
 
+def _build_placeholder_user(current: CurrentUser) -> User:
+    """
+    Minimal bootstrap row; onboarding fills in the rest.
+    The user_{id} username lets the frontend detect users who still need onboarding.
+    """
+    display_name = current.claims.get("name") or current.claims.get("email") or "New User"
+    return User(
+        id=current.auth_user_id,
+        username=f"user_{str(current.auth_user_id).replace('-', '').lower()[:24]}",
+        display_name=display_name[:DISPLAY_NAME_MAX_LENGTH],
+    )
+
 def get_or_create_user_for_auth(db: Session, current: CurrentUser) -> User:
     """
     Ensure we have a row in `users` for the given Supabase auth user id.
 
-    For now we lazily create a minimal record when first needed.
+    Safe under concurrent first-login requests (/session/start and /users/me):
+    if another request inserts the row first, the existing row is returned.
     """
     user = db.get(User, current.auth_user_id)
     if user:
         return user
 
-    # Minimal bootstrap; onboarding will fill in more details later.
-    # Use user_{id} as placeholder so frontend can detect new users (needs onboarding).
-    user = User(
-        id=current.auth_user_id,
-        username=f"user_{str(current.auth_user_id).replace('-', '').lower()[:24]}",
-        display_name=current.claims.get("name") or current.claims.get("email", "New User"),
-    )
+    user = _build_placeholder_user(current)
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing = db.get(User, current.auth_user_id)
+        if existing is None:
+            raise
+        return existing
     db.refresh(user)
     return user
 
