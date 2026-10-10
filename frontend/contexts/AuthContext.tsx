@@ -7,6 +7,12 @@ import { createClient } from '@/lib/supabase/client';
 import { apiGet, apiPost, getBaseUrl } from '@/lib/api/client';
 import { clearFeedCache } from '@/lib/feedCache';
 import { ROUTES } from '@/constants/routes';
+import {
+  ACCOUNT_LOAD_ERROR_MESSAGE,
+  reportAccountLoadFailure,
+} from '@/utils/auth/accountLoadError';
+import { buildRememberedAccount, saveRememberedAccount } from '@/utils/auth/rememberedAccount';
+import { recordSessionStart } from '@/utils/auth/postAuthRedirect';
 
 export interface BackendUser {
   id: string;
@@ -31,8 +37,11 @@ interface AuthContextValue {
   user: SupabaseUser | null;
   session: Session | null;
   backendUser: BackendUser | null;
+  /** Set when GET /users/me failed; pages show a retry (refreshBackendUser) instead of guessing. */
+  backendUserError: string | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  /** loginHint pre-selects that Google account (skips the account chooser). */
+  signInWithGoogle: (options?: { loginHint?: string }) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<Session | null>;
   signInWithEmail: (email: string, password: string) => Promise<Session | null>;
   resetPassword: (email: string) => Promise<void>;
@@ -47,31 +56,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [backendUser, setBackendUser] = useState<BackendUser | null>(null);
+  const [backendUserError, setBackendUserError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
 
-  const fetchBackendUser = useCallback(async (token: string) => {
-    const apiUrl = getBaseUrl();
-    if (!apiUrl) return null;
-
-    try {
-      const data = await apiGet<BackendUser>('/users/me', token);
-      return data;
-    } catch {
-      return null;
-    }
+  const clearBackendUser = useCallback(() => {
+    setBackendUser(null);
+    setBackendUserError(null);
   }, []);
+
+  const loadBackendUser = useCallback(
+    async (token: string) => {
+      if (!getBaseUrl()) {
+        clearBackendUser();
+        return;
+      }
+      try {
+        setBackendUser(await apiGet<BackendUser>('/users/me', token));
+        setBackendUserError(null);
+      } catch (err) {
+        setBackendUser(null);
+        setBackendUserError(ACCOUNT_LOAD_ERROR_MESSAGE);
+        reportAccountLoadFailure(err, 'auth_context');
+      }
+    },
+    [clearBackendUser]
+  );
 
   const refreshBackendUser = useCallback(async () => {
     if (!session?.access_token) {
-      setBackendUser(null);
+      clearBackendUser();
       return;
     }
-    const data = await fetchBackendUser(session.access_token);
-    setBackendUser(data ?? null);
-  }, [session?.access_token, fetchBackendUser]);
+    await loadBackendUser(session.access_token);
+  }, [session?.access_token, loadBackendUser, clearBackendUser]);
 
   // Only fetch backend user when on a protected/app route (not on landing /)
   // Prevents 401s from firing before login when /[username] or other routes prefetch
@@ -94,10 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (!session?.access_token || !shouldFetchBackend) {
-        setBackendUser(null);
+        clearBackendUser();
       } else if (needsFetch(session)) {
-        const data = await fetchBackendUser(session.access_token);
-        setBackendUser(data ?? null);
+        await loadBackendUser(session.access_token);
       }
 
       setLoading(false);
@@ -108,19 +127,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (!session?.access_token || !shouldFetchBackend) {
-        setBackendUser(null);
+        clearBackendUser();
         setLoading(false);
       } else if (needsFetch(session)) {
-        fetchBackendUser(session.access_token)
-          .then((data) => setBackendUser(data ?? null))
-          .finally(() => setLoading(false));
+        loadBackendUser(session.access_token).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth, fetchBackendUser, shouldFetchBackend, needsFetch]);
+  }, [supabase.auth, loadBackendUser, clearBackendUser, shouldFetchBackend, needsFetch]);
 
   // When navigating from / to a protected route, fetch backend user (only if we don't have it)
   useEffect(() => {
@@ -128,27 +145,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setLoading(true);
-    fetchBackendUser(session.access_token)
-      .then((data) => setBackendUser(data ?? null))
-      .finally(() => setLoading(false));
-  }, [shouldFetchBackend, session, needsFetch, fetchBackendUser]);
+    loadBackendUser(session.access_token).finally(() => setLoading(false));
+  }, [shouldFetchBackend, session, needsFetch, loadBackendUser]);
 
   // Session start: idempotent - creates session if none active (e.g. returning user, new visit)
   useEffect(() => {
     if (session?.access_token && getBaseUrl()) {
-      apiPost('/session/start', {}, session.access_token).catch(() => {});
+      void recordSessionStart(session.access_token);
     }
   }, [session?.access_token]);
 
-  const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) throw error;
-  }, [supabase.auth]);
+  // Remember who signed in on this browser so the landing page can offer "Continue as …"
+  useEffect(() => {
+    if (!session?.user || !backendUser) return;
+    const account = buildRememberedAccount(session.user, backendUser);
+    if (account) saveRememberedAccount(account);
+  }, [session?.user, backendUser]);
+
+  const signInWithGoogle = useCallback(
+    async (options?: { loginHint?: string }) => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          ...(options?.loginHint && { queryParams: { login_hint: options.loginHint } }),
+        },
+      });
+      if (error) throw error;
+    },
+    [supabase.auth]
+  );
 
   const signUpWithEmail = useCallback(
     async (email: string, password: string) => {
@@ -207,14 +233,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setBackendUser(null);
+    clearBackendUser();
     router.replace(ROUTES.landing);
-  }, [supabase.auth, router, session?.access_token]);
+  }, [supabase.auth, router, session?.access_token, clearBackendUser]);
 
   const value: AuthContextValue = {
     user,
     session,
     backendUser,
+    backendUserError,
     loading,
     signInWithGoogle,
     signUpWithEmail,

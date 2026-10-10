@@ -15,7 +15,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiPost, apiUploadProfilePicture } from '@/lib/api/client';
 import Loading from '@/components/app/common/Loading';
 import LoadingState from '@/components/app/common/LoadingState';
+import AccountLoadErrorView from '@/components/auth/AccountLoadErrorView';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
+import { needsOnboarding } from '@/utils/auth/postAuthRedirect';
 import { ROUTES } from '@/constants/routes';
 
 // Form validation schema
@@ -44,13 +46,9 @@ const onboardingSchema = z.object({
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
-function needsOnboarding(username: string): boolean {
-  return username.startsWith('user_');
-}
-
 export default function OnboardingPage() {
   const router = useRouter();
-  const { session, backendUser, loading, refreshBackendUser } = useAuth();
+  const { session, backendUser, backendUserError, loading, refreshBackendUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -185,6 +183,10 @@ export default function OnboardingPage() {
         <Loading />
       </div>
     );
+  }
+
+  if (backendUserError) {
+    return <AccountLoadErrorView onRetry={refreshBackendUser} className="min-h-screen" />;
   }
 
   return (

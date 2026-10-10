@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useContentFiltersContext } from '@/contexts/ContentFiltersContext';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
 import { apiDelete } from '@/lib/api/client';
+import { forgetRememberedAccount } from '@/utils/auth/rememberedAccount';
 import Link from 'next/link';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getBillingRowSubtitle } from '@/utils/billing/billingRowSubtitle';
@@ -161,6 +162,7 @@ function SettingsContent() {
   const handleDeleteAccount = async () => {
     if (!session?.access_token) throw new Error('Session expired. Please sign in again.');
     await apiDelete('/users/me', session.access_token);
+    forgetRememberedAccount();
     signOut();
   };
 

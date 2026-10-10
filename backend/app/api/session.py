@@ -11,6 +11,7 @@ from app.middleware.auth import get_current_user
 from app.services.auth_service import CurrentUser
 from app.services.geolocation_service import extract_client_ip
 from app.services.session_service import create_session, end_session
+from app.services.user_service import get_or_create_user_for_auth
 
 router = APIRouter(prefix="/session", tags=["session"])
 
@@ -25,7 +26,10 @@ async def session_start(
     Call after login (auth callback) and when app loads with existing session.
     No-op if user has active session (session_end NULL, session_start within 30 min).
     Captures ip_address_hash and user_agent.
+    Also bootstraps the `users` row, so a user who leaves right after sign-in still has one.
     """
+    get_or_create_user_for_auth(db, current_user)
+
     ip = extract_client_ip(request)
     ip_hash = hashlib.sha256(ip.encode("utf-8")).hexdigest() if ip else None
     user_agent = request.headers.get("user-agent")

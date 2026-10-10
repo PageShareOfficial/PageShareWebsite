@@ -15,15 +15,13 @@ import { usePostsData } from '@/hooks/post/usePostsData';
 import { useContentFilters } from '@/hooks/features/useContentFilters';
 import { useReportedContent } from '@/hooks/features/useReportedContent';
 import Loading from '@/components/app/common/Loading';
+import AccountLoadErrorView from '@/components/auth/AccountLoadErrorView';
+import { needsOnboarding } from '@/utils/auth/postAuthRedirect';
 import { ROUTES } from '@/constants/routes';
-
-function needsOnboarding(username: string): boolean {
-  return username.startsWith('user_');
-}
 
 export default function HomePage() {
   const router = useRouter();
-  const { backendUser, loading } = useAuth();
+  const { backendUser, backendUserError, loading, refreshBackendUser } = useAuth();
   const [isNewIdeaOpen, setIsNewIdeaOpen] = useState(false);
 
   // All hooks must run unconditionally (before any early return) to satisfy Rules of Hooks
@@ -71,6 +69,10 @@ export default function HomePage() {
       router.replace(ROUTES.onboarding);
     }
   }, [loading, backendUser, router]);
+
+  if (!loading && backendUserError) {
+    return <AccountLoadErrorView onRetry={refreshBackendUser} className="flex-1 min-h-[50vh]" />;
+  }
 
   // Show loading while: checking auth, fetching backend user, or user needs onboarding
   // (Avoids briefly showing home then redirecting when backendUser loads with user_xxx)
