@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart } from '@/constants/icons';
 import { Post, Comment } from '@/types';
-import { parseCashtags } from '@/utils/core/textFormatting';
+import { highlightContentTags } from '@/utils/core/textFormatting';
 import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
 import PostHeader from '@/components/app/post/PostHeader';
 import PostMedia from '@/components/app/post/PostMedia';
@@ -117,7 +117,7 @@ export default function ReplyCard({
                 {isQuote && quotedPost ? (
                   <>
                     <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
-                      {parseCashtags(originalPost.content)}
+                      {highlightContentTags(originalPost.content)}
                     </p>
                     {/* Quoted post card */}
                     <div className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10">
@@ -136,7 +136,7 @@ export default function ReplyCard({
                       {isTweet(quotedPost) && (
                         <>
                           <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
-                            {parseCashtags(quotedPost.content)}
+                            {highlightContentTags(quotedPost.content)}
                           </p>
                           <PostMedia
                             media={quotedPost.media || []}
@@ -167,7 +167,7 @@ export default function ReplyCard({
                 ) : originalPost.repostType === 'normal' && quotedPost ? (
                   <>
                     <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
-                      {parseCashtags(quotedPost.content)}
+                      {highlightContentTags(quotedPost.content)}
                     </p>
                     <PostMedia
                       media={quotedPost.media || []}
@@ -195,7 +195,7 @@ export default function ReplyCard({
                 ) : (
                   <>
                     <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
-                      {parseCashtags(originalPost.content)}
+                      {highlightContentTags(originalPost.content)}
                     </p>
                     <PostMedia
                       media={originalPost.media || []}
@@ -335,7 +335,7 @@ export default function ReplyCard({
             </div>
             {reply.content && (
               <p className="text-white text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word mb-2">
-                {parseCashtags(reply.content)}
+                {highlightContentTags(reply.content)}
               </p>
             )}
             

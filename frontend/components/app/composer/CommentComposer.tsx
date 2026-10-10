@@ -19,7 +19,8 @@ import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
 import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
 import { resizeComposerTextarea } from '@/hooks/composer/composerTextareaResize';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
-import DetectedCashtagsRow from '@/components/app/composer/DetectedCashtagsRow';
+import ComposerTagSuggestions from '@/components/app/composer/ComposerTagSuggestions';
+import { useComposerTagging } from '@/hooks/composer/useComposerTagging';
 import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
 import {
   FREE_CONTENT_MAX_LENGTH,
@@ -63,6 +64,7 @@ export default function CommentComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
   const exceedsFreeLimit = !isPremium && commentText.length > FREE_CONTENT_MAX_LENGTH;
+  const tagging = useComposerTagging({ text: commentText, setText: setCommentText, textareaRef });
 
   // Use hooks
   const {
@@ -179,7 +181,11 @@ export default function CommentComposer({
                 const newValue = e.target.value;
                 setCommentText(newValue);
                 resizeComposerTextarea(e.target);
+                tagging.trackCaret(e);
               }}
+              onSelect={tagging.trackCaret}
+              onBlur={tagging.clearCaret}
+              onKeyDown={tagging.handleKeyDown}
               placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
               className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-hidden overflow-y-auto overflow-x-hidden ${
                 exceedsFreeLimit ? 'placeholder-red-400' : ''
@@ -192,7 +198,7 @@ export default function CommentComposer({
               rows={2}
             />
           </div>
-          <DetectedCashtagsRow text={commentText} />
+          <ComposerTagSuggestions tagging={tagging} />
           {exceedsFreeLimit && (
             <div className="flex items-center justify-center mt-2">
               <button
