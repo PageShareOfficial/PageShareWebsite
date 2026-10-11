@@ -83,8 +83,10 @@ export {
   Clock,
   FlaskConical,
   Globe,
+  MapPin,
   Package,
   Target,
+  Ticket,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
@@ -97,6 +99,9 @@ export { GiBinoculars } from 'react-icons/gi';
 
 // React Icons: Github Octicons
 export { GoVerified } from 'react-icons/go';
+
+// React Icons: Grommet
+export { GrSchedule } from 'react-icons/gr';
 
 // React Icons: Heroicons
 export { HiOutlineEmojiHappy, HiOutlinePhotograph } from 'react-icons/hi';
