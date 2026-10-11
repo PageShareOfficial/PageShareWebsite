@@ -1,5 +1,5 @@
-# One scheduled job every 30 min: stale sessions, then Polygon prediction-hash retries.
-# Keep both in this workflow so they never compete for GitHub Actions concurrency.
+# One scheduled job every 30 min: stale sessions, Polygon prediction-hash retries,
+# then settling expired predictions. Keep all in this workflow so they never compete for GitHub Actions concurrency.
 # Scheduled runs use the "production" environment (prod backend only).
 # Manual runs can target production, dev, or preview by choosing the environment.
 #
@@ -57,8 +57,21 @@ jobs:
             exit 1
           fi
           echo "Anchor cron OK (HTTP $code)"
+
+      - name: Call prediction-settle cron
+        id: settle
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.CRON_BACKEND_URL }}/api/v1/cron/settle-predictions")
+          if [ "$code" != "200" ]; then
+            echo "Settle cron returned HTTP $code"
+            exit 1
+          fi
+          echo "Settle cron OK (HTTP $code)"
           echo "Environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}"
 
       - name: Fail if any cron failed
-        if: steps.sessions.outcome == 'failure' || steps.anchors.outcome == 'failure'
+        if: steps.sessions.outcome == 'failure' || steps.anchors.outcome == 'failure' || steps.settle.outcome == 'failure'
         run: exit 1

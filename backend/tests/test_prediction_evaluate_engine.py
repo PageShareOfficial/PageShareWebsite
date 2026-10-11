@@ -21,6 +21,8 @@ from app.services.prediction_evaluate_engine import (
     EvaluationError,
     apply_evaluation_to_prediction,
     evaluate_from_candles,
+    evaluate_prediction_market,
+    expiry_close_price,
     lower_bound_by_open_time,
     slice_candles_in_window,
 )
@@ -322,3 +324,103 @@ def test_expire_early_ignores_coarse_leading_partial_ohlc():
     assert result.outcome == OUTCOME_EXPIRED
     assert result.hit_at is None
     assert result.hit_price == 103
+
+def test_evaluate_prediction_market_reuses_injected_client_for_every_fetch():
+    shared_client = object()
+    seen_clients: list[object] = []
+
+    def fake_get_candles(asset, interval, start, end, *, client=None):
+        seen_clients.append(client)
+        return [Candle(open_time=start, open=100, high=111, low=99.5, close=110)]
+
+    result, timings = evaluate_prediction_market(
+        asset="BTC",
+        position="long",
+        entry=100,
+        target=110,
+        stop=90,
+        start_time=T0,
+        expiry_at=T0 + timedelta(hours=2),
+        get_candles_fn=fake_get_candles,
+        client=shared_client,
+    )
+
+    assert result.outcome == OUTCOME_WIN
+    assert seen_clients
+    assert all(client is shared_client for client in seen_clients)
+    assert timings.total_ms >= 0
+
+EXPIRY = T0 + timedelta(hours=2)
+
+def _quiet_candle(open_time: datetime, close: float) -> Candle:
+    return Candle(open_time=open_time, open=100, high=102, low=99, close=close)
+
+def _expired_market(minute_candles: list[Candle]):
+    """Coarse bars never touch the levels; their close is a post-expiry price (101.9)."""
+
+    def fake_get_candles(asset, interval, start, end, *, client=None):
+        if interval == "1m":
+            return minute_candles
+        return [_quiet_candle(start, 101.9)]
+
+    return fake_get_candles
+
+def _evaluate_expired(fake_get_candles):
+    return evaluate_prediction_market(
+        asset="BTC",
+        position="long",
+        entry=100,
+        target=110,
+        stop=90,
+        start_time=T0,
+        expiry_at=EXPIRY,
+        get_candles_fn=fake_get_candles,
+    )
+
+def test_expired_exit_uses_last_minute_closed_by_expiry():
+    minute_candles = [
+        _quiet_candle(EXPIRY - timedelta(minutes=2), 101.0),
+        _quiet_candle(EXPIRY - timedelta(minutes=1), 101.5),
+        _quiet_candle(EXPIRY, 555.0),  # opens at expiry, closes after it: excluded
+    ]
+
+    result, _timings = _evaluate_expired(_expired_market(minute_candles))
+
+    assert result.outcome == OUTCOME_EXPIRED
+    assert result.status == PREDICTION_STATUS_EXPIRED
+    assert result.hit_at is None
+    assert result.hit_price == pytest.approx(101.5)
+    assert result.return_pct == pytest.approx(0.015)
+
+def test_expired_exit_short_return_uses_expiry_price():
+    minute_candles = [_quiet_candle(EXPIRY - timedelta(minutes=1), 98.0)]
+
+    result, _timings = evaluate_prediction_market(
+        asset="BTC",
+        position="short",
+        entry=100,
+        target=90,
+        stop=110,
+        start_time=T0,
+        expiry_at=EXPIRY,
+        get_candles_fn=_expired_market(minute_candles),
+    )
+
+    assert result.outcome == OUTCOME_EXPIRED
+    assert result.hit_price == pytest.approx(98.0)
+    assert result.return_pct == pytest.approx(0.02)
+
+def test_expired_exit_keeps_coarse_price_when_no_minute_data():
+    result, _timings = _evaluate_expired(_expired_market([]))
+
+    assert result.outcome == OUTCOME_EXPIRED
+    assert result.hit_price == pytest.approx(101.9)
+
+def test_expiry_close_price_ignores_candles_still_open_at_expiry():
+    candles = [
+        _quiet_candle(EXPIRY - timedelta(minutes=1), 101.5),
+        _quiet_candle(EXPIRY, 555.0),
+    ]
+    assert expiry_close_price(candles, EXPIRY) == pytest.approx(101.5)
+    assert expiry_close_price(candles[1:], EXPIRY) is None
+    assert expiry_close_price([], EXPIRY) is None

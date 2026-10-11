@@ -167,3 +167,5 @@ class PredictionLeaderboardEntryResponse(BaseModel):
     win_rate_percent: Optional[float] = None
     predictions_count: int = 0
     wins: int = 0
+    # Active predictions not yet resolved (open, or expired and awaiting settle).
+    pending_count: int = 0

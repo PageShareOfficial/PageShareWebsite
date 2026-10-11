@@ -1,22 +1,27 @@
-"""Lazy settle due predictions when analyst loads list or detail."""
+"""Settle due predictions: one at a time on detail view, and in scheduled batches."""
 
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from uuid import UUID
-from sqlalchemy.orm import Session
+from time import perf_counter
+from typing import Callable, Optional
+import httpx
+from sqlalchemy.orm import Query, Session
 from app.models.prediction import Prediction
 from app.services.coinbase_market_service import (
     CoinbaseUnavailableError,
     UnsupportedAssetError,
+    create_market_http_client,
 )
 from app.services.prediction_constants import (
     PREDICTION_STATUS_ACTIVE,
-    SETTLE_DUE_PER_REQUEST,
+    SETTLE_DUE_PER_RUN,
+    SETTLE_RUN_TIME_BUDGET_SECONDS,
 )
 from app.services.prediction_evaluate_engine import (
     EvaluationError,
+    EvaluationResult,
     apply_evaluation_to_prediction,
     evaluate_prediction_market,
 )
@@ -29,30 +34,36 @@ class SettleDueResult:
     settled: int
     failed: int
 
-def fetch_due_predictions(
+def _due_predictions_query(db: Session, now: datetime) -> Query:
+    """Active, unresolved predictions whose expiry has passed."""
+    return db.query(Prediction).filter(
+        Prediction.status == PREDICTION_STATUS_ACTIVE,
+        Prediction.outcome.is_(None),
+        Prediction.expiry_at <= now,
+    )
+
+def fetch_due_predictions_queue(
     db: Session,
-    user_id: UUID,
     *,
-    limit: int = SETTLE_DUE_PER_REQUEST,
+    limit: int = SETTLE_DUE_PER_RUN,
 ) -> list[Prediction]:
-    """Active, unresolved predictions past expiry (asset-grouped, oldest first)."""
+    """All users' due predictions: never-attempted first, then least recently attempted."""
+    if limit < 1:
+        raise ValueError("limit must be positive")
     now = datetime.now(timezone.utc)
     return (
-        db.query(Prediction)
-        .filter(
-            Prediction.user_id == user_id,
-            Prediction.status == PREDICTION_STATUS_ACTIVE,
-            Prediction.outcome.is_(None),
-            Prediction.expiry_at <= now,
+        _due_predictions_query(db, now)
+        .order_by(
+            Prediction.settle_attempted_at.asc().nulls_first(),
+            Prediction.expiry_at.asc(),
         )
-        .order_by(Prediction.asset.asc(), Prediction.expiry_at.asc())
         .limit(limit)
         .all()
     )
 
 def settle_prediction_if_due(db: Session, prediction: Prediction) -> bool:
     """Evaluate a single row when active and past expiry; no-op otherwise."""
-    if prediction.outcome is not None or prediction.status != PREDICTION_STATUS_ACTIVE:
+    if _is_resolved(prediction):
         return True
 
     now = datetime.now(timezone.utc)
@@ -64,44 +75,62 @@ def settle_prediction_if_due(db: Session, prediction: Prediction) -> bool:
 
     return _try_settle_prediction(db, prediction)
 
-def settle_due_predictions_for_user(
+def settle_due_predictions(
     db: Session,
-    user_id: UUID,
     *,
-    limit: int = SETTLE_DUE_PER_REQUEST,
+    limit: int = SETTLE_DUE_PER_RUN,
+    time_budget_seconds: float = SETTLE_RUN_TIME_BUDGET_SECONDS,
+    clock: Callable[[], float] = perf_counter,
 ) -> SettleDueResult:
-    """Evaluate up to ``limit`` due rows; failed rows stay active (partial OK)."""
-    due_rows = fetch_due_predictions(db, user_id, limit=limit)
-    settled = 0
-    failed = 0
+    """Scheduled batch across all users; stops at ``limit`` rows or when the budget runs out."""
+    if limit < 1 or time_budget_seconds <= 0:
+        raise ValueError("limit and time_budget_seconds must be positive")
 
-    for prediction in due_rows:
-        if _try_settle_prediction(db, prediction):
+    due_rows = fetch_due_predictions_queue(db, limit=limit)
+    deadline = clock() + time_budget_seconds
+    with create_market_http_client() as client:
+        return _settle_rows(
+            db,
+            due_rows,
+            client=client,
+            should_stop=lambda: clock() >= deadline,
+        )
+
+def _settle_rows(
+    db: Session,
+    rows: list[Prediction],
+    *,
+    client: Optional[httpx.Client] = None,
+    should_stop: Callable[[], bool] = lambda: False,
+) -> SettleDueResult:
+    attempted = 0
+    settled = 0
+    for prediction in rows:
+        if should_stop():
+            break
+        attempted += 1
+        if _try_settle_prediction(db, prediction, client=client):
             settled += 1
-        else:
-            failed += 1
 
     return SettleDueResult(
-        attempted=len(due_rows),
+        attempted=attempted,
         settled=settled,
-        failed=failed,
+        failed=attempted - settled,
     )
 
-def _try_settle_prediction(db: Session, prediction: Prediction) -> bool:
+def _try_settle_prediction(
+    db: Session,
+    prediction: Prediction,
+    *,
+    client: Optional[httpx.Client] = None,
+) -> bool:
     """Return True when row is resolved (including already settled)."""
-    if prediction.outcome is not None or prediction.status != PREDICTION_STATUS_ACTIVE:
+    if _is_resolved(prediction):
         return True
 
+    prediction.settle_attempted_at = datetime.now(timezone.utc)
     try:
-        result, _timings = evaluate_prediction_market(
-            asset=prediction.asset,
-            position=prediction.position,
-            entry=float(prediction.entry_price),
-            target=float(prediction.target_price),
-            stop=float(prediction.stop_loss),
-            start_time=prediction.start_time,
-            expiry_at=prediction.expiry_at,
-        )
+        result = _evaluate_market(prediction, client)
     except (CoinbaseUnavailableError, UnsupportedAssetError, EvaluationError) as exc:
         logger.warning(
             "Prediction settle skipped id=%s asset=%s: %s",
@@ -109,11 +138,28 @@ def _try_settle_prediction(db: Session, prediction: Prediction) -> bool:
             prediction.asset,
             exc,
         )
+        db.commit()
         return False
 
-    if not apply_evaluation_to_prediction(prediction, result):
-        return True
-
+    apply_evaluation_to_prediction(prediction, result)
     db.commit()
     db.refresh(prediction)
     return True
+
+def _is_resolved(prediction: Prediction) -> bool:
+    return prediction.outcome is not None or prediction.status != PREDICTION_STATUS_ACTIVE
+
+def _evaluate_market(
+    prediction: Prediction, client: Optional[httpx.Client]
+) -> EvaluationResult:
+    result, _timings = evaluate_prediction_market(
+        asset=prediction.asset,
+        position=prediction.position,
+        entry=float(prediction.entry_price),
+        target=float(prediction.target_price),
+        stop=float(prediction.stop_loss),
+        start_time=prediction.start_time,
+        expiry_at=prediction.expiry_at,
+        client=client,
+    )
+    return result
