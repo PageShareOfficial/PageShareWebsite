@@ -231,6 +231,7 @@ export interface PredictionLeaderboardEntry {
   win_rate_percent?: number | null;
   predictions_count: number;
   wins: number;
+  pending_count?: number;
 }
 
 export interface ListPredictionLeaderboardResponse {

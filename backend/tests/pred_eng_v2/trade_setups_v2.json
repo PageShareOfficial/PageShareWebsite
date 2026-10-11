@@ -1,0 +1,341 @@
+{
+  "generated_at": "2026-10-11T21:04:47.795281+00:00",
+  "results": [
+    {
+      "setup": {
+        "name": "BTC swing long",
+        "asset": "BTC",
+        "position": "long",
+        "window_hours": 24,
+        "start": "2026-10-10T20:23:00+00:00",
+        "expiry": "2026-10-11T20:23:00+00:00",
+        "entry": 82974.61,
+        "stop": 81729.99085,
+        "target": 85463.8483,
+        "risk_reward": 2.0
+      },
+      "ground_truth": {
+        "outcome": "expired",
+        "hit_price": 83572.32,
+        "hit_at": null,
+        "return_pct": 0.007204,
+        "candles_scanned": 1441
+      },
+      "v1": {
+        "settled": true,
+        "status": "expired",
+        "resolution_note": "neither_level_hit",
+        "verdict": {
+          "outcome": "expired",
+          "hit_price": 83572.32,
+          "hit_at": null,
+          "return_pct": 0.007204
+        },
+        "ms": 6133.0,
+        "network_ms": 4570.9,
+        "verify_ms": 1562.17,
+        "requests": 6,
+        "candles": 37
+      },
+      "v2": {
+        "settled": true,
+        "status": "expired",
+        "resolution_note": "neither_level_hit",
+        "verdict": {
+          "outcome": "expired",
+          "hit_price": 83572.32,
+          "hit_at": null,
+          "return_pct": 0.007204
+        },
+        "ms": 196.1,
+        "network_ms": 195.1,
+        "verify_ms": 1.01,
+        "requests": 6,
+        "candles": 37
+      },
+      "v1_matches_truth": true,
+      "v2_matches_truth": true,
+      "r_multiple": 0.48
+    },
+    {
+      "setup": {
+        "name": "ETH breakdown short",
+        "asset": "ETH",
+        "position": "short",
+        "window_hours": 48,
+        "start": "2026-10-09T20:23:00+00:00",
+        "expiry": "2026-10-11T20:23:00+00:00",
+        "entry": 2478.62,
+        "stop": 2528.1924,
+        "target": 2379.4752,
+        "risk_reward": 2.0
+      },
+      "ground_truth": {
+        "outcome": "loss",
+        "hit_price": 2528.1924,
+        "hit_at": "2026-10-11T15:40:00+00:00",
+        "return_pct": -0.02,
+        "candles_scanned": 2881
+      },
+      "v1": {
+        "settled": true,
+        "status": "completed",
+        "resolution_note": null,
+        "verdict": {
+          "outcome": "loss",
+          "hit_price": 2528.1924,
+          "hit_at": "2026-10-11T15:40:00+00:00",
+          "return_pct": -0.02
+        },
+        "ms": 8916.6,
+        "network_ms": 6528.5,
+        "verify_ms": 2388.09,
+        "requests": 9,
+        "candles": 54
+      },
+      "v2": {
+        "settled": true,
+        "status": "completed",
+        "resolution_note": null,
+        "verdict": {
+          "outcome": "loss",
+          "hit_price": 2528.1924,
+          "hit_at": "2026-10-11T15:40:00+00:00",
+          "return_pct": -0.02
+        },
+        "ms": 162.3,
+        "network_ms": 161.2,
+        "verify_ms": 1.13,
+        "requests": 9,
+        "candles": 54
+      },
+      "v1_matches_truth": true,
+      "v2_matches_truth": true,
+      "r_multiple": -1.0
+    },
+    {
+      "setup": {
+        "name": "SOL momentum long",
+        "asset": "SOL",
+        "position": "long",
+        "window_hours": 12,
+        "start": "2026-10-11T08:23:00+00:00",
+        "expiry": "2026-10-11T20:23:00+00:00",
+        "entry": 109.28,
+        "stop": 107.0944,
+        "target": 112.5584,
+        "risk_reward": 1.5
+      },
+      "ground_truth": {
+        "outcome": "win",
+        "hit_price": 112.5584,
+        "hit_at": "2026-10-11T17:37:00+00:00",
+        "return_pct": 0.03,
+        "candles_scanned": 721
+      },
+      "v1": {
+        "settled": true,
+        "status": "completed",
+        "resolution_note": null,
+        "verdict": {
+          "outcome": "win",
+          "hit_price": 112.5584,
+          "hit_at": "2026-10-11T17:37:00+00:00",
+          "return_pct": 0.03
+        },
+        "ms": 6576.8,
+        "network_ms": 4741.2,
+        "verify_ms": 1835.64,
+        "requests": 7,
+        "candles": 48
+      },
+      "v2": {
+        "settled": true,
+        "status": "completed",
+        "resolution_note": null,
+        "verdict": {
+          "outcome": "win",
+          "hit_price": 112.5584,
+          "hit_at": "2026-10-11T17:37:00+00:00",
+          "return_pct": 0.03
+        },
+        "ms": 122.8,
+        "network_ms": 121.9,
+        "verify_ms": 0.9,
+        "requests": 7,
+        "candles": 48
+      },
+      "v1_matches_truth": true,
+      "v2_matches_truth": true,
+      "r_multiple": 1.5
+    },
+    {
+      "setup": {
+        "name": "BTC intraday short",
+        "asset": "BTC",
+        "position": "short",
+        "window_hours": 6,
+        "start": "2026-10-11T14:23:00+00:00",
+        "expiry": "2026-10-11T20:23:00+00:00",
+        "entry": 82956.32,
+        "stop": 83619.97056,
+        "target": 81960.84416,
+        "risk_reward": 1.5
+      },
+      "ground_truth": {
+        "outcome": "loss",
+        "hit_price": 83619.97056,
+        "hit_at": "2026-10-11T15:56:00+00:00",
+        "return_pct": -0.008,
+        "candles_scanned": 361
+      },
+      "v1": {
+        "settled": true,
+        "status": "completed",
+        "resolution_note": null,
+        "verdict": {
+          "outcome": "loss",
+          "hit_price": 83619.97056,
+          "hit_at": "2026-10-11T15:56:00+00:00",
+          "return_pct": -0.008
+        },
+        "ms": 6739.7,
+        "network_ms": 5198.4,
+        "verify_ms": 1541.32,
+        "requests": 6,
+        "candles": 40
+      },
+      "v2": {
+        "settled": true,
+        "status": "completed",
+        "resolution_note": null,
+        "verdict": {
+          "outcome": "loss",
+          "hit_price": 83619.97056,
+          "hit_at": "2026-10-11T15:56:00+00:00",
+          "return_pct": -0.008
+        },
+        "ms": 101.1,
+        "network_ms": 100.4,
+        "verify_ms": 0.73,
+        "requests": 6,
+        "candles": 40
+      },
+      "v1_matches_truth": true,
+      "v2_matches_truth": true,
+      "r_multiple": -1.0
+    },
+    {
+      "setup": {
+        "name": "ETH scalp long",
+        "asset": "ETH",
+        "position": "long",
+        "window_hours": 2,
+        "start": "2026-10-11T18:23:00+00:00",
+        "expiry": "2026-10-11T20:23:00+00:00",
+        "entry": 2538.95,
+        "stop": 2523.7163,
+        "target": 2564.3395,
+        "risk_reward": 1.67
+      },
+      "ground_truth": {
+        "outcome": "expired",
+        "hit_price": 2533.83,
+        "hit_at": null,
+        "return_pct": -0.002017,
+        "candles_scanned": 121
+      },
+      "v1": {
+        "settled": true,
+        "status": "expired",
+        "resolution_note": "neither_level_hit",
+        "verdict": {
+          "outcome": "expired",
+          "hit_price": 2533.83,
+          "hit_at": null,
+          "return_pct": -0.002017
+        },
+        "ms": 3916.6,
+        "network_ms": 2843.3,
+        "verify_ms": 1073.29,
+        "requests": 4,
+        "candles": 31
+      },
+      "v2": {
+        "settled": true,
+        "status": "expired",
+        "resolution_note": "neither_level_hit",
+        "verdict": {
+          "outcome": "expired",
+          "hit_price": 2533.83,
+          "hit_at": null,
+          "return_pct": -0.002017
+        },
+        "ms": 71.9,
+        "network_ms": 71.3,
+        "verify_ms": 0.66,
+        "requests": 4,
+        "candles": 31
+      },
+      "v1_matches_truth": true,
+      "v2_matches_truth": true,
+      "r_multiple": -0.34
+    },
+    {
+      "setup": {
+        "name": "DOGE swing long",
+        "asset": "DOGE",
+        "position": "long",
+        "window_hours": 36,
+        "start": "2026-10-10T08:23:00+00:00",
+        "expiry": "2026-10-11T20:23:00+00:00",
+        "entry": 0.08601,
+        "stop": 0.08343,
+        "target": 0.090311,
+        "risk_reward": 1.67
+      },
+      "ground_truth": {
+        "outcome": "expired",
+        "hit_price": 0.08685,
+        "hit_at": null,
+        "return_pct": 0.009766,
+        "candles_scanned": 1858
+      },
+      "v1": {
+        "settled": true,
+        "status": "expired",
+        "resolution_note": "neither_level_hit",
+        "verdict": {
+          "outcome": "expired",
+          "hit_price": 0.08685,
+          "hit_at": null,
+          "return_pct": 0.009766
+        },
+        "ms": 4419.9,
+        "network_ms": 2875.0,
+        "verify_ms": 1544.89,
+        "requests": 6,
+        "candles": 38
+      },
+      "v2": {
+        "settled": true,
+        "status": "expired",
+        "resolution_note": "neither_level_hit",
+        "verdict": {
+          "outcome": "expired",
+          "hit_price": 0.08685,
+          "hit_at": null,
+          "return_pct": 0.009766
+        },
+        "ms": 95.5,
+        "network_ms": 94.7,
+        "verify_ms": 0.73,
+        "requests": 6,
+        "candles": 38
+      },
+      "v1_matches_truth": true,
+      "v2_matches_truth": true,
+      "r_multiple": 0.33
+    }
+  ]
+}

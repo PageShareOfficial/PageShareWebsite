@@ -55,6 +55,8 @@ backend/app/utils/__pycache__/
 backend/app/tests/__pycache__/
 backend/.pytest_cache/
 backend/tests/__pycache__/
+backend/tests/pred_eng_v2/__pycache__
+backend/.ruff_cache/
 # typescript
 *.tsbuildinfo
 

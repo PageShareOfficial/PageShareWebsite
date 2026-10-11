@@ -17,6 +17,7 @@ export function mapLeaderboardEntry(
     winRatePercent: entry.win_rate_percent ?? 0,
     predictionsCount: entry.predictions_count,
     verifiedCount: entry.wins,
+    pendingCount: entry.pending_count ?? 0,
     avatar: entry.profile_picture_url?.trim() ?? '',
     subscriptionPlanId: (entry.subscription_plan_id as PlanId | undefined) ?? 'analyst',
     avatarInitials: entry.avatar_initials?.trim() || undefined,

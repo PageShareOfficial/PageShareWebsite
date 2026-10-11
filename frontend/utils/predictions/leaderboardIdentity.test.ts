@@ -15,6 +15,7 @@ const SAMPLE_ENTRY: LeaderboardEntry = {
   winRatePercent: 72,
   predictionsCount: 10,
   verifiedCount: 7,
+  pendingCount: 2,
   avatar: 'https://example.com/maya.png',
   avatarInitials: 'MC',
 };

@@ -9,6 +9,8 @@ export type LeaderboardEntry = {
   winRatePercent: number;
   predictionsCount: number;
   verifiedCount: number;
+  /** Predictions still open or awaiting verification. */
+  pendingCount: number;
   avatar: string;
   subscriptionPlanId?: PlanId;
   /** From real display name when identity is redacted; for avatar fallback only. */

@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from app.services.billing_constants import PLAN_ID_ANALYST, PLAN_ID_INVESTOR
 from app.services.prediction_leaderboard_service import (
+    AnalystLifetimeStats,
     LeaderboardEntryRow,
     build_leaderboard_entry_response,
     leaderboard_avatar_initials,
@@ -38,9 +39,9 @@ def test_list_leaderboard_ranks_by_net_rr_and_paginates():
     ), patch(
         "app.services.prediction_leaderboard_service._lifetime_stats_by_analyst",
         return_value={
-            analyst_a: (10, 6, 2),
-            analyst_b: (5, 2, 1),
-            analyst_c: (3, 1, 1),
+            analyst_a: AnalystLifetimeStats(total=10, wins=6, losses=2, pending=2),
+            analyst_b: AnalystLifetimeStats(total=5, wins=2, losses=1, pending=1),
+            analyst_c: AnalystLifetimeStats(total=3, wins=1, losses=1, pending=0),
         },
     ), patch(
         "app.services.prediction_leaderboard_service._net_rr_30d_by_analyst",
@@ -59,10 +60,32 @@ def test_list_leaderboard_ranks_by_net_rr_and_paginates():
     assert page_one[0].rank == 1
     assert page_one[0].net_rr_30d == 3.2
     assert page_one[0].win_rate_percent == pytest.approx(66.7)
+    assert page_one[0].pending_count == 1
 
     assert len(page_two) == 1
     assert page_two[0].user_id == analyst_c
     assert page_two[0].rank == 2
+    assert page_two[0].pending_count == 0
+
+def test_list_leaderboard_defaults_stats_for_analyst_without_predictions():
+    db = MagicMock()
+    analyst = uuid4()
+    with patch(
+        "app.services.prediction_leaderboard_service._analyst_user_ids",
+        return_value={analyst},
+    ), patch(
+        "app.services.prediction_leaderboard_service._lifetime_stats_by_analyst",
+        return_value={},
+    ), patch(
+        "app.services.prediction_leaderboard_service._net_rr_30d_by_analyst",
+        return_value={},
+    ):
+        rows, total = list_prediction_leaderboard(db)
+
+    assert total == 1
+    assert rows[0].predictions_count == 0
+    assert rows[0].pending_count == 0
+    assert rows[0].win_rate_percent is None
 
 def test_masked_leaderboard_display_name():
     assert masked_leaderboard_display_name(1) == "Analyst_1"
@@ -110,6 +133,7 @@ def test_build_leaderboard_entry_redacts_for_free_viewer():
         win_rate_percent=50.0,
         predictions_count=4,
         wins=2,
+        pending_count=1,
     )
     user = MagicMock()
     user.username = "realhandle"
@@ -129,6 +153,7 @@ def test_build_leaderboard_entry_redacts_for_free_viewer():
     assert masked.avatar_initials == "RN"
     assert masked.subscription_plan_id == PLAN_ID_ANALYST
     assert masked.predictions_count == 4
+    assert masked.pending_count == 1
 
     revealed = build_leaderboard_entry_response(
         row=row,
