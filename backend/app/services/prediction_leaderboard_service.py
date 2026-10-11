@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import NamedTuple, Optional
 from uuid import UUID
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
@@ -20,6 +20,7 @@ from app.services.prediction_constants import (
     ANALYTICS_LOOKBACK_DAYS,
     OUTCOME_LOSS,
     OUTCOME_WIN,
+    PREDICTION_STATUS_ACTIVE,
     PREDICTION_STATUS_INVALID,
     RESOLVED_OUTCOMES,
 )
@@ -37,6 +38,15 @@ class LeaderboardEntryRow:
     win_rate_percent: Optional[float]
     predictions_count: int
     wins: int
+    pending_count: int = 0
+
+class AnalystLifetimeStats(NamedTuple):
+    total: int
+    wins: int
+    losses: int
+    pending: int
+
+EMPTY_LIFETIME_STATS = AnalystLifetimeStats(total=0, wins=0, losses=0, pending=0)
 
 def _is_valid_leaderboard_rank(rank: int) -> bool:
     return isinstance(rank, int) and rank >= 1
@@ -112,23 +122,28 @@ def build_leaderboard_entry_response(
         win_rate_percent=row.win_rate_percent,
         predictions_count=row.predictions_count,
         wins=row.wins,
+        pending_count=row.pending_count,
     )
+
+def _count_where(condition):
+    """SQL aggregate: number of rows in the group matching ``condition``."""
+    return func.coalesce(func.sum(case((condition, 1), else_=0)), 0)
 
 def _lifetime_stats_by_analyst(
     db: Session, analyst_ids: set[UUID]
-) -> dict[UUID, tuple[int, int, int]]:
-    """Return user_id -> (total_predictions, wins, losses)."""
+) -> dict[UUID, AnalystLifetimeStats]:
+    """Return user_id -> lifetime totals; pending = active and not yet resolved."""
     if not analyst_ids:
         return {}
 
-    win_case = case((Prediction.outcome == OUTCOME_WIN, 1), else_=0)
-    loss_case = case((Prediction.outcome == OUTCOME_LOSS, 1), else_=0)
+    is_pending = (Prediction.status == PREDICTION_STATUS_ACTIVE) & Prediction.outcome.is_(None)
     rows = (
         db.query(
             Prediction.user_id,
             func.count(Prediction.id),
-            func.coalesce(func.sum(win_case), 0),
-            func.coalesce(func.sum(loss_case), 0),
+            _count_where(Prediction.outcome == OUTCOME_WIN),
+            _count_where(Prediction.outcome == OUTCOME_LOSS),
+            _count_where(is_pending),
         )
         .filter(
             Prediction.user_id.in_(analyst_ids),
@@ -138,8 +153,10 @@ def _lifetime_stats_by_analyst(
         .all()
     )
     return {
-        user_id: (int(total), int(wins), int(losses))
-        for user_id, total, wins, losses in rows
+        user_id: AnalystLifetimeStats(
+            total=int(total), wins=int(wins), losses=int(losses), pending=int(pending)
+        )
+        for user_id, total, wins, losses, pending in rows
     }
 
 def _net_rr_30d_by_analyst(
@@ -188,24 +205,31 @@ def list_prediction_leaderboard(
         analyst_ids,
         key=lambda uid: (-net_map.get(uid, 0.0), str(uid)),
     )
-    total = len(ranked)
     offset = (safe_page - 1) * safe_per_page
     page_ids = ranked[offset : offset + safe_per_page]
-
-    entries: list[LeaderboardEntryRow] = []
-    for index, user_id in enumerate(page_ids, start=offset + 1):
-        total_preds, wins, losses = lifetime_map.get(user_id, (0, 0, 0))
-        entries.append(
-            LeaderboardEntryRow(
-                user_id=user_id,
-                rank=index,
-                net_rr_30d=net_map.get(user_id, 0.0),
-                win_rate_percent=_win_rate_percent(wins, losses),
-                predictions_count=total_preds,
-                wins=wins,
-            )
+    entries = [
+        _leaderboard_row(
+            user_id,
+            rank,
+            net_rr_30d=net_map.get(user_id, 0.0),
+            stats=lifetime_map.get(user_id, EMPTY_LIFETIME_STATS),
         )
-    return entries, total
+        for rank, user_id in enumerate(page_ids, start=offset + 1)
+    ]
+    return entries, len(ranked)
+
+def _leaderboard_row(
+    user_id: UUID, rank: int, *, net_rr_30d: float, stats: AnalystLifetimeStats
+) -> LeaderboardEntryRow:
+    return LeaderboardEntryRow(
+        user_id=user_id,
+        rank=rank,
+        net_rr_30d=net_rr_30d,
+        win_rate_percent=_win_rate_percent(stats.wins, stats.losses),
+        predictions_count=stats.total,
+        wins=stats.wins,
+        pending_count=stats.pending,
+    )
 
 def load_leaderboard_users(
     db: Session, entries: list[LeaderboardEntryRow]

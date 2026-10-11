@@ -9,6 +9,10 @@ LADDER_FROM_6H: tuple[CandleInterval, ...] = ("6h", "1h", "15m", "1m")
 LADDER_FROM_1H: tuple[CandleInterval, ...] = ("1h", "15m", "1m")
 LADDER_FROM_15M: tuple[CandleInterval, ...] = ("15m", "1m")
 
+# Expired exit price: look back this far for the last 1m candle closed by expiry
+# (covers quiet minutes on thin markets).
+EXPIRY_PRICE_LOOKBACK = timedelta(minutes=15)
+
 # Back-compat alias for older call sites / docs.
 SEARCH_LADDER = LADDER_FROM_6H
 

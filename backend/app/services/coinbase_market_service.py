@@ -47,6 +47,10 @@ class Candle:
     low: float
     close: float
 
+def create_market_http_client() -> httpx.Client:
+    """HTTP client for Coinbase calls; share one across a batch to reuse connections."""
+    return httpx.Client(timeout=DEFAULT_TIMEOUT_SECONDS)
+
 def get_live_price(
     asset: str,
     *,
@@ -56,7 +60,7 @@ def get_live_price(
     """Fetch the current price for a base asset from Coinbase."""
     product_id = _product_id(asset)
     owns_client = client is None
-    http = client or httpx.Client(timeout=DEFAULT_TIMEOUT_SECONDS)
+    http = client or create_market_http_client()
     try:
         path = f"products/{quote(product_id, safe='')}/ticker"
         payload = _get_json(http, f"{_normalize_base(base_url)}/{path}")
@@ -85,7 +89,7 @@ def get_candles(
     product_id = _product_id(asset)
     granularity = INTERVAL_TO_GRANULARITY[interval]
     owns_client = client is None
-    http = client or httpx.Client(timeout=DEFAULT_TIMEOUT_SECONDS)
+    http = client or create_market_http_client()
     try:
         return _fetch_candles_window(
             http,

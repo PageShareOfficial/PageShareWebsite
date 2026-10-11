@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import Image from 'next/image';
 import { ChartColumn, Lock, TrendingUp, Users } from '@/constants/icons';
-
 const TRUST_PILLS = [
   { icon: Lock, label: 'Locked Records' },
   { icon: TrendingUp, label: 'Earned Credibility' },

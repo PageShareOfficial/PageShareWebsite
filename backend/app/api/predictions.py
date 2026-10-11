@@ -30,9 +30,7 @@ from app.services.prediction_service import (
     MarketPriceError,
     create_prediction,
     fetch_live_price_for_asset,
-    get_prediction_for_user,
     get_submission_quota,
-    list_predictions_for_user,
 )
 from app.services.prediction_analytics_service import (
     get_analyst_dashboard_for_investor,
@@ -53,7 +51,6 @@ from app.services.prediction_analytics_predictions_service import (
     list_analyst_prediction_index_for_investor,
     list_own_prediction_index,
 )
-from app.services.prediction_settle_service import settle_due_predictions_for_user
 from app.services.saved_analyst_service import (
     AnalystTargetRequiredError,
     InvestorRequiredError,
@@ -465,40 +462,6 @@ def prediction_analytics_user_detail(
             detail=str(exc),
         ) from exc
     return _detail_response(number, prediction)
-
-@router.get("", response_model=dict)
-def list_my_predictions(
-    db: Session = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=50),
-):
-    """List current user's predictions; settle up to 5 due rows first (owner only)."""
-    user_id = UUID(current_user.auth_user_id)
-    settle_due_predictions_for_user(db, user_id)
-    rows, total = list_predictions_for_user(
-        db, user_id, page=page, per_page=per_page
-    )
-    data = [_to_response(row) for row in rows]
-    return paginated_response(data, page, per_page, total)
-
-@router.get("/{prediction_id}", response_model=dict)
-def get_my_prediction(
-    prediction_id: str,
-    db: Session = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Owner detail; settle up to 5 due rows first, then return this prediction."""
-    pid = parse_uuid_or_404(prediction_id, "Prediction not found")
-    user_id = UUID(current_user.auth_user_id)
-    settle_due_predictions_for_user(db, user_id)
-    prediction = get_prediction_for_user(db, user_id, pid)
-    if prediction is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Prediction not found",
-        )
-    return {"data": _to_response(prediction)}
 
 @router.post("", response_model=PredictionResponse, status_code=status.HTTP_201_CREATED)
 def submit_prediction(

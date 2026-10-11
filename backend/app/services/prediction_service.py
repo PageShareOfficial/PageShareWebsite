@@ -164,36 +164,3 @@ def _persist_new_prediction(db: Session, prediction: Prediction) -> Prediction:
     db.commit()
     db.refresh(prediction)
     return prediction
-
-def list_predictions_for_user(
-    db: Session,
-    user_id: UUID,
-    *,
-    page: int,
-    per_page: int,
-) -> tuple[list[Prediction], int]:
-    """Paginated predictions for the owner, newest first."""
-    base = db.query(Prediction).filter(Prediction.user_id == user_id)
-    total = base.count()
-    rows = (
-        base.order_by(Prediction.created_at.desc())
-        .offset((page - 1) * per_page)
-        .limit(per_page)
-        .all()
-    )
-    return rows, total
-
-def get_prediction_for_user(
-    db: Session,
-    user_id: UUID,
-    prediction_id: UUID,
-) -> Optional[Prediction]:
-    """Return a prediction when it belongs to the user."""
-    return (
-        db.query(Prediction)
-        .filter(
-            Prediction.id == prediction_id,
-            Prediction.user_id == user_id,
-        )
-        .first()
-    )

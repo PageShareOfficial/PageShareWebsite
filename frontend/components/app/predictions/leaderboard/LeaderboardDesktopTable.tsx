@@ -40,6 +40,7 @@ export default function LeaderboardDesktopTable({
           <col />
           <col className="w-26" />
           <col className="w-22" />
+          <col className="w-22" />
           <col className={showAnalytics || showSaveAnalyst ? 'w-36' : 'w-22'} />
         </colgroup>
         <thead>
@@ -51,6 +52,9 @@ export default function LeaderboardDesktopTable({
             </th>
             <th className="whitespace-nowrap px-2 py-3 text-right font-medium tabular-nums tracking-normal">
               Correct
+            </th>
+            <th className="whitespace-nowrap px-2 py-3 text-right font-medium tabular-nums tracking-normal">
+              Pending
             </th>
             <th className="whitespace-nowrap px-2 py-3 text-right font-medium tabular-nums tracking-normal">
               Win rate
@@ -107,6 +111,12 @@ export default function LeaderboardDesktopTable({
                   className={`border-y-2 bg-black/65 px-2 py-3 text-right tabular-nums text-gray-400 ${rowClass}`}
                 >
                   {entry.verifiedCount}
+                </td>
+                <td
+                  style={podiumBorderStyle}
+                  className={`border-y-2 bg-black/65 px-2 py-3 text-right tabular-nums text-gray-400 ${rowClass}`}
+                >
+                  {entry.pendingCount}
                 </td>
                 <td
                   style={podiumBorderStyle}

@@ -11,6 +11,7 @@ import FounderVideoSection from '@/components/landing/FounderVideoSection';
 import BottomCTA from '@/components/landing/BottomCTA';
 import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
 import CryptoTickerBar from '@/components/landing/CryptoTickerBar';
+import CoinbaseDataBadge from '@/components/landing/CoinbaseDataBadge';
 import type { TopCrypto } from '@/utils/api/topCryptosApi';
 import {
   AUTH_ERROR_CODES,
@@ -64,8 +65,8 @@ function HomeContent({ topCryptos }: LandingPageProps) {
             <div className="hidden lg:block">
               <LandingHero showLogo />
             </div>
-
-            <div className="flex items-center justify-center w-full">
+            <div className="flex flex-col items-center justify-center gap-4 sm:gap-5 w-full">
+              <CoinbaseDataBadge />
               <AuthTabs initialError={authInitialError} />
             </div>
           </div>

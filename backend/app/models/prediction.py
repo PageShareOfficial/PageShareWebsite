@@ -50,6 +50,8 @@ class Prediction(Base):
     return_pct = Column(Numeric(18, 8), nullable=True)
     resolution_source = Column(String(40), nullable=True)
     resolution_note = Column(Text, nullable=True)
+    # Last settle attempt; the cron queue retries never-tried rows first.
+    settle_attempted_at = Column(DateTime(timezone=True), nullable=True)
     content_hash = Column(String(64), nullable=True)
     anchor_status = Column(String(20), nullable=False, server_default="none")
     chain_tx_hash = Column(String(66), nullable=True)

@@ -1,10 +1,12 @@
 """Pure prediction evaluate engine (A–D) with Coinbase coarse→fine search."""
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+import logging
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, timezone
 from time import perf_counter
 from typing import Callable, Literal, Optional, Sequence
+import httpx
 from app.models.prediction import Prediction
 from app.services.coinbase_market_service import Candle, CandleInterval, get_candles
 from app.services.prediction_constants import (
@@ -17,13 +19,15 @@ from app.services.prediction_constants import (
     RESOLUTION_SOURCE_COINBASE,
 )
 from app.services.prediction_evaluate_constants import (
+    EXPIRY_PRICE_LOOKBACK,
     INTERVAL_DURATION,
     LADDER_FROM_15M,
     LADDER_FROM_1D,
     LADDER_FROM_1H,
     LADDER_FROM_6H,
-    SEARCH_LADDER,
 )
+
+logger = logging.getLogger("pageshare.prediction_evaluate")
 
 Position = Literal["long", "short"]
 Outcome = Literal["win", "loss", "expired"]
@@ -486,13 +490,17 @@ def evaluate_prediction_market(
     expiry_at: datetime,
     get_candles_fn: Callable[..., list[Candle]] = get_candles,
     timings: Optional[EvaluateTimings] = None,
+    client: Optional[httpx.Client] = None,
 ) -> tuple[EvaluationResult, EvaluateTimings]:
-    """Fetch Coinbase candles via smart search and evaluate once."""
+    """Fetch Coinbase candles via smart search and evaluate once.
+
+    Pass ``client`` to reuse one connection for every candle request.
+    """
     clock = timings or EvaluateTimings()
     total_started = perf_counter()
 
     def fetch(interval: CandleInterval, start: datetime, end: datetime) -> list[Candle]:
-        return get_candles_fn(asset, interval, start, end)
+        return get_candles_fn(asset, interval, start, end, client=client)
 
     result = evaluate_smart_search(
         position=position,
@@ -504,8 +512,55 @@ def evaluate_prediction_market(
         fetch_candles=fetch,
         timings=clock,
     )
+    if result.outcome == OUTCOME_EXPIRED:
+        exit_price = _fetch_expiry_exit_price(fetch, expiry_at, clock)
+        if exit_price is not None:
+            result = _with_expired_exit(
+                result, exit_price, position=position, entry=entry, target=target, stop=stop
+            )
     clock.total_ms = (perf_counter() - total_started) * 1000
     return result, clock
+
+
+def expiry_close_price(candles: Sequence[Candle], expiry_at: datetime) -> Optional[float]:
+    """Close of the last 1m candle fully closed at or before expiry (never a later price)."""
+    end = _to_utc(expiry_at)
+    one_minute = INTERVAL_DURATION["1m"]
+    closed = [candle for candle in candles if candle.open_time + one_minute <= end]
+    return closed[-1].close if closed else None
+
+def _fetch_expiry_exit_price(
+    fetch_candles: Callable[[CandleInterval, datetime, datetime], list[Candle]],
+    expiry_at: datetime,
+    timings: EvaluateTimings,
+) -> Optional[float]:
+    """Price at expiry; the coarse candle that decided "expired" usually closes after it."""
+    end = _to_utc(expiry_at)
+    candles = _timed_fetch(fetch_candles, "1m", end - EXPIRY_PRICE_LOOKBACK, end, timings)
+    timings.candles_scanned += len(candles)
+    price = expiry_close_price(candles, end)
+    if price is None:
+        logger.warning("No 1m candle before expiry %s; keeping coarse exit price", end)
+    return price
+
+def _with_expired_exit(
+    result: EvaluationResult,
+    exit_price: float,
+    *,
+    position: Position,
+    entry: float,
+    target: float,
+    stop: float,
+) -> EvaluationResult:
+    return_pct = compute_return_pct(
+        position=position,
+        entry=entry,
+        target=target,
+        stop=stop,
+        outcome=OUTCOME_EXPIRED,
+        expiry_price=exit_price,
+    )
+    return replace(result, hit_price=exit_price, return_pct=return_pct)
 
 def apply_evaluation_to_prediction(
     prediction: Prediction,

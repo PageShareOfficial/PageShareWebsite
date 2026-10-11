@@ -3,14 +3,18 @@ Cron endpoint: daily DB touch + materialized view refresh + stale session cleanu
 Protects Supabase prod DB from inactivity (7-day pause) and keeps metrics views fresh.
 Call from Vercel Cron or external cron with CRON_SECRET.
 """
+import logging
+from time import perf_counter
 from fastapi import APIRouter, Header, HTTPException, status
 from sqlalchemy import text
 from app.config import get_settings
 from app.database import db_health_check, db_session
 from app.services.session_service import close_stale_sessions
 from app.services.polygon_anchor_service import retry_pending_anchors
+from app.services.prediction_settle_service import SettleDueResult, settle_due_predictions
 
 router = APIRouter(prefix="/cron", tags=["cron"])
+logger = logging.getLogger("pageshare.cron")
 
 settings = get_settings()
 
@@ -123,3 +127,42 @@ def cron_anchor_predictions(
         return {"ok": True, "results": results}
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
+
+@router.get("/settle-predictions")
+def cron_settle_predictions(
+    authorization: str | None = Header(default=None),
+    x_cron_secret: str | None = Header(default=None, alias="X-Cron-Secret"),
+):
+    """
+    Settle expired predictions for all users so outcomes don't wait for someone
+    to open them. Call every 30 min.
+
+    Sync def so FastAPI runs this in a threadpool: Coinbase candle fetches are blocking.
+    """
+    _require_cron_secret(authorization, x_cron_secret)
+    started = perf_counter()
+    try:
+        with db_session() as db:
+            result = settle_due_predictions(db)
+    except Exception as exc:
+        logger.exception("Scheduled prediction settle failed")
+        return {"ok": False, "error": str(exc)}
+
+    return _settle_run_summary(result, elapsed_ms=round((perf_counter() - started) * 1000))
+
+def _settle_run_summary(result: SettleDueResult, *, elapsed_ms: int) -> dict:
+    """Log one line per run (for tuning batch size) and build the response body."""
+    logger.info(
+        "Scheduled prediction settle attempted=%s settled=%s failed=%s elapsed_ms=%s",
+        result.attempted,
+        result.settled,
+        result.failed,
+        elapsed_ms,
+    )
+    return {
+        "ok": True,
+        "attempted": result.attempted,
+        "settled": result.settled,
+        "failed": result.failed,
+        "elapsed_ms": elapsed_ms,
+    }

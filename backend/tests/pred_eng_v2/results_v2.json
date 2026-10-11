@@ -1,0 +1,1232 @@
+{
+  "engine_version": "v2_shared_connection",
+  "generated_at": "2026-10-11T20:41:42.396149+00:00",
+  "asset": "BTC",
+  "rounds": 2,
+  "summary": {
+    "v1_new_connection": {
+      "evaluations": 36,
+      "mean_total_ms": 2555.4,
+      "median_total_ms": 1542.0,
+      "mean_ms_per_request": 484.1,
+      "mean_batch_ms": 45997.3,
+      "total_requests": 190
+    },
+    "v2_shared_connection": {
+      "evaluations": 36,
+      "mean_total_ms": 99.3,
+      "median_total_ms": 83.1,
+      "mean_ms_per_request": 18.8,
+      "mean_batch_ms": 1787.2,
+      "total_requests": 190
+    }
+  },
+  "cases": [
+    {
+      "case": {
+        "name": "30m_win",
+        "duration": "30m",
+        "expected": "win",
+        "entry": 83575.65,
+        "target": 83474.43656,
+        "stop": 82674.4842,
+        "start": "2026-10-11T20:08:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1472.2,
+      "v2_mean_total_ms": 58.1,
+      "speedup_pct": 96.0,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83474.44,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": -0.001211,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 2318.8,
+          "total_ms": 2318.9
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83474.44,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": -0.001211,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 625.4,
+          "total_ms": 625.4
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83474.44,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": -0.001211,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 60.9,
+          "total_ms": 60.9
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83474.44,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": -0.001211,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 55.3,
+          "total_ms": 55.4
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "30m_loss",
+        "duration": "30m",
+        "expected": "loss",
+        "entry": 83575.65,
+        "target": 87823.80600000001,
+        "stop": 83676.59916,
+        "start": "2026-10-11T20:08:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 604.5,
+      "v2_mean_total_ms": 35.0,
+      "speedup_pct": 94.2,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": 0.001208,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 597.0,
+          "total_ms": 597.0
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": 0.001208,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 611.8,
+          "total_ms": 611.9
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": 0.001208,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 34.0,
+          "total_ms": 34.0
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T20:09:00+00:00",
+          "return_pct": 0.001208,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 36.0,
+          "total_ms": 36.0
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "30m_expired",
+        "duration": "30m",
+        "expected": "expired",
+        "entry": 83575.65,
+        "target": 104469.5625,
+        "stop": 62681.737499999996,
+        "start": "2026-10-11T20:08:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 676.6,
+      "v2_mean_total_ms": 39.2,
+      "speedup_pct": 94.2,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000237,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 733.4,
+          "total_ms": 733.5
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000237,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 619.6,
+          "total_ms": 619.7
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000237,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 36.9,
+          "total_ms": 37.1
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000237,
+          "fetches": 2,
+          "candles_scanned": 11,
+          "fetch_ms": 41.1,
+          "total_ms": 41.2
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "1h_win",
+        "duration": "1h",
+        "expected": "win",
+        "entry": 83588.905,
+        "target": 83500.89353999999,
+        "stop": 82674.4842,
+        "start": "2026-10-11T19:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 2169.2,
+      "v2_mean_total_ms": 62.6,
+      "speedup_pct": 97.1,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83500.89,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": -0.001053,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 3425.7,
+          "total_ms": 3425.9
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83500.89,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": -0.001053,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 912.4,
+          "total_ms": 912.5
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83500.89,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": -0.001053,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 66.7,
+          "total_ms": 66.9
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83500.89,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": -0.001053,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 58.2,
+          "total_ms": 58.3
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "1h_loss",
+        "duration": "1h",
+        "expected": "loss",
+        "entry": 83588.905,
+        "target": 87851.6415,
+        "stop": 83676.59916,
+        "start": "2026-10-11T19:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 922.0,
+      "v2_mean_total_ms": 53.0,
+      "speedup_pct": 94.2,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": 0.001049,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 952.2,
+          "total_ms": 952.4
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": 0.001049,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 891.5,
+          "total_ms": 891.7
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": 0.001049,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 55.2,
+          "total_ms": 55.3
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 83676.6,
+          "hit_at": "2026-10-11T19:39:00+00:00",
+          "return_pct": 0.001049,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 50.7,
+          "total_ms": 50.8
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "1h_expired",
+        "duration": "1h",
+        "expected": "expired",
+        "entry": 83588.905,
+        "target": 104486.13125,
+        "stop": 62691.67875,
+        "start": "2026-10-11T19:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 907.5,
+      "v2_mean_total_ms": 65.7,
+      "speedup_pct": 92.8,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 7.9e-05,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 901.2,
+          "total_ms": 901.3
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 7.9e-05,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 913.6,
+          "total_ms": 913.8
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 7.9e-05,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 57.1,
+          "total_ms": 57.2
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 7.9e-05,
+          "fetches": 3,
+          "candles_scanned": 13,
+          "fetch_ms": 74.0,
+          "total_ms": 74.1
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "6h_win",
+        "duration": "6h",
+        "expected": "win",
+        "entry": 83563.13,
+        "target": 83942.76802,
+        "stop": 82185.1173,
+        "start": "2026-10-11T14:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 4333.2,
+      "v2_mean_total_ms": 103.0,
+      "speedup_pct": 97.6,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.004543,
+          "fetches": 6,
+          "candles_scanned": 39,
+          "fetch_ms": 6820.1,
+          "total_ms": 6820.4
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.004543,
+          "fetches": 6,
+          "candles_scanned": 39,
+          "fetch_ms": 1845.8,
+          "total_ms": 1846.0
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.004543,
+          "fetches": 6,
+          "candles_scanned": 39,
+          "fetch_ms": 100.2,
+          "total_ms": 100.4
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.004543,
+          "fetches": 6,
+          "candles_scanned": 39,
+          "fetch_ms": 105.4,
+          "total_ms": 105.6
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "6h_loss",
+        "duration": "6h",
+        "expected": "loss",
+        "entry": 83563.13,
+        "target": 88316.53950000001,
+        "stop": 83181.30054000001,
+        "start": "2026-10-11T14:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1266.6,
+      "v2_mean_total_ms": 69.3,
+      "speedup_pct": 94.5,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 83181.3,
+          "hit_at": "2026-10-11T14:39:00+00:00",
+          "return_pct": -0.004569,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 1242.4,
+          "total_ms": 1242.6
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 83181.3,
+          "hit_at": "2026-10-11T14:39:00+00:00",
+          "return_pct": -0.004569,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 1290.5,
+          "total_ms": 1290.6
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 83181.3,
+          "hit_at": "2026-10-11T14:39:00+00:00",
+          "return_pct": -0.004569,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 73.8,
+          "total_ms": 74.0
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 83181.3,
+          "hit_at": "2026-10-11T14:39:00+00:00",
+          "return_pct": -0.004569,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 64.6,
+          "total_ms": 64.7
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "6h_expired",
+        "duration": "6h",
+        "expected": "expired",
+        "entry": 83563.13,
+        "target": 104453.9125,
+        "stop": 62672.3475,
+        "start": "2026-10-11T14:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1292.2,
+      "v2_mean_total_ms": 70.4,
+      "speedup_pct": 94.6,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000387,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 1249.2,
+          "total_ms": 1249.3
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000387,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 1334.9,
+          "total_ms": 1335.1
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000387,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 72.8,
+          "total_ms": 73.0
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.000387,
+          "fetches": 4,
+          "candles_scanned": 18,
+          "fetch_ms": 67.7,
+          "total_ms": 67.8
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "1d_win",
+        "duration": "1d",
+        "expected": "win",
+        "entry": 83412.62,
+        "target": 83942.76802,
+        "stop": 81887.1075,
+        "start": "2026-10-10T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 6184.1,
+      "v2_mean_total_ms": 153.7,
+      "speedup_pct": 97.5,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.006356,
+          "fetches": 9,
+          "candles_scanned": 52,
+          "fetch_ms": 9592.1,
+          "total_ms": 9592.4
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.006356,
+          "fetches": 9,
+          "candles_scanned": 52,
+          "fetch_ms": 2775.6,
+          "total_ms": 2775.9
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.006356,
+          "fetches": 9,
+          "candles_scanned": 52,
+          "fetch_ms": 155.2,
+          "total_ms": 155.5
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.006356,
+          "fetches": 9,
+          "candles_scanned": 52,
+          "fetch_ms": 151.6,
+          "total_ms": 151.9
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "1d_loss",
+        "duration": "1d",
+        "expected": "loss",
+        "entry": 83412.62,
+        "target": 88316.53950000001,
+        "stop": 82879.6785,
+        "start": "2026-10-10T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 2970.2,
+      "v2_mean_total_ms": 116.2,
+      "speedup_pct": 96.1,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 82879.68,
+          "hit_at": "2026-10-10T22:46:00+00:00",
+          "return_pct": -0.006389,
+          "fetches": 7,
+          "candles_scanned": 41,
+          "fetch_ms": 3785.0,
+          "total_ms": 3785.2
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 82879.68,
+          "hit_at": "2026-10-10T22:46:00+00:00",
+          "return_pct": -0.006389,
+          "fetches": 7,
+          "candles_scanned": 41,
+          "fetch_ms": 2155.1,
+          "total_ms": 2155.3
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 82879.68,
+          "hit_at": "2026-10-10T22:46:00+00:00",
+          "return_pct": -0.006389,
+          "fetches": 7,
+          "candles_scanned": 41,
+          "fetch_ms": 116.9,
+          "total_ms": 117.2
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 82879.68,
+          "hit_at": "2026-10-10T22:46:00+00:00",
+          "return_pct": -0.006389,
+          "fetches": 7,
+          "candles_scanned": 41,
+          "fetch_ms": 115.1,
+          "total_ms": 115.3
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "1d_expired",
+        "duration": "1d",
+        "expected": "expired",
+        "entry": 83412.62,
+        "target": 104265.775,
+        "stop": 62559.465,
+        "start": "2026-10-10T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1531.7,
+      "v2_mean_total_ms": 158.8,
+      "speedup_pct": 89.6,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.002192,
+          "fetches": 5,
+          "candles_scanned": 20,
+          "fetch_ms": 1547.9,
+          "total_ms": 1548.1
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.002192,
+          "fetches": 5,
+          "candles_scanned": 20,
+          "fetch_ms": 1515.2,
+          "total_ms": 1515.3
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.002192,
+          "fetches": 5,
+          "candles_scanned": 20,
+          "fetch_ms": 235.2,
+          "total_ms": 235.4
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.002192,
+          "fetches": 5,
+          "candles_scanned": 20,
+          "fetch_ms": 82.2,
+          "total_ms": 82.3
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "2d_win",
+        "duration": "2d",
+        "expected": "win",
+        "entry": 83234.505,
+        "target": 83942.76802,
+        "stop": 81534.43980000001,
+        "start": "2026-10-09T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 4533.9,
+      "v2_mean_total_ms": 155.6,
+      "speedup_pct": 96.6,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.008509,
+          "fetches": 9,
+          "candles_scanned": 53,
+          "fetch_ms": 6308.0,
+          "total_ms": 6308.3
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.008509,
+          "fetches": 9,
+          "candles_scanned": 53,
+          "fetch_ms": 2759.2,
+          "total_ms": 2759.5
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.008509,
+          "fetches": 9,
+          "candles_scanned": 53,
+          "fetch_ms": 153.7,
+          "total_ms": 154.0
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 83942.77,
+          "hit_at": "2026-10-11T16:42:00+00:00",
+          "return_pct": 0.008509,
+          "fetches": 9,
+          "candles_scanned": 53,
+          "fetch_ms": 156.9,
+          "total_ms": 157.2
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "2d_loss",
+        "duration": "2d",
+        "expected": "loss",
+        "entry": 83234.505,
+        "target": 88316.53950000001,
+        "stop": 82522.73604,
+        "start": "2026-10-09T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1584.3,
+      "v2_mean_total_ms": 84.4,
+      "speedup_pct": 94.7,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 82522.74,
+          "hit_at": "2026-10-09T20:39:00+00:00",
+          "return_pct": -0.008551,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 1548.8,
+          "total_ms": 1549.0
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 82522.74,
+          "hit_at": "2026-10-09T20:39:00+00:00",
+          "return_pct": -0.008551,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 1619.6,
+          "total_ms": 1619.7
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 82522.74,
+          "hit_at": "2026-10-09T20:39:00+00:00",
+          "return_pct": -0.008551,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 83.8,
+          "total_ms": 83.9
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 82522.74,
+          "hit_at": "2026-10-09T20:39:00+00:00",
+          "return_pct": -0.008551,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 84.7,
+          "total_ms": 84.9
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "2d_expired",
+        "duration": "2d",
+        "expected": "expired",
+        "entry": 83234.505,
+        "target": 104043.13125,
+        "stop": 62425.87875,
+        "start": "2026-10-09T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1517.7,
+      "v2_mean_total_ms": 93.8,
+      "speedup_pct": 93.8,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.004337,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 1514.7,
+          "total_ms": 1514.9
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.004337,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 1520.3,
+          "total_ms": 1520.5
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.004337,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 112.4,
+          "total_ms": 112.6
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.47,
+          "hit_at": null,
+          "return_pct": 0.004337,
+          "fetches": 5,
+          "candles_scanned": 21,
+          "fetch_ms": 74.7,
+          "total_ms": 74.9
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "7d_win",
+        "duration": "7d",
+        "expected": "win",
+        "entry": 83655.35,
+        "target": 86822.008,
+        "stop": 79511.553,
+        "start": "2026-10-04T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 8370.7,
+      "v2_mean_total_ms": 231.1,
+      "speedup_pct": 97.2,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 86822.01,
+          "hit_at": "2026-10-05T01:18:00+00:00",
+          "return_pct": 0.037854,
+          "fetches": 12,
+          "candles_scanned": 62,
+          "fetch_ms": 12856.2,
+          "total_ms": 12856.6
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 86822.01,
+          "hit_at": "2026-10-05T01:18:00+00:00",
+          "return_pct": 0.037854,
+          "fetches": 12,
+          "candles_scanned": 62,
+          "fetch_ms": 3884.4,
+          "total_ms": 3884.8
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "win",
+          "hit_price": 86822.01,
+          "hit_at": "2026-10-05T01:18:00+00:00",
+          "return_pct": 0.037854,
+          "fetches": 12,
+          "candles_scanned": 62,
+          "fetch_ms": 257.7,
+          "total_ms": 258.2
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "win",
+          "hit_price": 86822.01,
+          "hit_at": "2026-10-05T01:18:00+00:00",
+          "return_pct": 0.037854,
+          "fetches": 12,
+          "candles_scanned": 62,
+          "fetch_ms": 203.6,
+          "total_ms": 204.0
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "7d_loss",
+        "duration": "7d",
+        "expected": "loss",
+        "entry": 83655.35,
+        "target": 91345.8,
+        "stop": 80475.3294,
+        "start": "2026-10-04T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 4092.2,
+      "v2_mean_total_ms": 153.1,
+      "speedup_pct": 96.3,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 80475.33,
+          "hit_at": "2026-10-08T17:24:00+00:00",
+          "return_pct": -0.038013,
+          "fetches": 9,
+          "candles_scanned": 59,
+          "fetch_ms": 5443.2,
+          "total_ms": 5443.5
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 80475.33,
+          "hit_at": "2026-10-08T17:24:00+00:00",
+          "return_pct": -0.038013,
+          "fetches": 9,
+          "candles_scanned": 59,
+          "fetch_ms": 2740.4,
+          "total_ms": 2740.8
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "loss",
+          "hit_price": 80475.33,
+          "hit_at": "2026-10-08T17:24:00+00:00",
+          "return_pct": -0.038013,
+          "fetches": 9,
+          "candles_scanned": 59,
+          "fetch_ms": 164.7,
+          "total_ms": 165.2
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "loss",
+          "hit_price": 80475.33,
+          "hit_at": "2026-10-08T17:24:00+00:00",
+          "return_pct": -0.038013,
+          "fetches": 9,
+          "candles_scanned": 59,
+          "fetch_ms": 140.6,
+          "total_ms": 140.9
+        }
+      ]
+    },
+    {
+      "case": {
+        "name": "7d_expired",
+        "duration": "7d",
+        "expected": "expired",
+        "entry": 83655.35,
+        "target": 104569.1875,
+        "stop": 62741.512500000004,
+        "start": "2026-10-04T20:38:42.396149+00:00",
+        "expiry": "2026-10-11T20:38:42.396149+00:00"
+      },
+      "v1_mean_total_ms": 1568.4,
+      "v2_mean_total_ms": 84.1,
+      "speedup_pct": 94.6,
+      "results_identical": true,
+      "matches_expected": true,
+      "runs": [
+        {
+          "mode": "v1_new_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.46,
+          "hit_at": null,
+          "return_pct": -0.000716,
+          "fetches": 5,
+          "candles_scanned": 26,
+          "fetch_ms": 1535.7,
+          "total_ms": 1535.9
+        },
+        {
+          "mode": "v1_new_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.46,
+          "hit_at": null,
+          "return_pct": -0.000716,
+          "fetches": 5,
+          "candles_scanned": 26,
+          "fetch_ms": 1600.7,
+          "total_ms": 1600.9
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 1,
+          "outcome": "expired",
+          "hit_price": 83595.46,
+          "hit_at": null,
+          "return_pct": -0.000716,
+          "fetches": 5,
+          "candles_scanned": 26,
+          "fetch_ms": 83.9,
+          "total_ms": 84.1
+        },
+        {
+          "mode": "v2_shared_connection",
+          "round": 2,
+          "outcome": "expired",
+          "hit_price": 83595.46,
+          "hit_at": null,
+          "return_pct": -0.000716,
+          "fetches": 5,
+          "candles_scanned": 26,
+          "fetch_ms": 83.9,
+          "total_ms": 84.1
+        }
+      ]
+    }
+  ]
+}
