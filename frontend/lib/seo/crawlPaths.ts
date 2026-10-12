@@ -13,6 +13,7 @@ export const ROBOTS_DISALLOWED_PATHS = [
   '/discover',
   '/plans',
   '/labs',
+  '/events',
   '/coming-soon',
 ] as const;
 
