@@ -13,6 +13,7 @@ export const RESERVED_ROUTES = new Set<string>([
   'analytics',
   'bookmarks',
   'cookies',
+  'events',
   'home',
   'labs',
   'onboarding',

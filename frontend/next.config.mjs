@@ -78,6 +78,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.cnn.com',
       },
+      // Crypto event banners (Coinpedia events page)
+      {
+        protocol: 'https',
+        hostname: 'image.coinpedia.org',
+        pathname: '/app_uploads/**',
+      },
     ],
     // Allow any external image domain (required for news articles from various sources)
     // We'll use unoptimized images in NewsCard to handle unknown domains gracefully

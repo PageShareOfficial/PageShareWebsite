@@ -17,6 +17,7 @@ import {
   Trash,
   MdOutlineWorkspacePremium,
   LuChartCandlestick,
+  GrSchedule,
 } from '@/constants/icons';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -99,6 +100,7 @@ export default function Sidebar() {
     { name: 'Settings', icon: Settings, href: ROUTES.settings, prefetch: true },
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
     { name: 'Premium', icon: MdOutlineWorkspacePremium, href: ROUTES.plans, prefetch: true },
+    { name: 'Events', icon: GrSchedule, href: ROUTES.events, prefetch: true },
   ];
 
   // Desktop nav items (without watchlist since it's in right rail, but with Premium and Settings)
@@ -320,13 +322,27 @@ export default function Sidebar() {
                   {isMoreMenuOpen && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-black border border-white/10 rounded-xl shadow-lg overflow-hidden z-50 min-w-[150px]">
                       <Link
+                        href={ROUTES.events}
+                        prefetch={true}
+                        onClick={() => {
+                          setIsMoreMenuOpen(false);
+                          setActiveNav('Events');
+                        }}
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                          getActiveNav(ROUTES.events) ? 'bg-white/10 text-white' : 'text-white'
+                        }`}
+                      >
+                        <GrSchedule className="w-4 h-4" />
+                        <span className="text-sm">Events</span>
+                      </Link>
+                      <Link
                         href={ROUTES.labs}
                         prefetch={true}
                         onClick={() => {
                           setIsMoreMenuOpen(false);
                           setActiveNav('Labs');
                         }}
-                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                        className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
                           getActiveNav('/labs') ? 'bg-white/10 text-white' : 'text-white'
                         }`}
                       >

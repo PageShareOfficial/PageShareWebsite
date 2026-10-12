@@ -25,6 +25,7 @@ export const ROUTES = {
   myAnalysts: '/myanalysts',
   discover: '/discover',
   labs: '/labs',
+  events: '/events',
   watchlist: '/watchlist',
   bookmarks: '/bookmarks',
   about: '/about',
