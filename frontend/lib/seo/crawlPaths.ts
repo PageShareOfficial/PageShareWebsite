@@ -13,11 +13,18 @@ export const ROBOTS_DISALLOWED_PATHS = [
   '/discover',
   '/plans',
   '/labs',
-  '/events',
   '/coming-soon',
 ] as const;
 
-export const SITEMAP_PATHS = ['', '/about', '/privacy', '/terms', '/cookies', '/disclaimer'] as const;
+export const SITEMAP_PATHS = [
+  '',
+  '/events',
+  '/about',
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/disclaimer',
+] as const;
 
 export function isPathDisallowed(path: string): boolean {
   const normalizedPath = path || '/';

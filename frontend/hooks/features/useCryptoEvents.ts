@@ -14,16 +14,21 @@ interface UseCryptoEventsResult {
 }
 
 /**
- * Crypto events feed backed by a short-lived localStorage cache.
- * A cached copy (even expired) renders immediately; the network refresh replaces it.
+ * Crypto events feed. A server-rendered `initialFeed` is used as-is and saved to localStorage;
+ * without one (backend unreachable during the server render) the hook falls back to the cached
+ * copy, even expired, and refreshes from the network.
  */
-export function useCryptoEvents(): UseCryptoEventsResult {
-  const [feed, setFeed] = useState<CryptoEventsFeed | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function useCryptoEvents(initialFeed: CryptoEventsFeed | null = null): UseCryptoEventsResult {
+  const [feed, setFeed] = useState<CryptoEventsFeed | null>(initialFeed);
+  const [isLoading, setIsLoading] = useState(initialFeed === null);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
+    if (initialFeed && reloadToken === 0) {
+      writeCachedCryptoEvents(initialFeed);
+      return;
+    }
     let cancelled = false;
     const cached = readCachedCryptoEvents();
     if (cached) setFeed(cached.feed);
@@ -50,7 +55,7 @@ export function useCryptoEvents(): UseCryptoEventsResult {
     return () => {
       cancelled = true;
     };
-  }, [reloadToken]);
+  }, [initialFeed, reloadToken]);
 
   const retry = useCallback(() => setReloadToken((token) => token + 1), []);
 
