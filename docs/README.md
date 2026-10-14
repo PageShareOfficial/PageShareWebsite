@@ -14,6 +14,7 @@ Each page answers: **why it exists → how it works → the knobs to tweak → f
 | [Feed](features/feed.md) | add ranking or change pagination |
 | [Crypto events](features/crypto-events.md) | change the Coinpedia scraper or caching |
 | [Cron jobs](operations/cron-jobs.md) | add or reschedule a background job |
+| [Admin portal](features/admin-portal.md) | change moderation, admin access, or the paywall bypass |
 
 ## Conventions
 
