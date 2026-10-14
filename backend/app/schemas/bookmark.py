@@ -18,6 +18,7 @@ class BookmarkedPostAuthor(BaseModel):
     display_name: str
     profile_picture_url: str | None = None
     subscription_plan_id: Optional[str] = None
+    is_admin: bool = False
 
 class BookmarkedPostItem(BaseModel):
     """One bookmarked post in GET /bookmarks list."""

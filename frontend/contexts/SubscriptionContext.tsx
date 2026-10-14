@@ -22,6 +22,8 @@ interface SubscriptionContextValue {
   activePlanId: PlanId | null;
   isAnalystPlan: boolean;
   isInvestorPlan: boolean;
+  /** PageShare admin: unlocks every premium feature regardless of billing. */
+  isAdmin: boolean;
   isLoading: boolean;
   error: string | null;
   refreshBillingStatus: () => Promise<void>;
@@ -122,6 +124,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     bootstrapPlanId
   );
 
+  const isAdmin = backendUser?.is_admin === true;
+
   const canFetchBilling = Boolean(session?.access_token && getBaseUrl());
   const isBillingUnsettled = canFetchBilling && billingStatus === null;
 
@@ -134,10 +138,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       billingStatus,
-      isPremium,
+      isPremium: isPremium || isAdmin,
       activePlanId,
-      isAnalystPlan: activePlanId === 'analyst',
-      isInvestorPlan: activePlanId === 'investor',
+      isAnalystPlan: isAdmin || activePlanId === 'analyst',
+      isInvestorPlan: isAdmin || activePlanId === 'investor',
+      isAdmin,
       isLoading: !isEntitlementResolved,
       error,
       refreshBillingStatus,
@@ -146,6 +151,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       activePlanId,
       billingStatus,
       error,
+      isAdmin,
       isEntitlementResolved,
       isPremium,
       refreshBillingStatus,

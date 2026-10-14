@@ -231,7 +231,11 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
                               <span className="text-xs text-gray-400">
                                 @{comment.author.handle}
                               </span>
-                              <AuthorBadges subscriptionPlanId={comment.author.subscriptionPlanId} size="sm" />
+                              <AuthorBadges
+                                subscriptionPlanId={comment.author.subscriptionPlanId}
+                                isAdmin={comment.author.isAdmin}
+                                size="sm"
+                              />
                               <span className="text-xs text-gray-500">
                                 · {comment.createdAt}
                               </span>

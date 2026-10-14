@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.user_entitlement import UserEntitlement
 from app.schemas.billing import BillingStatusResponse
+from app.services.admin_access_service import is_admin_user_id
 from app.services.billing_constants import (
     STALE_SUBSCRIPTION_STATUSES,
     compute_past_due_grace_ends_at,
@@ -90,6 +91,9 @@ def get_billing_status(db: Session, user_id: UUID) -> BillingStatusResponse:
     return entitlement_to_status(get_entitlement(db, user_id))
 
 def is_premium_user(db: Session, user_id: UUID) -> bool:
+    """Active paid subscriber, or an admin (admins get every premium feature)."""
+    if is_admin_user_id(db, user_id):
+        return True
     row = get_entitlement(db, user_id)
     if not row:
         return False

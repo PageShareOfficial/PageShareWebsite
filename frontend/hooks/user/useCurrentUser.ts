@@ -18,6 +18,7 @@ function backendUserToUser(backendUser: {
   display_name: string;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
 }): User {
   return {
     id: backendUser.id,
@@ -25,6 +26,7 @@ function backendUserToUser(backendUser: {
     displayName: backendUser.display_name,
     avatar: backendUser.profile_picture_url ?? '',
     subscriptionPlanId: parseSubscriptionPlanId(backendUser.subscription_plan_id),
+    isAdmin: backendUser.is_admin === true,
   };
 }
 

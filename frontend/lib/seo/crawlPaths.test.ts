@@ -23,4 +23,9 @@ describe('crawlPaths', () => {
     expect(isPathDisallowed('/about')).toBe(false);
     expect(isPathDisallowed('/terms')).toBe(false);
   });
+
+  it('lets crawlers index the public crypto events page', () => {
+    expect(isPathDisallowed('/events')).toBe(false);
+    expect(SITEMAP_PATHS).toContain('/events');
+  });
 });

@@ -7,6 +7,7 @@ export interface ApiAuthorFields {
   display_name: string;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
 }
 
 export function parseSubscriptionPlanId(
@@ -25,5 +26,6 @@ export function mapApiAuthorToUser(author: ApiAuthorFields): User {
     handle: author.username,
     avatar: author.profile_picture_url ?? '',
     subscriptionPlanId: parseSubscriptionPlanId(author.subscription_plan_id),
+    isAdmin: author.is_admin === true,
   };
 }

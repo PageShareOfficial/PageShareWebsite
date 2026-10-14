@@ -25,7 +25,11 @@ from app.services.prediction_constants import (
     RESOLVED_OUTCOMES,
 )
 from app.services.prediction_rr_utils import net_rr_contribution
-from app.services.subscription_service import get_active_plan_ids_for_users
+from app.services.subscription_service import (
+    get_active_plan_ids_for_users,
+    get_user_plan_id,
+)
+from app.services.admin_access_service import is_admin_user_id
 
 DEFAULT_LEADERBOARD_PER_PAGE = 20
 MAX_LEADERBOARD_PER_PAGE = 50
@@ -74,6 +78,16 @@ def leaderboard_avatar_initials(display_name: Optional[str]) -> str:
     if not words:
         return "?"
     return "".join(word[0] for word in words[:2]).upper()
+
+def resolve_leaderboard_viewer_plan_id(
+    db: Session, viewer_user_id: Optional[UUID]
+) -> Optional[str]:
+    """Plan used for leaderboard visibility. Admins see the board as investors do."""
+    if viewer_user_id is None:
+        return None
+    if is_admin_user_id(db, viewer_user_id):
+        return PLAN_ID_INVESTOR
+    return get_user_plan_id(db, viewer_user_id)
 
 def should_reveal_leaderboard_identity(
     *,

@@ -34,6 +34,7 @@ class PostAuthor(BaseModel):
         default=None,
         description="Paid tier: analyst or investor when subscription is active.",
     )
+    is_admin: bool = False
 
 class PostStats(BaseModel):
     """Aggregated stats for a post."""

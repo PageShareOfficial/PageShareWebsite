@@ -13,6 +13,7 @@ from app.schemas.user import (
     UserResponse,
     UserStats,
 )
+from app.services.admin_access_service import is_admin
 from app.services.auth_service import CurrentUser
 from app.services.comment_service import (
     get_reaction_counts_for_comments,
@@ -201,6 +202,7 @@ async def get_me(
         ),
         interests=interests,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.get("/by-username/{username}", response_model=PublicUserResponse)
@@ -234,6 +236,7 @@ async def get_user_by_username_endpoint(
         interests=interests,
         created_at=user.created_at,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.get("/{user_id}", response_model=PublicUserResponse)
@@ -262,6 +265,7 @@ async def get_user_profile(
         interests=interests,
         created_at=user.created_at,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.patch("/me", response_model=UserResponse)
@@ -294,6 +298,7 @@ async def update_me(
         ),
         interests=interests,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.post("/me/onboarding", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -335,6 +340,7 @@ async def onboarding(
         ),
         interests=interests,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.post("/me/profile-picture")
@@ -384,6 +390,7 @@ async def upload_profile_picture_endpoint(
             ),
             interests=interests,
             subscription_plan_id=get_user_plan_id(db, user.id),
+            is_admin=is_admin(user),
         )
     }
 

@@ -24,6 +24,7 @@ export interface OriginalPostInResponse {
     display_name: string;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
 };
   content: string;
   media_urls?: string[] | null;
@@ -39,6 +40,7 @@ export interface PostInFeedResponse {
     display_name: string;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
 };
   content: string;
   media_urls?: string[] | null;

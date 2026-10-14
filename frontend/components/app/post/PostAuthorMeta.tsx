@@ -7,6 +7,7 @@ interface PostAuthorMetaProps {
   displayName: string;
   handle: string;
   subscriptionPlanId?: User['subscriptionPlanId'];
+  isAdmin?: boolean;
   createdAt?: string;
   size?: 'sm' | 'md';
   onDisplayNameClick?: (e: React.MouseEvent) => void;
@@ -19,6 +20,7 @@ export default function PostAuthorMeta({
   displayName,
   handle,
   subscriptionPlanId,
+  isAdmin,
   createdAt,
   size = 'md',
   onDisplayNameClick,
@@ -40,6 +42,7 @@ export default function PostAuthorMeta({
       <span className={`${metaSizeClass} shrink-0 text-gray-400`}>@{handle}</span>
       <AuthorBadges
         subscriptionPlanId={subscriptionPlanId}
+        isAdmin={isAdmin}
         size={size === 'sm' ? 'sm' : 'md'}
         className="shrink-0"
       />

@@ -18,6 +18,7 @@ import {
   MdOutlineWorkspacePremium,
   LuChartCandlestick,
   GrSchedule,
+  ShieldCheck,
 } from '@/constants/icons';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -101,6 +102,9 @@ export default function Sidebar() {
     { name: 'Profile', icon: User, href: profileHref, prefetch: false },
     { name: 'Premium', icon: MdOutlineWorkspacePremium, href: ROUTES.plans, prefetch: true },
     { name: 'Events', icon: GrSchedule, href: ROUTES.events, prefetch: true },
+    ...(currentUser.isAdmin
+      ? [{ name: 'Admin', icon: ShieldCheck, href: ROUTES.admin, prefetch: false }]
+      : []),
   ];
 
   // Desktop nav items (without watchlist since it's in right rail, but with Premium and Settings)
@@ -240,7 +244,10 @@ export default function Sidebar() {
                     <span className="font-semibold text-white text-sm truncate">
                       {currentUser.displayName}
                     </span>
-                    <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
+                    <AuthorBadges
+                    subscriptionPlanId={currentUser.subscriptionPlanId}
+                    isAdmin={currentUser.isAdmin}
+                  />
                   </div>
                   <div className="text-gray-400 text-xs truncate">
                     @{currentUser.handle}
@@ -259,7 +266,10 @@ export default function Sidebar() {
                   <span className="font-semibold text-white text-sm truncate">
                     {currentUser.displayName}
                   </span>
-                  <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
+                  <AuthorBadges
+                    subscriptionPlanId={currentUser.subscriptionPlanId}
+                    isAdmin={currentUser.isAdmin}
+                  />
                 </div>
                 <div className="text-gray-400 text-xs truncate">
                   @{currentUser.handle}
@@ -363,6 +373,22 @@ export default function Sidebar() {
                         <Bookmark className="w-4 h-4" />
                         <span className="text-sm">Bookmarks</span>
                       </Link>
+                      {currentUser.isAdmin && (
+                        <Link
+                          href={ROUTES.admin}
+                          prefetch={false}
+                          onClick={() => {
+                            setIsMoreMenuOpen(false);
+                            setActiveNav('Admin');
+                          }}
+                          className={`flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors border-t border-white/10 ${
+                            getActiveNav(ROUTES.admin) ? 'bg-white/10 text-white' : 'text-white'
+                          }`}
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          <span className="text-sm">Admin</span>
+                        </Link>
+                      )}
                       <button
                         type="button"
                         onClick={() => {

@@ -192,6 +192,7 @@ export default function ProfilePage() {
           profile_picture_url: backendProfile.profile_picture_url,
           subscription_plan_id: backendProfile.subscription_plan_id,
         }).subscriptionPlanId,
+        isAdmin: backendProfile.is_admin === true,
         joinedDate: backendProfile.created_at,
         followers: backendProfile.follower_count,
         following: backendProfile.following_count,

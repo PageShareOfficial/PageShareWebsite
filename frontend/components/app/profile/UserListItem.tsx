@@ -56,7 +56,11 @@ export default function UserListItem({
             <span className="font-semibold text-white text-sm truncate">
               {user.displayName}
             </span>
-            <AuthorBadges subscriptionPlanId={user.subscriptionPlanId} size="md" />
+            <AuthorBadges
+              subscriptionPlanId={user.subscriptionPlanId}
+              isAdmin={user.isAdmin}
+              size="md"
+            />
           </div>
           <p className="text-gray-400 text-sm truncate">@{user.handle}</p>
         </div>

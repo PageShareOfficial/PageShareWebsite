@@ -15,6 +15,7 @@ export interface SearchUsersResponse {
       display_name: string;
       profile_picture_url?: string | null;
       subscription_plan_id?: string | null;
+      is_admin?: boolean;
     }>;
     tickers: unknown[];
   };
@@ -29,6 +30,7 @@ function toUser(item: SearchUsersResponse['data']['users'][0]): User {
     displayName: item.display_name,
     avatar: item.profile_picture_url ?? '',
     subscriptionPlanId: parseSubscriptionPlanId(item.subscription_plan_id),
+    isAdmin: item.is_admin === true,
   };
 }
 
