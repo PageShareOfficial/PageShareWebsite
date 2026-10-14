@@ -11,6 +11,7 @@ from app.schemas.bookmark import (
     BookmarkedPostItem,
     BookmarkToggleResponse,
 )
+from app.services.admin_access_service import is_admin
 from app.services.auth_service import CurrentUser
 from app.api.deps import get_post_or_404
 from app.services.bookmark_service import add_bookmark, list_bookmarks, remove_bookmark
@@ -72,6 +73,7 @@ def list_bookmarks_endpoint(
                 display_name=author.display_name,
                 profile_picture_url=author.profile_picture_url,
                 subscription_plan_id=plan_map.get(author.id),
+                is_admin=is_admin(author),
             ),
             content=post.content,
             created_at=post.created_at,

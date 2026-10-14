@@ -85,7 +85,10 @@ export default function Topbar() {
                     <span className="font-semibold text-white text-sm truncate">
                       {currentUser.displayName}
                     </span>
-                    <AuthorBadges subscriptionPlanId={currentUser.subscriptionPlanId} />
+                    <AuthorBadges
+                      subscriptionPlanId={currentUser.subscriptionPlanId}
+                      isAdmin={currentUser.isAdmin}
+                    />
                   </div>
                   <div className="text-gray-400 text-xs">@{currentUser.handle}</div>
                 </div>

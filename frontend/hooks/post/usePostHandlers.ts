@@ -207,6 +207,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
           handle: currentUser.handle,
           avatar: currentUser.avatar,
           subscriptionPlanId: currentUser.subscriptionPlanId,
+          isAdmin: currentUser.isAdmin,
         },
       });
 
@@ -371,6 +372,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
         handle: currentUser.handle,
         avatar: currentUser.avatar,
         subscriptionPlanId: currentUser.subscriptionPlanId,
+        isAdmin: currentUser.isAdmin,
       },
       content,
       createdAt: 'now',
@@ -413,6 +415,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
           handle: currentUser.handle,
           avatar: currentUser.avatar,
           subscriptionPlanId: currentUser.subscriptionPlanId,
+          isAdmin: currentUser.isAdmin,
         },
         hasPoll ? { options: poll!.options.filter((o) => o.trim()), duration: poll!.duration } : undefined
       );
@@ -471,6 +474,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
         handle: currentUser.handle,
         avatar: currentUser.avatar,
         subscriptionPlanId: currentUser.subscriptionPlanId,
+        isAdmin: currentUser.isAdmin,
       },
       quoteText: text,
     });

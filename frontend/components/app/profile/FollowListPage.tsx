@@ -31,6 +31,7 @@ function mapItemToUser(item: FollowerFollowingItem): User {
     handle: item.username,
     avatar: item.profile_picture_url ?? '',
     subscriptionPlanId: parseSubscriptionPlanId(item.subscription_plan_id),
+    isAdmin: item.is_admin === true,
   };
 }
 

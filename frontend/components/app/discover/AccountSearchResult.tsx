@@ -44,7 +44,11 @@ export default function AccountSearchResult({
             <span className="font-semibold text-white truncate">
               {user.displayName}
             </span>
-            <AuthorBadges subscriptionPlanId={user.subscriptionPlanId} size="sm" />
+            <AuthorBadges
+              subscriptionPlanId={user.subscriptionPlanId}
+              isAdmin={user.isAdmin}
+              size="sm"
+            />
           </div>
           <div className="text-sm text-gray-400 truncate">
             @{user.handle}

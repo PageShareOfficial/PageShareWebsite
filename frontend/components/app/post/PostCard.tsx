@@ -217,6 +217,7 @@ export default function PostCard({
                       displayName={originalPost.author.displayName}
                       handle={originalPost.author.handle}
                       subscriptionPlanId={originalPost.author.subscriptionPlanId}
+                      isAdmin={originalPost.author.isAdmin}
                       createdAt={originalPost.createdAt}
                       size="sm"
                       onDisplayNameClick={(e) => {

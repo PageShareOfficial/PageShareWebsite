@@ -43,8 +43,8 @@ from app.services.prediction_leaderboard_service import (
     list_prediction_leaderboard,
     load_leaderboard_users,
     plan_ids_for_leaderboard,
+    resolve_leaderboard_viewer_plan_id,
 )
-from app.services.subscription_service import get_user_plan_id
 from app.services.prediction_analytics_predictions_service import (
     get_analyst_prediction_detail_for_investor,
     get_own_prediction_detail,
@@ -259,9 +259,7 @@ def prediction_leaderboard(
 ):
     """Analyst rankings by 30d Net RR. Identity redacted unless investor or own row."""
     viewer_user_id = UUID(current_user.auth_user_id) if current_user else None
-    viewer_plan_id = (
-        get_user_plan_id(db, viewer_user_id) if viewer_user_id is not None else None
-    )
+    viewer_plan_id = resolve_leaderboard_viewer_plan_id(db, viewer_user_id)
     rows, total = list_prediction_leaderboard(db, page=page, per_page=per_page)
     users = load_leaderboard_users(db, rows)
     plan_map = plan_ids_for_leaderboard(db, rows)

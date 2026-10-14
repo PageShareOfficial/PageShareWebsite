@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.middleware.auth import get_current_user, get_optional_user
 from app.schemas.follow import FollowToggleResponse, FollowerFollowingItem
+from app.services.admin_access_service import is_admin
 from app.services.auth_service import CurrentUser
 from app.services.follow_service import (
     follow_user,
@@ -81,6 +82,7 @@ def list_followers_endpoint(
                 display_name=user.display_name,
                 profile_picture_url=user.profile_picture_url,
                 subscription_plan_id=plan_map.get(user.id),
+                is_admin=is_admin(user),
                 is_following=is_fol,
                 followed_at=followed_at,
             )
@@ -112,6 +114,7 @@ def list_following_endpoint(
                 display_name=user.display_name,
                 profile_picture_url=user.profile_picture_url,
                 subscription_plan_id=plan_map.get(user.id),
+                is_admin=is_admin(user),
                 is_following=is_fol,
                 followed_at=followed_at,
             )

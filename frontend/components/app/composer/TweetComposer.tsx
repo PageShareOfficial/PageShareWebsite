@@ -492,7 +492,11 @@ export default function TweetComposer({
                 />
                 <span className="font-semibold text-white text-sm">{originalPost.author.displayName}</span>
                 <span className="text-xs text-gray-400">@{originalPost.author.handle}</span>
-                <AuthorBadges subscriptionPlanId={originalPost.author.subscriptionPlanId} size="sm" />
+                <AuthorBadges
+                  subscriptionPlanId={originalPost.author.subscriptionPlanId}
+                  isAdmin={originalPost.author.isAdmin}
+                  size="sm"
+                />
                 <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
               </div>
               {/* Render content based on post type */}

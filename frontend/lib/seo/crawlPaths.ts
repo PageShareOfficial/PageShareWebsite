@@ -14,6 +14,7 @@ export const ROBOTS_DISALLOWED_PATHS = [
   '/plans',
   '/labs',
   '/coming-soon',
+  '/admin',
 ] as const;
 
 export const SITEMAP_PATHS = [

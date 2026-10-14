@@ -11,6 +11,7 @@ export interface ProfileByUsernameResponse {
   bio?: string | null;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
   follower_count: number;
   following_count: number;
   post_count: number;
@@ -114,6 +115,7 @@ export interface FollowerFollowingItem {
   display_name: string;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
   is_following: boolean;
   followed_at: string;
 }
@@ -183,6 +185,7 @@ export interface OriginalPostInReplyResponse {
     display_name: string;
     profile_picture_url?: string | null;
     subscription_plan_id?: string | null;
+    is_admin?: boolean;
   };
   content: string;
   media_urls?: string[] | null;
@@ -201,6 +204,7 @@ export interface UserReplyItem {
       display_name: string;
       profile_picture_url?: string | null;
       subscription_plan_id?: string | null;
+      is_admin?: boolean;
     };
     content: string;
     media_urls?: string[] | null;
@@ -221,6 +225,7 @@ export interface UserReplyItem {
       display_name: string;
       profile_picture_url?: string | null;
       subscription_plan_id?: string | null;
+      is_admin?: boolean;
     };
     created_at?: string | null;
     poll?: PollInReplyResponse | null;

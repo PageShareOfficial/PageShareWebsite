@@ -70,6 +70,7 @@ export const AUTH_PROTECTED_ROUTES = new Set<string>([
   'bookmarks',
   'watchlist',
   'ticker',
+  'admin',
 ]);
 
 /**

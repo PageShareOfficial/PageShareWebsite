@@ -5,6 +5,7 @@ from uuid import UUID
 from app.models.user import User
 from app.schemas.comment import CommentAuthor
 from app.schemas.post import PostAuthor
+from app.services.admin_access_service import is_admin
 from app.services.billing_constants import normalize_plan_id
 from app.services.subscription_service import get_active_plan_ids_for_users
 
@@ -20,6 +21,7 @@ def build_post_author(
         display_name=user.display_name,
         profile_picture_url=user.profile_picture_url,
         subscription_plan_id=_normalize_plan_id(subscription_plan_id),
+        is_admin=is_admin(user),
     )
 
 def build_comment_author(
@@ -31,6 +33,7 @@ def build_comment_author(
         display_name=user.display_name,
         profile_picture_url=user.profile_picture_url,
         subscription_plan_id=_normalize_plan_id(subscription_plan_id),
+        is_admin=is_admin(user),
     )
 
 def load_subscription_plan_map(
