@@ -21,6 +21,8 @@ export interface BackendUser {
   bio?: string | null;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
+  onboarding_completed?: boolean;
   timezone?: string | null;
   country?: string | null;
   country_code?: string | null;

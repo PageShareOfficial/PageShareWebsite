@@ -4,12 +4,17 @@ import { siteConfig } from '@/lib/seo/metadata';
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>;
 
+/** Pages whose content changes every day, so crawlers should revisit them often. */
+const DAILY_PATHS: ReadonlySet<string> = new Set(['/events']);
+
 function getChangeFrequency(path: string): ChangeFrequency {
+  if (DAILY_PATHS.has(path)) return 'daily';
   return path === '' ? 'weekly' : 'monthly';
 }
 
 function getPriority(path: string): number {
-  return path === '' ? 1 : 0.7;
+  if (path === '') return 1;
+  return DAILY_PATHS.has(path) ? 0.8 : 0.7;
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {

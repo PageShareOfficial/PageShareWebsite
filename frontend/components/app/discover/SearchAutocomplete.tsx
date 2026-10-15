@@ -326,7 +326,11 @@ export default function SearchAutocomplete({
                                 <span className="font-medium text-white truncate">
                                   {user.displayName}
                                 </span>
-                                <AuthorBadges subscriptionPlanId={user.subscriptionPlanId} size="sm" />
+                                <AuthorBadges
+                                  subscriptionPlanId={user.subscriptionPlanId}
+                                  isAdmin={user.isAdmin}
+                                  size="sm"
+                                />
                               </div>
                               <div className="text-sm text-gray-400 truncate mt-0.5">
                                 @{user.handle}

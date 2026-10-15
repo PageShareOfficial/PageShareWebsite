@@ -56,6 +56,7 @@ export default function PostHeader({
             displayName={originalPost.author.displayName}
             handle={originalPost.author.handle}
             subscriptionPlanId={originalPost.author.subscriptionPlanId}
+            isAdmin={originalPost.author.isAdmin}
             createdAt={post.createdAt}
             onDisplayNameClick={(e) =>
               onProfileClick?.(e, originalPost.author.handle)
@@ -66,6 +67,7 @@ export default function PostHeader({
             displayName={post.author.displayName}
             handle={post.author.handle}
             subscriptionPlanId={post.author.subscriptionPlanId}
+            isAdmin={post.author.isAdmin}
             createdAt={post.createdAt}
             onDisplayNameClick={(e) => onProfileClick?.(e, post.author.handle)}
           />

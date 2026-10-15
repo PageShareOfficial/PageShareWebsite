@@ -12,6 +12,7 @@ class SearchUserItem(BaseModel):
     display_name: str
     profile_picture_url: Optional[str] = None
     subscription_plan_id: Optional[str] = None
+    is_admin: bool = False
 
 class SearchTickerItem(BaseModel):
     """One ticker in search results."""

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings, get_settings
 from app.database import get_db
 from app.middleware.auth import get_current_user, get_optional_user
+from app.models.user import User
 from app.schemas.user import (
     OnboardingRequest,
     PublicUserResponse,
@@ -13,6 +14,7 @@ from app.schemas.user import (
     UserResponse,
     UserStats,
 )
+from app.services.admin_access_service import is_admin
 from app.services.auth_service import CurrentUser
 from app.services.comment_service import (
     get_reaction_counts_for_comments,
@@ -40,6 +42,8 @@ from app.services.user_service import (
     get_user_by_username,
     get_user_interests,
     get_user_stats,
+    is_onboarded,
+    UsernameTakenError,
 )
 from app.services.supabase_admin import delete_auth_user
 from app.services.billing_service import cancel_user_stripe_subscription
@@ -51,6 +55,32 @@ from app.utils.post_author import load_subscription_plan_map
 from app.utils.responses import paginated_response
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+def _build_user_response(db: Session, user: User) -> UserResponse:
+    """Full profile of the signed-in user, as returned by every /users/me endpoint."""
+    user_id = str(user.id)
+    follower_count, following_count, post_count = get_user_stats(db, user_id)
+    return UserResponse(
+        id=user_id,
+        username=user.username,
+        display_name=user.display_name,
+        bio=user.bio,
+        profile_picture_url=user.profile_picture_url,
+        timezone=user.timezone,
+        country=user.country,
+        country_code=user.country_code,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        stats=UserStats(
+            follower_count=follower_count,
+            following_count=following_count,
+            post_count=post_count,
+        ),
+        interests=get_user_interests(db, user_id),
+        subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
+        onboarding_completed=is_onboarded(user),
+    )
 
 def _poll_info_from_tuple(t):
     """Build PollInfo from (poll_id, options, results, total, user_vote, is_finished, expires_at)."""
@@ -180,28 +210,7 @@ async def get_me(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     user = get_or_create_user_for_auth(db, current_user)
-    user_id = str(user.id)
-    follower_count, following_count, post_count = get_user_stats(db, user_id)
-    interests = get_user_interests(db, user_id)
-    return UserResponse(
-        id=user_id,
-        username=user.username,
-        display_name=user.display_name,
-        bio=user.bio,
-        profile_picture_url=user.profile_picture_url,
-        timezone=user.timezone,
-        country=user.country,
-        country_code=user.country_code,
-        created_at=user.created_at,
-        updated_at=user.updated_at,
-        stats=UserStats(
-            follower_count=follower_count,
-            following_count=following_count,
-            post_count=post_count,
-        ),
-        interests=interests,
-        subscription_plan_id=get_user_plan_id(db, user.id),
-    )
+    return _build_user_response(db, user)
 
 @router.get("/by-username/{username}", response_model=PublicUserResponse)
 async def get_user_by_username_endpoint(
@@ -234,6 +243,7 @@ async def get_user_by_username_endpoint(
         interests=interests,
         created_at=user.created_at,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.get("/{user_id}", response_model=PublicUserResponse)
@@ -262,6 +272,7 @@ async def get_user_profile(
         interests=interests,
         created_at=user.created_at,
         subscription_plan_id=get_user_plan_id(db, user.id),
+        is_admin=is_admin(user),
     )
 
 @router.patch("/me", response_model=UserResponse)
@@ -272,29 +283,7 @@ async def update_me(
 ):
     user = get_or_create_user_for_auth(db, current_user)
     user = apply_user_update(db, user, payload)
-    user_id = str(user.id)
-    follower_count, following_count, post_count = get_user_stats(db, user_id)
-    interests = get_user_interests(db, user_id)
-
-    return UserResponse(
-        id=user_id,
-        username=user.username,
-        display_name=user.display_name,
-        bio=user.bio,
-        profile_picture_url=user.profile_picture_url,
-        timezone=user.timezone,
-        country=user.country,
-        country_code=user.country_code,
-        created_at=user.created_at,
-        updated_at=user.updated_at,
-        stats=UserStats(
-            follower_count=follower_count,
-            following_count=following_count,
-            post_count=post_count,
-        ),
-        interests=interests,
-        subscription_plan_id=get_user_plan_id(db, user.id),
-    )
+    return _build_user_response(db, user)
 
 @router.post("/me/onboarding", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def onboarding(
@@ -305,37 +294,18 @@ async def onboarding(
 ):
     ip = extract_client_ip(request)
     geo = await lookup_ip(ip) if ip else None
-    user = apply_onboarding(
-        db=db,
-        current=current_user,
-        payload=payload,
-        country=geo.country if geo else None,
-        country_code=geo.country_code if geo else None,
-        ip_hash=geo.ip_hash if geo else None,
-    )
-    user_id = str(user.id)
-    follower_count, following_count, post_count = get_user_stats(db, user_id)
-    interests = get_user_interests(db, user_id)
-
-    return UserResponse(
-        id=user_id,
-        username=user.username,
-        display_name=user.display_name,
-        bio=user.bio,
-        profile_picture_url=user.profile_picture_url,
-        timezone=user.timezone,
-        country=user.country,
-        country_code=user.country_code,
-        created_at=user.created_at,
-        updated_at=user.updated_at,
-        stats=UserStats(
-            follower_count=follower_count,
-            following_count=following_count,
-            post_count=post_count,
-        ),
-        interests=interests,
-        subscription_plan_id=get_user_plan_id(db, user.id),
-    )
+    try:
+        user = apply_onboarding(
+            db=db,
+            current=current_user,
+            payload=payload,
+            country=geo.country if geo else None,
+            country_code=geo.country_code if geo else None,
+            ip_hash=geo.ip_hash if geo else None,
+        )
+    except UsernameTakenError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return _build_user_response(db, user)
 
 @router.post("/me/profile-picture")
 async def upload_profile_picture_endpoint(
@@ -360,32 +330,7 @@ async def upload_profile_picture_endpoint(
     db.add(user)
     db.commit()
     db.refresh(user)
-
-    user_id = str(user.id)
-    follower_count, following_count, post_count = get_user_stats(db, user_id)
-    interests = get_user_interests(db, user_id)
-
-    return {
-        "data": UserResponse(
-            id=user_id,
-            username=user.username,
-            display_name=user.display_name,
-            bio=user.bio,
-            profile_picture_url=user.profile_picture_url,
-            timezone=user.timezone,
-            country=user.country,
-            country_code=user.country_code,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
-            stats=UserStats(
-                follower_count=follower_count,
-                following_count=following_count,
-                post_count=post_count,
-            ),
-            interests=interests,
-            subscription_plan_id=get_user_plan_id(db, user.id),
-        )
-    }
+    return {"data": _build_user_response(db, user)}
 
 @router.delete("/me/profile-picture", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_profile_picture_endpoint(

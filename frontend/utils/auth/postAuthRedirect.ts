@@ -4,8 +4,11 @@ import { AccountLoadError, reportAccountLoadFailure } from '@/utils/auth/account
 
 type PostAuthPath = typeof ROUTES.onboarding | typeof ROUTES.home;
 
-export function needsOnboarding(username: string): boolean {
-  return username.startsWith('user_');
+type OnboardingState = { onboarding_completed?: boolean };
+
+/** Treats a missing flag as "not onboarded" so an incomplete profile never skips onboarding. */
+export function needsOnboarding(user: OnboardingState): boolean {
+  return user.onboarding_completed !== true;
 }
 
 /** Session tracking is best-effort; it must never block or fail sign-in. */
@@ -18,14 +21,14 @@ export async function recordSessionStart(accessToken: string): Promise<void> {
 }
 
 async function resolveDestinationFromProfile(accessToken: string): Promise<PostAuthPath> {
-  let user: { username: string };
+  let user: OnboardingState;
   try {
-    user = await apiGet<{ username: string }>('/users/me', accessToken);
+    user = await apiGet<OnboardingState>('/users/me', accessToken);
   } catch (err) {
     reportAccountLoadFailure(err, 'auth_callback');
     throw new AccountLoadError();
   }
-  return needsOnboarding(user.username) ? ROUTES.onboarding : ROUTES.home;
+  return needsOnboarding(user) ? ROUTES.onboarding : ROUTES.home;
 }
 
 /**

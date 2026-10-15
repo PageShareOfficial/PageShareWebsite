@@ -10,6 +10,7 @@ import { resolvePostAuthPath } from '@/utils/auth/postAuthRedirect';
 import { AUTH_ERROR_CODES, landingWithError } from '@/constants/routes';
 
 const SESSION_WAIT_MS = 8000;
+const NO_REDIRECT_WAIT_MS = 2000;
 
 async function waitForAuthSession(
   supabase: SupabaseClient,
@@ -79,9 +80,8 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const supabase = createClient();
-    const code = searchParams.get('code');
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    const hasHash = hash.length > 0;
+    const isAuthRedirect = Boolean(searchParams.get('code')) || hash.length > 0;
 
     async function completeSignIn(session: Session, recordSessionStart: boolean) {
       if (handled.current) return;
@@ -97,31 +97,15 @@ function AuthCallbackContent() {
       router.replace(landingWithError(AUTH_ERROR_CODES.auth));
     }
 
+    // The browser client (detectSessionInUrl) already exchanges `?code=` on load and consumes
+    // the one-time PKCE verifier, so calling exchangeCodeForSession here again always fails.
     async function run() {
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          await failAuth();
-          return;
-        }
-
-        const session =
-          data.session ?? (await waitForAuthSession(supabase, SESSION_WAIT_MS));
-        if (session?.access_token) {
-          await completeSignIn(session, true);
-          return;
-        }
-
-        await failAuth();
-        return;
-      }
-
       const session = await waitForAuthSession(
         supabase,
-        hasHash ? SESSION_WAIT_MS : 2000
+        isAuthRedirect ? SESSION_WAIT_MS : NO_REDIRECT_WAIT_MS
       );
       if (session?.access_token) {
-        await completeSignIn(session, hasHash);
+        await completeSignIn(session, isAuthRedirect);
         return;
       }
 

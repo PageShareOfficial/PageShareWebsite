@@ -25,6 +25,7 @@ class CommentAuthor(BaseModel):
         default=None,
         description="Paid tier: analyst or investor when subscription is active.",
     )
+    is_admin: bool = False
 
 class CommentResponse(BaseModel):
     """Comment in response (create or list)."""

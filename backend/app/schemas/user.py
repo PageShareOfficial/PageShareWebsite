@@ -31,6 +31,8 @@ class UserResponse(UserBase):
         default=None,
         description="Paid tier: analyst or investor when subscription is active.",
     )
+    is_admin: bool = False
+    onboarding_completed: bool = False
 
     class Config:
         from_attributes = True
@@ -45,6 +47,7 @@ class PublicUserResponse(BaseModel):
         default=None,
         description="Paid tier: analyst or investor when subscription is active.",
     )
+    is_admin: bool = False
     follower_count: int = 0
     following_count: int = 0
     post_count: int = 0

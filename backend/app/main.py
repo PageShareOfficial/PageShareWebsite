@@ -31,6 +31,7 @@ from .api.recent_searches import router as recent_searches_router
 from .api.billing import router as billing_router
 from .api.predictions import router as predictions_router
 from .api.saved_analysts import router as saved_analysts_router
+from .api.admin import router as admin_router
 
 settings = get_settings()
 # Sentry: init only when DSN is set (optional)
@@ -104,3 +105,4 @@ app.include_router(recent_searches_router, prefix="/api/v1")
 app.include_router(billing_router, prefix="/api/v1")
 app.include_router(predictions_router, prefix="/api/v1")
 app.include_router(saved_analysts_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")

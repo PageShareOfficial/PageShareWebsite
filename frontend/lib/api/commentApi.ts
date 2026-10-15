@@ -11,6 +11,7 @@ export interface CommentAuthorResponse {
   display_name: string;
   profile_picture_url?: string | null;
   subscription_plan_id?: string | null;
+  is_admin?: boolean;
 }
 
 export interface CommentResponse {

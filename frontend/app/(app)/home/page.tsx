@@ -65,7 +65,7 @@ export default function HomePage() {
   // Redirect to onboarding if user hasn't completed it
   useEffect(() => {
     if (loading) return;
-    if (backendUser && needsOnboarding(backendUser.username)) {
+    if (backendUser && needsOnboarding(backendUser)) {
       router.replace(ROUTES.onboarding);
     }
   }, [loading, backendUser, router]);
@@ -75,8 +75,8 @@ export default function HomePage() {
   }
 
   // Show loading while: checking auth, fetching backend user, or user needs onboarding
-  // (Avoids briefly showing home then redirecting when backendUser loads with user_xxx)
-  if (loading || !backendUser || needsOnboarding(backendUser.username)) {
+  // (Avoids briefly showing home then redirecting once backendUser loads)
+  if (loading || !backendUser || needsOnboarding(backendUser)) {
     return (
       <>
         <div className="flex flex-1 items-center justify-center min-h-[50vh]">

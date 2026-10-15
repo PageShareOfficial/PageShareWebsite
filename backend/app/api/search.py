@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.search import SearchResponseData, SearchTickerItem, SearchUserItem
+from app.services.admin_access_service import is_admin
 from app.services.subscription_service import get_active_plan_ids_for_users
 from app.services.search_service import search_tickers, search_users
 from app.utils.responses import paginated_response
@@ -41,6 +42,7 @@ def search_endpoint(
                 display_name=u.display_name,
                 profile_picture_url=u.profile_picture_url,
                 subscription_plan_id=plan_map.get(u.id),
+                is_admin=is_admin(u),
             )
             for u in users_list
         ]

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.user import User
+from app.services.admin_access_service import is_admin_user_id
 from app.services.auth_service import AuthErrorCode, AuthException, CurrentUser, verify_jwt
 
 def _parse_authorization_header(authorization: Optional[str]) -> str:
@@ -35,10 +35,9 @@ async def require_admin(
 ) -> CurrentUser:
     """
     Dependency for endpoints that require admin (user.badge == 'admin').
-    Use only for metrics and errors admin APIs.
+    Use for admin-only APIs (metrics, errors, admin moderation).
     """
-    user = db.get(User, UUID(current_user.auth_user_id))
-    if not user or user.badge != "admin":
+    if not is_admin_user_id(db, UUID(current_user.auth_user_id)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",

@@ -137,7 +137,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError ?? null);
   const { signInWithGoogle } = useAuth();
-  const rememberedAccount = useRememberedAccount();
+  const { account: rememberedAccount, forgetAccount } = useRememberedAccount();
   const isReturningView = Boolean(rememberedAccount) && view === 'signin';
 
   const switchView = (nextView: AuthView) => {
@@ -167,6 +167,11 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
     }
   };
 
+  const handleUseAnotherAccount = () => {
+    forgetAccount();
+    switchView('signin');
+  };
+
   const heading = isReturningView ? RETURNING_HEADING : HEADINGS[view];
 
   return (
@@ -184,6 +189,7 @@ export default function AuthTabs({ initialError }: AuthTabsProps) {
           onContinueWithGoogle={() => void handleGoogleAuth(rememberedAccount.email)}
           onError={setError}
           onForgotPassword={() => switchView('forgot')}
+          onUseAnotherAccount={handleUseAnotherAccount}
         />
       ) : (
         <>

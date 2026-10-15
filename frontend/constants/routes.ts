@@ -34,6 +34,7 @@ export const ROUTES = {
   cookies: '/cookies',
   disclaimer: '/disclaimer',
   comingSoon: '/coming-soon',
+  admin: '/admin',
 } as const;
 
 /** Placeholder pages linked from the landing footer; the coming-soon page shows the name. */

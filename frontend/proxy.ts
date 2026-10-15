@@ -45,6 +45,6 @@ export const config = {
      * - public folder files (images, fonts, etc.), except under AUTH_PROTECTED_ROUTES
      *   (kept in sync by proxy.test.ts) so a fake extension cannot bypass sign-in
      */
-    '/((?!_next/static|_next/image|favicon.ico|_next|(?!(?:home|predictions|submit-prediction|analytics|myanalysts|onboarding|settings|bookmarks|watchlist|ticker)(?:/|$)).*\\.(?:ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot|json)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|_next|(?!(?:home|predictions|submit-prediction|analytics|myanalysts|onboarding|settings|bookmarks|watchlist|ticker|admin)(?:/|$)).*\\.(?:ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot|json)$).*)',
   ],
 };

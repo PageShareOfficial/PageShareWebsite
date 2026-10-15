@@ -86,6 +86,18 @@ describe('AuthTabs', () => {
     expect(screen.queryByText('Create account')).not.toBeInTheDocument();
   });
 
+  it('forgets the remembered account and shows the normal sign-in on "Not you?"', async () => {
+    remember(googleAccount);
+    render(<AuthTabs />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Use another account' }));
+
+    expect(window.localStorage.getItem(REMEMBERED_ACCOUNT_STORAGE_KEY)).toBeNull();
+    expect(screen.getByText('Welcome to PageShare')).toBeInTheDocument();
+    expect(screen.getByText('New here?')).toBeInTheDocument();
+    expect(screen.getByText('Continue with Google')).toBeInTheDocument();
+  });
+
   it('opens sign-up from Get Started for a new visitor', () => {
     render(<AuthTabs />);
 

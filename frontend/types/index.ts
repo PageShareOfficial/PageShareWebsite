@@ -6,6 +6,7 @@ export interface User {
   handle: string;
   avatar: string;
   subscriptionPlanId?: PlanId;
+  isAdmin?: boolean;
 }
 
 // Normal tweet/post (from TweetComposer)

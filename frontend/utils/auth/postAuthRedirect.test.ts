@@ -18,11 +18,17 @@ vi.mock('@/utils/auth/accountLoadError', async (importOriginal) => ({
 }));
 
 const TOKEN = 'token';
+const ONBOARDED_USER = { username: 'user_picked_this', onboarding_completed: true };
+const NEW_USER = { username: 'user_abc', onboarding_completed: false };
 
 describe('needsOnboarding', () => {
-  it('flags placeholder usernames only', () => {
-    expect(needsOnboarding('user_abc123')).toBe(true);
-    expect(needsOnboarding('alice')).toBe(false);
+  it('follows the onboarding flag, not the username', () => {
+    expect(needsOnboarding(NEW_USER)).toBe(true);
+    expect(needsOnboarding(ONBOARDED_USER)).toBe(false);
+  });
+
+  it('treats a missing flag as not onboarded', () => {
+    expect(needsOnboarding({})).toBe(true);
   });
 });
 
@@ -34,17 +40,17 @@ describe('resolvePostAuthPath', () => {
   });
 
   it('sends onboarded users home and new users to onboarding', async () => {
-    api.apiGet.mockResolvedValueOnce({ username: 'alice' });
+    api.apiGet.mockResolvedValueOnce(ONBOARDED_USER);
     await expect(resolvePostAuthPath(TOKEN)).resolves.toBe(ROUTES.home);
 
-    api.apiGet.mockResolvedValueOnce({ username: 'user_abc' });
+    api.apiGet.mockResolvedValueOnce(NEW_USER);
     await expect(resolvePostAuthPath(TOKEN)).resolves.toBe(ROUTES.onboarding);
   });
 
   it('starts the session and loads the profile in parallel', async () => {
     let releaseSessionStart: () => void = () => {};
     api.apiPost.mockReturnValue(new Promise<void>((resolve) => (releaseSessionStart = resolve)));
-    api.apiGet.mockResolvedValue({ username: 'alice' });
+    api.apiGet.mockResolvedValue(ONBOARDED_USER);
 
     const pending = resolvePostAuthPath(TOKEN, { recordSessionStart: true });
     expect(api.apiGet).toHaveBeenCalledWith('/users/me', TOKEN);
@@ -55,14 +61,14 @@ describe('resolvePostAuthPath', () => {
   });
 
   it('skips session start unless requested', async () => {
-    api.apiGet.mockResolvedValue({ username: 'alice' });
+    api.apiGet.mockResolvedValue(ONBOARDED_USER);
     await resolvePostAuthPath(TOKEN);
     expect(api.apiPost).not.toHaveBeenCalled();
   });
 
   it('does not let a failed session start block sign-in', async () => {
     api.apiPost.mockRejectedValue(new Error('down'));
-    api.apiGet.mockResolvedValue({ username: 'alice' });
+    api.apiGet.mockResolvedValue(ONBOARDED_USER);
     await expect(resolvePostAuthPath(TOKEN, { recordSessionStart: true })).resolves.toBe(
       ROUTES.home
     );

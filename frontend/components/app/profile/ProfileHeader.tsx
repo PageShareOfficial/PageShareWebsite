@@ -107,7 +107,11 @@ export default function ProfileHeader({
               <h1 className="text-xl md:text-2xl font-bold text-white truncate">
                 {profileUser.displayName}
               </h1>
-              <AuthorBadges subscriptionPlanId={profileUser.subscriptionPlanId} size="md" />
+              <AuthorBadges
+                subscriptionPlanId={profileUser.subscriptionPlanId}
+                isAdmin={profileUser.isAdmin}
+                size="md"
+              />
             </div>
             {!basicOnly && (
               <>
