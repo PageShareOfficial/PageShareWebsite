@@ -29,6 +29,21 @@ function parseErrorDetail(text: string, fallback: string): string {
   }
 }
 
+/** Throws the backend's error message for non-2xx responses; returns the raw body otherwise. */
+async function readOkBody(res: Response): Promise<string> {
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(parseErrorDetail(text, `Request failed: ${res.status}`));
+  }
+  return text;
+}
+
+/** Parsed JSON body. Empty bodies (e.g. 204 No Content) resolve to undefined. */
+async function readJsonResponse<T>(res: Response): Promise<T> {
+  const text = await readOkBody(res);
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
 export interface ApiClientOptions {
   /** Access token for Authorization header. If not provided, no auth header is sent. */
   accessToken?: string | null;
@@ -78,11 +93,7 @@ export async function apiGet<T = unknown>(
   accessToken?: string | null
 ): Promise<T> {
   const res = await apiFetch(path, { method: 'GET', accessToken });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(parseErrorDetail(text, `Request failed: ${res.status}`));
-  }
-  return res.json() as Promise<T>;
+  return readJsonResponse<T>(res);
 }
 
 /**
@@ -98,11 +109,7 @@ export async function apiPost<T = unknown>(
     body: body ? JSON.stringify(body) : undefined,
     accessToken,
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(parseErrorDetail(text, `Request failed: ${res.status}`));
-  }
-  return res.json() as Promise<T>;
+  return readJsonResponse<T>(res);
 }
 
 /**
@@ -118,11 +125,7 @@ export async function apiPatch<T = unknown>(
     body: body ? JSON.stringify(body) : undefined,
     accessToken,
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(parseErrorDetail(text, `Request failed: ${res.status}`));
-  }
-  return res.json() as Promise<T>;
+  return readJsonResponse<T>(res);
 }
 
 /**
@@ -191,8 +194,5 @@ export async function apiDelete(
   accessToken?: string | null
 ): Promise<void> {
   const res = await apiFetch(path, { method: 'DELETE', accessToken });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(parseErrorDetail(text, `Request failed: ${res.status}`));
-  }
+  await readOkBody(res);
 }

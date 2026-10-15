@@ -14,6 +14,7 @@ type ReturningAccountSignInProps = Readonly<{
   onContinueWithGoogle: () => void;
   onError: (message: string | null) => void;
   onForgotPassword: () => void;
+  onUseAnotherAccount: () => void;
 }>;
 
 const METHOD_LABEL: Record<RememberedAccount['method'], string> = {
@@ -29,6 +30,7 @@ export default function ReturningAccountSignIn({
   onContinueWithGoogle,
   onError,
   onForgotPassword,
+  onUseAnotherAccount,
 }: ReturningAccountSignInProps) {
   return (
     <div className="flex flex-col">
@@ -71,6 +73,17 @@ export default function ReturningAccountSignIn({
           onForgotPassword={onForgotPassword}
         />
       )}
+
+      <p className="mt-5 text-center text-sm text-gray-400">
+        Not you?{' '}
+        <button
+          type="button"
+          onClick={onUseAnotherAccount}
+          className="text-cyan-400 hover:underline"
+        >
+          Use another account
+        </button>
+      </p>
     </div>
   );
 }

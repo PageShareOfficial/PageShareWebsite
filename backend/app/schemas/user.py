@@ -32,6 +32,7 @@ class UserResponse(UserBase):
         description="Paid tier: analyst or investor when subscription is active.",
     )
     is_admin: bool = False
+    onboarding_completed: bool = False
 
     class Config:
         from_attributes = True
