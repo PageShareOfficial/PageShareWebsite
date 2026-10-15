@@ -134,7 +134,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (loading) return;
     if (!session) return;
-    if (backendUser && !needsOnboarding(backendUser.username)) {
+    if (backendUser && !needsOnboarding(backendUser)) {
       router.replace(ROUTES.home);
     }
   }, [loading, session, backendUser, router]);

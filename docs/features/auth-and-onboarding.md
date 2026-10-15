@@ -11,7 +11,8 @@ before using the app. Logged-out visitors can only see public pages and shared p
 
 - Google OAuth and email/password via Supabase (`frontend/contexts/AuthContext.tsx`).
   OAuth and email confirmation both land on `/auth/callback`.
-- `/auth/callback` exchanges the code for a session, then `resolvePostAuthPath` calls
+- `/auth/callback` waits for the session (the Supabase client exchanges the code), then
+  `resolvePostAuthPath` calls
   `/users/me` and routes to `/onboarding` or `/home`. If `/users/me` fails it shows a retry view
   instead of guessing.
 - Email sign-in/up forms call `resolvePostAuthPath` directly.
@@ -20,16 +21,20 @@ before using the app. Logged-out visitors can only see public pages and shared p
 
 - Created lazily by `get_or_create_user_for_auth` (`backend/app/services/user_service.py`) on
   `/session/start`, `/users/me` and a few other `me` endpoints. Safe under concurrent calls.
-- New rows get a **placeholder username** `user_<24 hex chars>` and a display name from the
-  OAuth `name` claim (or email).
+- New rows get a **placeholder username** `user_<24 hex chars>` (just a unique filler, not a
+  signal) and a display name from the OAuth `name` claim (or email).
 
 ### "Needs onboarding" rule
 
-`needsOnboarding(username) = username.startsWith('user_')` in
-`frontend/utils/auth/postAuthRedirect.ts`. Applied in the callback/email forms, `/home`
-(redirects to `/onboarding`) and `/onboarding` (redirects to `/home` once done).
+**`users.onboarded_at` is the only signal.** NULL = needs onboarding.
 
-`POST /api/v1/users/me/onboarding` sets username, profile fields, interests and geo country.
+- `POST /api/v1/users/me/onboarding` sets username, profile fields, interests, geo country and
+  `onboarded_at` (first time only).
+- Every `/users/me` response carries `onboarding_completed` (built in `_build_user_response`).
+- Frontend `needsOnboarding(user)` in `frontend/utils/auth/postAuthRedirect.ts` reads that flag
+  (missing = not onboarded). Applied in the callback/email forms, `/home` (redirects to
+  `/onboarding`) and `/onboarding` (redirects to `/home` once done).
+- Usernames starting with `user_` are allowed; they no longer affect onboarding.
 
 ### Backend token check
 
@@ -92,14 +97,16 @@ Supabase `/auth/v1/user`. Routes use `get_current_user` / `get_optional_user` /
 
 ## Gotchas
 
-- Onboarding is detected by the `user_` prefix only — but nothing stops a user from *choosing*
-  a username starting with `user_`, which would loop them back to onboarding.
+- Deploy order for anything touching `onboarded_at`: migration + backend first, frontend second.
+  A frontend that expects the flag against an old backend sends everyone to onboarding.
 - The backend doesn't block reserved names (`home`, `settings`, …) as usernames; only the
   frontend route list knows them.
 - Username max length differs: frontend 20, backend 50. Age/bio/interest rules are
   frontend-only.
-- After sign-up, users can briefly land on `/home` before being sent to `/onboarding`.
-  Root cause not yet confirmed — reproduce before changing the redirect logic.
+- **Don't call `exchangeCodeForSession` in `/auth/callback`.** The browser Supabase client
+  (`detectSessionInUrl`) already exchanges `?code=` on load and consumes the one-time PKCE
+  verifier; a second exchange fails, which used to bounce users via `/?error=auth` → `/home` →
+  `/onboarding`. The callback just waits for the session.
 - Account deletion: DB row is deleted before the Supabase auth user; if the second step fails,
   the next sign-in creates a fresh placeholder row.
 - `last_active_at` tracking only decodes HS256 tokens.

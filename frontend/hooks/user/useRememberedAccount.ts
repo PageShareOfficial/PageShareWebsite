@@ -1,15 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { readRememberedAccount, type RememberedAccount } from '@/utils/auth/rememberedAccount';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  forgetRememberedAccount,
+  readRememberedAccount,
+  type RememberedAccount,
+} from '@/utils/auth/rememberedAccount';
+
+interface RememberedAccountState {
+  account: RememberedAccount | null;
+  /** Removes the hint from this browser (e.g. "Not you?") and hides it immediately. */
+  forgetAccount: () => void;
+}
 
 /** Reads the remembered account after mount (localStorage is unavailable during SSR). */
-export function useRememberedAccount(): RememberedAccount | null {
+export function useRememberedAccount(): RememberedAccountState {
   const [account, setAccount] = useState<RememberedAccount | null>(null);
 
   useEffect(() => {
     setAccount(readRememberedAccount());
   }, []);
 
-  return account;
+  const forgetAccount = useCallback(() => {
+    forgetRememberedAccount();
+    setAccount(null);
+  }, []);
+
+  return { account, forgetAccount };
 }

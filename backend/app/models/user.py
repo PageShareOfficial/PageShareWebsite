@@ -36,6 +36,8 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     last_active_at = Column(DateTime(timezone=True))
+    # NULL until the user completes onboarding; the only "needs onboarding" signal.
+    onboarded_at = Column(DateTime(timezone=True))
     deleted_at = Column(DateTime(timezone=True))
 
     __table_args__ = (

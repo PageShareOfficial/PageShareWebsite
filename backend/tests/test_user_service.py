@@ -8,7 +8,7 @@ from app.models.user import User
 from app.services.auth_service import CurrentUser
 from pydantic import ValidationError
 from app.schemas.user import DISPLAY_NAME_MAX_LENGTH, OnboardingRequest, UpdateUserRequest
-from app.services.user_service import get_or_create_user_for_auth
+from app.services.user_service import get_or_create_user_for_auth, is_onboarded
 
 def _current_user(**claims) -> CurrentUser:
     return CurrentUser(auth_user_id=str(uuid4()), claims=claims)
@@ -33,6 +33,7 @@ def test_creates_placeholder_user_needing_onboarding():
 
     assert user.username == f"user_{current.auth_user_id.replace('-', '')[:24]}"
     assert user.display_name == "Alice Doe"
+    assert is_onboarded(user) is False
     db.commit.assert_called_once()
 
 def test_falls_back_to_email_then_default_display_name():
