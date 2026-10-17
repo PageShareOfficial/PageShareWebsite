@@ -35,6 +35,8 @@ export const ROUTES = {
   disclaimer: '/disclaimer',
   comingSoon: '/coming-soon',
   admin: '/admin',
+  /** Shown when sign-in succeeded but the account profile could not be loaded. */
+  accountError: '/auth/account-error',
 } as const;
 
 /** Placeholder pages linked from the landing footer; the coming-soon page shows the name. */
