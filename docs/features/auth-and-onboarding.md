@@ -11,10 +11,10 @@ before using the app. Logged-out visitors can only see public pages and shared p
 
 - Google OAuth and email/password via Supabase (`frontend/contexts/AuthContext.tsx`).
   OAuth and email confirmation both land on `/auth/callback`.
-- `/auth/callback` waits for the session (the Supabase client exchanges the code), then
-  `resolvePostAuthPath` calls
-  `/users/me` and routes to `/onboarding` or `/home`. If `/users/me` fails it shows a retry view
-  instead of guessing.
+- `/auth/callback` is a server redirect. It exchanges the one-time code, calls `/users/me`,
+  and sends the browser straight to `/onboarding` or `/home`. Session tracking starts on that
+  next page, so it does not delay the redirect. If `/users/me` fails, the user lands on
+  `/auth/account-error` and can retry. The server never guesses.
 - Email sign-in/up forms call `resolvePostAuthPath` directly.
 
 ### The `users` row
@@ -69,7 +69,6 @@ Supabase `/auth/v1/user`. Routes use `get_current_user` / `get_optional_user` /
 | `UsernameStr` | `backend/app/schemas/user.py` | `^[a-z0-9_]{3,50}$` |
 | Onboarding form rules (username 3–20, age 18+, bio 10–200, ≥1 interest) | `frontend/app/onboarding/page.tsx` | Zod schema |
 | `INACTIVITY_MINUTES` | `backend/app/services/session_service.py` | 30 |
-| `SESSION_WAIT_MS` | `frontend/app/auth/callback/page.tsx` | 8000 |
 | `RESERVED_ROUTES`, `AUTH_PROTECTED_ROUTES` | `frontend/utils/core/routeConstants.ts` | sets |
 | `ROBOTS_DISALLOWED_PATHS`, `SITEMAP_PATHS` | `frontend/lib/seo/crawlPaths.ts` | lists |
 
@@ -85,7 +84,7 @@ Supabase `/auth/v1/user`. Routes use `get_current_user` / `get_optional_user` /
 
 **Frontend**
 - `contexts/AuthContext.tsx` — session, sign-in/out, `backendUser`
-- `app/auth/callback/page.tsx`, `utils/auth/postAuthRedirect.ts` — post-sign-in routing
+- `app/auth/callback/route.ts`, `app/auth/account-error/page.tsx`, `utils/auth/postAuthRedirect.ts` — post-sign-in routing
 - `components/auth/*` — sign-in/up forms
 - `app/onboarding/page.tsx` — onboarding form
 - `proxy.ts`, `lib/supabase/proxy.ts` — route protection
@@ -103,10 +102,9 @@ Supabase `/auth/v1/user`. Routes use `get_current_user` / `get_optional_user` /
   frontend route list knows them.
 - Username max length differs: frontend 20, backend 50. Age/bio/interest rules are
   frontend-only.
-- **Don't call `exchangeCodeForSession` in `/auth/callback`.** The browser Supabase client
-  (`detectSessionInUrl`) already exchanges `?code=` on load and consumes the one-time PKCE
-  verifier; a second exchange fails, which used to bounce users via `/?error=auth` → `/home` →
-  `/onboarding`. The callback just waits for the session.
+- **`/auth/callback` must stay a server route.** A client page would exchange the same one-time
+  code again (`detectSessionInUrl`) and fail. Email and password sign-in does not use this
+  route; those forms still call `resolvePostAuthPath` in the browser.
 - Account deletion: DB row is deleted before the Supabase auth user; if the second step fails,
   the next sign-in creates a fresh placeholder row.
 - `last_active_at` tracking only decodes HS256 tokens.
