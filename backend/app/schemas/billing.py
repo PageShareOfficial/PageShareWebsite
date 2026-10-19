@@ -53,6 +53,39 @@ class PortalSessionResponse(BaseModel):
     url: str
 
 
+class SalePhaseResponse(BaseModel):
+    """The live holiday phase. `ends_at` is exclusive."""
+
+    code: str
+    percent_off: int
+    name: str
+    offer: str
+    ends_at: datetime
+
+
+class SaleStripFaceResponse(BaseModel):
+    """One rotating side of the public sale strip."""
+
+    code: str
+    percent_off: int
+    name: str
+    offer: str
+    headline: str
+    starts_at: datetime
+    ends_at: datetime
+
+
+class ActiveSaleResponse(BaseModel):
+    phase: Optional[SalePhaseResponse] = None
+    faces: list[SaleStripFaceResponse] = Field(default_factory=list)
+
+
+class SaleEligibilityResponse(BaseModel):
+    """Whether this signed-in account can still receive a sale code."""
+
+    eligible: bool
+
+
 class CheckoutSessionBody(BaseModel):
     """Validated checkout payload with string URLs for Stripe SDK."""
 

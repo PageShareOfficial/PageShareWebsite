@@ -11,6 +11,7 @@ import FounderVideoSection from '@/components/landing/FounderVideoSection';
 import BottomCTA from '@/components/landing/BottomCTA';
 import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
 import CryptoTickerBar from '@/components/landing/CryptoTickerBar';
+import SaleStrip from '@/components/landing/SaleStrip';
 import type { TopCrypto } from '@/utils/api/topCryptosApi';
 import {
   AUTH_ERROR_CODES,
@@ -40,6 +41,7 @@ function HomeContent({ topCryptos }: LandingPageProps) {
       <div className="fixed inset-0 pointer-events-none z-0 bg-black" aria-hidden />
 
       <CryptoTickerBar cryptos={topCryptos} />
+      <SaleStrip />
 
       <header className="relative z-10 lg:hidden flex justify-center items-center py-6 sm:py-8 border-b border-white/10">
         <Link href={ROUTES.landing} className="block">
