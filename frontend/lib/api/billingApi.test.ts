@@ -2,8 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createCheckoutSession,
   createPortalSession,
+  getActiveSale,
   getBillingStatus,
+  getSaleStrip,
 } from './billingApi';
+import { getSaleEligibility } from './saleEligibility';
 
 vi.mock('./client', () => ({
   apiGet: vi.fn(),
@@ -17,6 +20,80 @@ const accessToken = 'test-token';
 describe('billingApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('getActiveSale maps the live phase and returns null when the season is off', async () => {
+    vi.mocked(apiGet).mockResolvedValueOnce({
+      phase: {
+        code: 'EARLYCOMERS15',
+        percent_off: 15,
+        name: 'Early Access',
+        offer: 'Black Friday starts early',
+        ends_at: '2026-11-27T00:00:00Z',
+      },
+    });
+    await expect(getActiveSale()).resolves.toEqual({
+      code: 'EARLYCOMERS15',
+      percentOff: 15,
+      name: 'Early Access',
+      offer: 'Black Friday starts early',
+      endsAt: '2026-11-27T00:00:00Z',
+    });
+    expect(apiGet).toHaveBeenCalledWith('/billing/sale');
+
+    vi.mocked(apiGet).mockResolvedValueOnce({ phase: null });
+    await expect(getActiveSale()).resolves.toBeNull();
+
+    vi.mocked(apiGet).mockRejectedValueOnce(
+      new Error('Unable to reach the server. Please try again later.')
+    );
+    await expect(getActiveSale()).resolves.toBeNull();
+  });
+
+  it('getSaleStrip maps both faces and returns none when the request fails', async () => {
+    vi.mocked(apiGet).mockResolvedValueOnce({
+      phase: null,
+      faces: [
+        {
+          code: 'EARLYCOMERS15',
+          percent_off: 15,
+          name: 'Early Access',
+          offer: 'Black Friday starts early',
+          headline: 'Early Access',
+          starts_at: '2026-11-12T00:00:00Z',
+          ends_at: '2026-11-27T00:00:00Z',
+        },
+      ],
+    });
+    await expect(getSaleStrip()).resolves.toEqual([
+      {
+        code: 'EARLYCOMERS15',
+        percentOff: 15,
+        name: 'Early Access',
+        offer: 'Black Friday starts early',
+        headline: 'Early Access',
+        startsAt: '2026-11-12T00:00:00Z',
+        endsAt: '2026-11-27T00:00:00Z',
+      },
+    ]);
+
+    vi.mocked(apiGet).mockResolvedValueOnce({ phase: null });
+    await expect(getSaleStrip()).resolves.toEqual([]);
+
+    vi.mocked(apiGet).mockRejectedValueOnce(new Error('Unable to reach the server'));
+    await expect(getSaleStrip()).resolves.toEqual([]);
+  });
+
+  it('getSaleEligibility reads the signed-in flag and hides the strip when the check fails', async () => {
+    vi.mocked(apiGet).mockResolvedValueOnce({ eligible: false });
+    await expect(getSaleEligibility(accessToken)).resolves.toBe(false);
+    expect(apiGet).toHaveBeenCalledWith('/billing/sale-eligibility', accessToken);
+
+    vi.mocked(apiGet).mockResolvedValueOnce({ eligible: true });
+    await expect(getSaleEligibility(accessToken)).resolves.toBe(true);
+
+    vi.mocked(apiGet).mockRejectedValueOnce(new Error('Unable to reach the server'));
+    await expect(getSaleEligibility(accessToken)).resolves.toBe(false);
   });
 
   it('getBillingStatus calls GET /billing/status', async () => {

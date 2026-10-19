@@ -3,7 +3,9 @@
 import { CircleAlert, LoaderCircle, X } from '@/constants/icons';
 import PlanCard from './PlanCard';
 import PlansFaq from './PlansFaq';
+import { useActiveSale } from '@/hooks/billing/useActiveSale';
 import { usePlanCheckout } from '@/hooks/billing/usePlanCheckout';
+import type { ActiveSale } from '@/lib/api/billingApi';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { resolvePlanCardUiState } from '@/utils/billing/resolvePlanCardUiState';
 import { PLANS, type BillingInterval, type PlanDefinition } from './planData';
@@ -11,6 +13,8 @@ import { PLANS, type BillingInterval, type PlanDefinition } from './planData';
 interface PlansPageContentProps {
   billingInterval?: BillingInterval;
   onBillingIntervalChange?: (interval: BillingInterval) => void;
+  /** False once this account has used a sale code or has canceled. */
+  saleEligible?: boolean;
 }
 
 function CheckoutErrorBanner({
@@ -39,6 +43,15 @@ function CheckoutErrorBanner({
   );
 }
 
+function showsSalePrice(
+  sale: ActiveSale | null,
+  saleEligible: boolean,
+  isCurrentBilling: boolean,
+  isCrossPlanLocked: boolean
+): boolean {
+  return sale !== null && saleEligible && !isCurrentBilling && !isCrossPlanLocked;
+}
+
 function PlansHero() {
   return (
     <header className="text-center mb-6">
@@ -61,6 +74,7 @@ function PlansHero() {
 
 export default function PlansPageContent({
   billingInterval = 'monthly',
+  saleEligible = false,
 }: PlansPageContentProps) {
   const { billingStatus } = useSubscription();
   const {
@@ -69,6 +83,7 @@ export default function PlansPageContent({
     clearCheckoutError,
     handleSelectPlan,
   } = usePlanCheckout();
+  const sale = useActiveSale();
 
   const onSelectPlan = (planId: PlanDefinition['id']) => {
     void handleSelectPlan(planId, billingInterval);
@@ -99,6 +114,13 @@ export default function PlansPageContent({
             billingInterval
           );
 
+          const showSale = showsSalePrice(
+            sale,
+            saleEligible,
+            cardState.isCurrentBilling,
+            cardState.isCrossPlanLocked
+          );
+
           return (
             <PlanCard
               key={plan.id}
@@ -109,6 +131,7 @@ export default function PlansPageContent({
               isCurrentBilling={cardState.isCurrentBilling}
               canSwitchInterval={cardState.canSwitchInterval}
               isCrossPlanLocked={cardState.isCrossPlanLocked}
+              sale={showSale ? sale : null}
               disabled={isCheckoutBusy}
               className="flex-1 min-w-0"
             />

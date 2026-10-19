@@ -1,12 +1,15 @@
 """Stripe Checkout, Portal, and webhook handling."""
 
 import logging
-from typing import Any, Optional
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Callable, Optional
 from uuid import UUID
 import stripe
 from sqlalchemy.orm import Session
 from app.config import Settings
 from app.schemas.billing import CheckoutSessionBody
+from app.services.holiday_sale import active_sale_phase, sale_promotion_codes
 from app.services.billing_constants import (
     CROSS_PLAN_SWITCH_MESSAGE,
     INTERVAL_MONTHLY,
@@ -126,16 +129,21 @@ def _checkout_session_has_tax_collection(session: Any) -> bool:
         and tax_id_collection.get("enabled") is True
     )
 
+def _session_sale_code(session: Any) -> str:
+    metadata = session.get("metadata") or {}
+    return str(metadata.get("sale_code") or "")
+
 def _find_open_checkout_session_url(
     settings: Settings,
     customer_id: str,
     plan_id: str,
     interval: str,
+    sale_code: str,
 ) -> Optional[str]:
     """Reuse an in-flight Checkout session so double-clicks are idempotent.
 
-    Skips older open sessions that lack tax / tax-ID collection so buyers get a
-    fresh Checkout after those settings are enabled in code.
+    Skips older open sessions that lack tax collection, and sessions from a
+    different sale phase, so the buyer is not sent through a stale price.
     """
     _configure_stripe(settings)
     sessions = stripe.checkout.Session.list(
@@ -148,6 +156,8 @@ def _find_open_checkout_session_url(
         if metadata.get("plan_id") != plan_id or metadata.get("interval") != interval:
             continue
         if not _checkout_session_has_tax_collection(session):
+            continue
+        if _session_sale_code(session) != sale_code:
             continue
         url = session.get("url")
         if url:
@@ -305,6 +315,207 @@ def cancel_user_stripe_subscription(
             exc,
         )
 
+@dataclass(frozen=True)
+class CheckoutSale:
+    """Active phase whose Stripe promotion code was found."""
+
+    code: str
+    promotion_code_id: str
+
+def _stripe_field(item: Any, name: str) -> Any:
+    if item is None:
+        return None
+    if isinstance(item, dict):
+        return item.get(name)
+    return getattr(item, name, None)
+
+def _promotion_id(item: Any) -> Optional[str]:
+    value = _stripe_field(item, "id")
+    return str(value) if value else None
+
+def lookup_active_promotion_code_id(settings: Settings, code: str) -> Optional[str]:
+    """Stripe id for an active promotion code, or None when it is not redeemable."""
+    _configure_stripe(settings)
+    try:
+        found = stripe.PromotionCode.list(code=code, active=True, limit=1)
+    except stripe.StripeError as exc:
+        logger.error("Promotion code lookup failed for %s: %s", code, exc)
+        return None
+    matches = list(getattr(found, "data", []) or [])
+    if not matches:
+        logger.warning("No active promotion code %s", code)
+        return None
+    return _promotion_id(matches[0])
+
+def _stripe_list(found: Any) -> list[Any]:
+    return list(getattr(found, "data", []) or [])
+
+def _promotion_code_text(value: Any) -> str:
+    if value is None or isinstance(value, str):
+        return ""
+    return str(_stripe_field(value, "code") or "").upper()
+
+def _item_discounts(item: Any) -> list[Any]:
+    many = list(_stripe_field(item, "discounts") or [])
+    single = _stripe_field(item, "discount")
+    if single is not None:
+        many.append(single)
+    return many
+
+def _has_sale_code(items: list[Any], codes: set[str]) -> bool:
+    for item in items:
+        for discount in _item_discounts(item):
+            code = _promotion_code_text(_stripe_field(discount, "promotion_code"))
+            if code in codes:
+                return True
+    return False
+
+_SALE_CODE_EXPAND = [
+    "data.discount.promotion_code",
+    "data.discounts.promotion_code",
+]
+
+def _load_customer_history(customer_id: str) -> tuple[list[Any], list[Any]]:
+    invoices = _stripe_list(
+        stripe.Invoice.list(customer=customer_id, limit=100, expand=_SALE_CODE_EXPAND)
+    )
+    subscriptions = _stripe_list(
+        stripe.Subscription.list(
+            customer=customer_id,
+            status="all",
+            limit=100,
+            expand=_SALE_CODE_EXPAND,
+        )
+    )
+    return invoices, subscriptions
+
+def _has_paid_invoice(invoices: list[Any]) -> bool:
+    return any(
+        int(_stripe_field(invoice, "amount_paid") or 0) > 0 for invoice in invoices
+    )
+
+def _has_live_subscription(subscriptions: list[Any]) -> bool:
+    live_statuses = {"active", "trialing", "past_due"}
+    return any(_stripe_field(sub, "status") in live_statuses for sub in subscriptions)
+
+def customer_can_redeem_sale(settings: Settings, customer_id: str) -> bool:
+    """One sale code per customer. A canceled customer does not get another."""
+    _configure_stripe(settings)
+    try:
+        invoices, subscriptions = _load_customer_history(customer_id)
+    except stripe.StripeError as exc:
+        logger.error("Sale eligibility check failed for %s: %s", customer_id, exc)
+        return False
+    codes = {code.upper() for code in sale_promotion_codes()}
+    if _has_sale_code(invoices, codes) or _has_sale_code(subscriptions, codes):
+        return False
+    canceled = _has_paid_invoice(invoices) and not _has_live_subscription(subscriptions)
+    return not canceled
+
+def sale_redeemable_for_user(db: Session, settings: Settings, user_id: UUID) -> bool:
+    """True when this account can still receive one sale code."""
+    row = get_entitlement(db, user_id)
+    customer_id = row.stripe_customer_id if row is not None else None
+    if not customer_id:
+        return True
+    return customer_can_redeem_sale(settings, customer_id)
+
+def resolve_checkout_sale(
+    settings: Settings,
+    customer_id: str,
+    now: Optional[datetime] = None,
+) -> Optional[CheckoutSale]:
+    """The sale to attach. None when the phase, the code, or the customer is ineligible."""
+    phase = active_sale_phase(now or datetime.now(timezone.utc))
+    if phase is None or not customer_can_redeem_sale(settings, customer_id):
+        return None
+    promotion_code_id = lookup_active_promotion_code_id(settings, phase.code)
+    if not promotion_code_id:
+        return None
+    return CheckoutSale(code=phase.code, promotion_code_id=promotion_code_id)
+
+def _checkout_metadata(user_id: UUID, body: CheckoutSessionBody, sale_code: str) -> dict:
+    metadata = {
+        "supabase_user_id": str(user_id),
+        "plan_id": body.plan_id,
+        "interval": body.interval,
+    }
+    if sale_code:
+        metadata["sale_code"] = sale_code
+    return metadata
+
+def _checkout_create_params(
+    user_id: UUID,
+    body: CheckoutSessionBody,
+    customer_id: str,
+    price_id: str,
+    sale: Optional[CheckoutSale],
+) -> dict:
+    sale_code = sale.code if sale else ""
+    metadata = _checkout_metadata(user_id, body, sale_code)
+    params: dict[str, Any] = {
+        "mode": "subscription",
+        "customer": customer_id,
+        "line_items": [{"price": price_id, "quantity": 1}],
+        "success_url": body.success_url,
+        "cancel_url": body.cancel_url,
+        "client_reference_id": str(user_id),
+        "billing_address_collection": "required",
+        "automatic_tax": {"enabled": True},
+        "tax_id_collection": {"enabled": True},
+        "customer_update": {"address": "auto", "name": "auto"},
+        "metadata": metadata,
+        "subscription_data": {"metadata": dict(metadata)},
+    }
+    if sale is not None:
+        params["discounts"] = [{"promotion_code": sale.promotion_code_id}]
+    return params
+
+def _is_promotion_rejection(exc: stripe.InvalidRequestError) -> bool:
+    text = str(exc).lower()
+    return "promotion" in text or "coupon" in text
+
+def _without_sale(params: dict) -> dict:
+    metadata = dict(params.get("metadata") or {})
+    metadata.pop("sale_code", None)
+    retried = {**params, "metadata": metadata}
+    retried.pop("discounts", None)
+    if "subscription_data" not in params:
+        return retried
+    subscription_data = dict(params.get("subscription_data") or {})
+    sub_metadata = dict(subscription_data.get("metadata") or {})
+    sub_metadata.pop("sale_code", None)
+    subscription_data["metadata"] = sub_metadata
+    retried["subscription_data"] = subscription_data
+    return retried
+
+def _call_with_sale_fallback(call: Callable[..., Any], params: dict) -> Any:
+    """Run a Stripe call. A rejected sale code is retried at the list price."""
+    try:
+        return call(**params)
+    except stripe.InvalidRequestError as exc:
+        if "discounts" not in params or not _is_promotion_rejection(exc):
+            raise
+        logger.warning("Sale promotion code rejected: %s", exc)
+        return call(**_without_sale(params))
+
+def _create_stripe_checkout(params: dict) -> Any:
+    """Create Checkout. A rejected sale code falls back to the list price."""
+    return _call_with_sale_fallback(stripe.checkout.Session.create, params)
+
+def _modify_subscription(subscription_id: str, params: dict) -> Any:
+    """Apply a plan change. A rejected sale code falls back to the list price."""
+    def modify(**modify_params: Any) -> Any:
+        return stripe.Subscription.modify(subscription_id, **modify_params)
+
+    try:
+        return _call_with_sale_fallback(modify, params)
+    except stripe.CardError as exc:
+        raise PaymentFailedError(
+            "Your card was declined for the plan change. "
+            "Update your payment method and try again."
+        ) from exc
+
 def create_checkout_session(
     db: Session,
     settings: Settings,
@@ -326,12 +537,15 @@ def create_checkout_session(
     _assert_plan_type_unchanged(row, body.plan_id)
 
     customer_id = get_or_create_stripe_customer(db, settings, user_id, email)
+    sale = resolve_checkout_sale(settings, customer_id)
+    sale_code = sale.code if sale else ""
 
     existing_url = _find_open_checkout_session_url(
         settings,
         customer_id,
         body.plan_id,
         body.interval,
+        sale_code,
     )
     if existing_url:
         return existing_url
@@ -339,39 +553,11 @@ def create_checkout_session(
     if not entitlement_matches_checkout(row, body.plan_id, body.interval):
         cancel_existing_subscription_for_checkout(db, settings, user_id)
 
-    # No Stripe idempotency key: double-click protection is handled by reusing
-    # the open Checkout session above, and a static key collides whenever the
-    # customer or URLs change (e.g. re-subscribe after cancel within 24h).
-    # Tax + optional B2B tax ID: Dashboard registrations/tax codes must be set;
-    # tax_id_collection stays optional so B2C buyers can skip it.
-    session = stripe.checkout.Session.create(
-        mode="subscription",
-        customer=customer_id,
-        line_items=[{"price": price_id, "quantity": 1}],
-        success_url=body.success_url,
-        cancel_url=body.cancel_url,
-        client_reference_id=str(user_id),
-        billing_address_collection="required",
-        automatic_tax={"enabled": True},
-        tax_id_collection={"enabled": True},
-        customer_update={
-            "address": "auto",
-            "name": "auto",
-        },
-        metadata={
-            "supabase_user_id": str(user_id),
-            "plan_id": body.plan_id,
-            "interval": body.interval,
-        },
-        subscription_data={
-            "metadata": {
-                "supabase_user_id": str(user_id),
-                "plan_id": body.plan_id,
-                "interval": body.interval,
-            }
-        },
+    # No Stripe idempotency key: double-click protection is the open-session
+    # reuse above, and a static key collides when the customer or URLs change.
+    session = _create_stripe_checkout(
+        _checkout_create_params(user_id, body, customer_id, price_id, sale)
     )
-
     url = session.get("url")
     if not url:
         raise RuntimeError("Stripe checkout session did not return a URL")
@@ -421,24 +607,21 @@ def switch_subscription_plan(
             "Active subscription has no billable item to switch."
         )
 
-    try:
-        updated = stripe.Subscription.modify(
-            subscription["id"],
-            items=[{"id": items[0]["id"], "price": new_price_id}],
-            proration_behavior="always_invoice",
-            payment_behavior="error_if_incomplete",
-            cancel_at_period_end=False,
-            metadata={
-                "supabase_user_id": str(user_id),
-                "plan_id": plan_id,
-                "interval": interval,
-            },
-        )
-    except stripe.CardError as exc:
-        raise PaymentFailedError(
-            "Your card was declined for the plan change. "
-            "Update your payment method and try again."
-        ) from exc
+    sale = resolve_checkout_sale(settings, row.stripe_customer_id)
+    modify_params: dict[str, Any] = {
+        "items": [{"id": items[0]["id"], "price": new_price_id}],
+        "proration_behavior": "always_invoice",
+        "payment_behavior": "error_if_incomplete",
+        "cancel_at_period_end": False,
+        "metadata": {
+            "supabase_user_id": str(user_id),
+            "plan_id": plan_id,
+            "interval": interval,
+        },
+    }
+    if sale is not None:
+        modify_params["discounts"] = [{"promotion_code": sale.promotion_code_id}]
+    updated = _modify_subscription(subscription["id"], modify_params)
 
     parsed = parse_subscription_record(updated)
     upsert_from_stripe_subscription(
