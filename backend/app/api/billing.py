@@ -1,5 +1,6 @@
 """Billing: subscription status, Stripe Checkout, Portal, webhooks."""
 
+from datetime import datetime, timezone
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -14,11 +15,15 @@ from app.config import Settings, get_settings
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.schemas.billing import (
+    ActiveSaleResponse,
     BillingStatusResponse,
     CheckoutSessionBody,
     CheckoutSessionResponse,
     CreateCheckoutSessionRequest,
     PortalSessionResponse,
+    SaleEligibilityResponse,
+    SalePhaseResponse,
+    SaleStripFaceResponse,
     SwitchPlanRequest,
 )
 from app.services.auth_service import CurrentUser
@@ -27,15 +32,57 @@ from app.services.billing_service import (
     construct_webhook_event,
     create_checkout_session,
     create_portal_session,
+    sale_redeemable_for_user,
     get_customer_credit_balance,
     process_webhook_event,
     reconcile_entitlement_with_stripe,
     switch_subscription_plan,
 )
+from app.services.holiday_sale import SalePhase, SaleStripFace, active_sale_phase, sale_strip_faces
 from app.services.subscription_service import get_billing_status
 from app.services.user_service import get_or_create_user_for_auth
 
 router = APIRouter(prefix="/billing", tags=["billing"])
+
+def _phase_response(phase: SalePhase | None) -> SalePhaseResponse | None:
+    if phase is None:
+        return None
+    return SalePhaseResponse(
+        code=phase.code,
+        percent_off=phase.percent_off,
+        name=phase.name,
+        offer=phase.offer,
+        ends_at=phase.ends_at,
+    )
+
+def _face_response(face: SaleStripFace) -> SaleStripFaceResponse:
+    return SaleStripFaceResponse(
+        code=face.code,
+        percent_off=face.percent_off,
+        name=face.name,
+        offer=face.offer,
+        headline=face.headline,
+        starts_at=face.starts_at,
+        ends_at=face.ends_at,
+    )
+
+@router.get("/sale", response_model=ActiveSaleResponse)
+def billing_sale() -> ActiveSaleResponse:
+    """Public. Checkout uses `phase`; the strip uses `faces`."""
+    now = datetime.now(timezone.utc)
+    faces = [_face_response(face) for face in sale_strip_faces(now)]
+    return ActiveSaleResponse(phase=_phase_response(active_sale_phase(now)), faces=faces)
+
+@router.get("/sale-eligibility", response_model=SaleEligibilityResponse)
+def billing_sale_eligibility(
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> SaleEligibilityResponse:
+    """Signed-in only. The in-app strip hides when this is false."""
+    user_id = UUID(current_user.auth_user_id)
+    eligible = sale_redeemable_for_user(db, settings, user_id)
+    return SaleEligibilityResponse(eligible=eligible)
 
 @router.get("/status", response_model=BillingStatusResponse)
 def billing_status(

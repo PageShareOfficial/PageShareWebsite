@@ -35,7 +35,9 @@ gate behind them yet.
 3. Premium user, same plan, different interval → `POST /billing/switch` (in-place, prorated
    immediately, no Stripe page).
 4. Otherwise → `POST /billing/checkout` → redirect to Stripe Checkout.
-   - Reuses an open session for the same plan/interval (double-click protection).
+   - Reuses an open session for the same plan/interval and the same sale code.
+   - During a holiday phase, the active promotion code is applied for a new
+     checkout. Plan switches do not get the code.
    - Cancels any other live subscriptions on the customer first.
 5. Stripe returns to `/home?checkout=success|canceled`; `CheckoutReturnBanner` refreshes status.
 
@@ -81,6 +83,7 @@ Premium when status is `active`/`trialing`, or `past_due` within the grace windo
 | `FREE_CONTENT_MAX_LENGTH` / `PREMIUM_CONTENT_MAX_LENGTH` | `backend/app/services/content_limit_service.py` **and** `frontend/constants/contentLimits.ts` | 280 / 10000 |
 | `CROSS_PLAN_SWITCH_MESSAGE` | `billing_constants.py` **and** `frontend/utils/billing/resolvePlanCardUiState.ts` | copy |
 | Display prices | `frontend/components/app/plans/planData.ts` | display only |
+| `SALE_PHASES` | `backend/app/services/holiday_sale.py` | phase dates, codes, percents |
 | Real prices | Stripe Price IDs (env) | — |
 
 > Values marked **and** are duplicated — change both.
@@ -88,6 +91,7 @@ Premium when status is `active`/`trialing`, or `past_due` within the grace windo
 ## Files involved
 
 **Backend**
+- `app/services/holiday_sale.py` — sale phase calendar
 - `app/services/billing_service.py` — Stripe customer, checkout, switch, portal, reconcile, webhook
 - `app/services/billing_constants.py` — plan ids, statuses, grace logic, price resolution
 - `app/services/subscription_service.py` — entitlement reads/upserts, `row_grants_premium`, batch plan map
@@ -109,6 +113,14 @@ Premium when status is `active`/`trialing`, or `past_due` within the grace windo
 ## Gotchas
 
 - The prices users pay come from the Stripe Price IDs, not `planData.ts`. Keep them in sync manually.
+- Each sale code is a Stripe coupon (percent, duration **once**) plus a promotion code with the
+  same string as `SALE_PHASES`. Once means one invoice: a monthly subscriber is discounted until
+  the next renewal, and a yearly subscriber is discounted for that year. Do not set first-time
+  order only, or a customer who already paid full price cannot use a code. Checkout and interval
+  switch attach the live code when that Stripe customer has never used one of the four codes and
+  still has a live subscription, or has never paid. A canceled customer is not offered another
+  code. After a code is used, the in-app strip hides and plan cards show the list price. The
+  public landing strip stays up. Create the codes in test mode, then again in live mode.
 - Own plan has two sources: `/users/me` (`subscription_plan_id`, fast bootstrap) and
   `/billing/status` (authoritative). The UI trusts the bootstrap until billing loads.
 - A failed `/billing/status` fetch silently shows the user as Free.

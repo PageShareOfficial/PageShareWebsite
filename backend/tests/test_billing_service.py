@@ -9,6 +9,7 @@ from app.models.user_entitlement import UserEntitlement
 from app.services.billing_service import (
     AlreadySubscribedError,
     BillingNotConfiguredError,
+    CheckoutSale,
     NoActiveSubscriptionError,
     PaymentFailedError,
     PlanTypeChangeNotAllowedError,
@@ -125,6 +126,7 @@ class TestCancelSubscription:
         mock_cancel_all.assert_called_once_with(settings, "cus_new")
         mock_mark_canceled.assert_not_called()
 
+    @patch("app.services.billing_service.resolve_checkout_sale", return_value=None)
     @patch("app.services.billing_service.stripe.checkout.Session.create")
     @patch("app.services.billing_service.cancel_existing_subscription_for_checkout")
     @patch("app.services.billing_service.stripe.checkout.Session.list")
@@ -137,6 +139,7 @@ class TestCancelSubscription:
         mock_session_list,
         mock_cancel_existing,
         mock_session_create,
+        _sale,
     ):
         from app.schemas.billing import CheckoutSessionBody
 
@@ -175,6 +178,7 @@ class TestCancelSubscription:
 
 
 class TestCreateCheckoutSession:
+    @patch("app.services.billing_service.resolve_checkout_sale", return_value=None)
     @patch("app.services.billing_service.stripe.checkout.Session.create")
     @patch("app.services.billing_service.stripe.checkout.Session.list")
     @patch("app.services.billing_service.get_or_create_stripe_customer")
@@ -185,6 +189,7 @@ class TestCreateCheckoutSession:
         mock_get_customer,
         mock_session_list,
         mock_session_create,
+        _sale,
     ):
         from app.schemas.billing import CheckoutSessionBody
 
@@ -218,6 +223,7 @@ class TestCreateCheckoutSession:
         assert url == "https://checkout.stripe.test/open"
         mock_session_create.assert_not_called()
 
+    @patch("app.services.billing_service.resolve_checkout_sale", return_value=None)
     @patch("app.services.billing_service.stripe.checkout.Session.create")
     @patch("app.services.billing_service.stripe.checkout.Session.list")
     @patch("app.services.billing_service.get_or_create_stripe_customer")
@@ -228,6 +234,7 @@ class TestCreateCheckoutSession:
         mock_get_customer,
         mock_session_list,
         mock_session_create,
+        _sale,
     ):
         from app.schemas.billing import CheckoutSessionBody
 
@@ -263,6 +270,7 @@ class TestCreateCheckoutSession:
         assert url == "https://checkout.stripe.test/fresh"
         mock_session_create.assert_called_once()
 
+    @patch("app.services.billing_service.resolve_checkout_sale", return_value=None)
     @patch("app.services.billing_service.stripe.checkout.Session.create")
     @patch("app.services.billing_service.stripe.checkout.Session.list")
     @patch("app.services.billing_service.get_or_create_stripe_customer")
@@ -273,6 +281,7 @@ class TestCreateCheckoutSession:
         mock_get_customer,
         mock_session_list,
         mock_session_create,
+        _sale,
     ):
         from app.schemas.billing import CheckoutSessionBody
 
@@ -412,6 +421,7 @@ class TestSwitchSubscriptionPlan:
             "items": {"data": [{"id": "si_1", "price": {"recurring": {"interval": "month"}}}]},
         }
 
+    @patch("app.services.billing_service.resolve_checkout_sale", return_value=None)
     @patch("app.services.billing_service.upsert_from_stripe_subscription")
     @patch("app.services.billing_service.stripe.Subscription.modify")
     @patch("app.services.billing_service.stripe.Subscription.list")
@@ -422,6 +432,7 @@ class TestSwitchSubscriptionPlan:
         mock_subscription_list,
         mock_modify,
         mock_upsert,
+        _mock_sale,
     ):
         user_id = UUID("11111111-1111-1111-1111-111111111111")
         mock_get_entitlement.return_value = self._active_investor_monthly_row(user_id)
@@ -498,6 +509,7 @@ class TestSwitchSubscriptionPlan:
                 interval="yearly",
             )
 
+    @patch("app.services.billing_service.resolve_checkout_sale", return_value=None)
     @patch("app.services.billing_service.stripe.Subscription.modify")
     @patch("app.services.billing_service.stripe.Subscription.list")
     @patch("app.services.billing_service.get_entitlement")
@@ -506,6 +518,7 @@ class TestSwitchSubscriptionPlan:
         mock_get_entitlement,
         mock_subscription_list,
         mock_modify,
+        _mock_sale,
     ):
         user_id = UUID("11111111-1111-1111-1111-111111111111")
         mock_get_entitlement.return_value = self._active_investor_monthly_row(user_id)
@@ -524,6 +537,73 @@ class TestSwitchSubscriptionPlan:
                 plan_id="investor",
                 interval="yearly",
             )
+
+    @patch("app.services.billing_service.upsert_from_stripe_subscription")
+    @patch("app.services.billing_service.stripe.Subscription.modify")
+    @patch("app.services.billing_service.stripe.Subscription.list")
+    @patch("app.services.billing_service.get_entitlement")
+    @patch("app.services.billing_service.resolve_checkout_sale")
+    def test_rejected_promotion_code_falls_back_to_list_price(
+        self,
+        mock_sale,
+        mock_get_entitlement,
+        mock_subscription_list,
+        mock_modify,
+        _mock_upsert,
+    ):
+        user_id = UUID("11111111-1111-1111-1111-111111111111")
+        mock_get_entitlement.return_value = self._active_investor_monthly_row(user_id)
+        mock_subscription_list.return_value = MagicMock(
+            data=[self._live_subscription(user_id)]
+        )
+        mock_sale.return_value = CheckoutSale("BLACKFRIDAY30", "promo_bf")
+        mock_modify.side_effect = [
+            stripe.InvalidRequestError(
+                "This promotion code cannot be redeemed", "discounts"
+            ),
+            self._live_subscription(user_id),
+        ]
+
+        switch_subscription_plan(
+            MagicMock(),
+            _settings_with_prices(),
+            user_id=user_id,
+            plan_id="investor",
+            interval="yearly",
+        )
+
+        assert mock_modify.call_count == 2
+        assert "discounts" not in mock_modify.call_args_list[1].kwargs
+
+    @patch("app.services.billing_service.stripe.Subscription.modify")
+    @patch("app.services.billing_service.stripe.Subscription.list")
+    @patch("app.services.billing_service.get_entitlement")
+    @patch("app.services.billing_service.resolve_checkout_sale")
+    def test_unrelated_stripe_error_is_not_retried_without_the_sale(
+        self,
+        mock_sale,
+        mock_get_entitlement,
+        mock_subscription_list,
+        mock_modify,
+    ):
+        user_id = UUID("11111111-1111-1111-1111-111111111111")
+        mock_get_entitlement.return_value = self._active_investor_monthly_row(user_id)
+        mock_subscription_list.return_value = MagicMock(
+            data=[self._live_subscription(user_id)]
+        )
+        mock_sale.return_value = CheckoutSale("BLACKFRIDAY30", "promo_bf")
+        mock_modify.side_effect = stripe.InvalidRequestError("No such price", "price")
+
+        with pytest.raises(stripe.InvalidRequestError):
+            switch_subscription_plan(
+                MagicMock(),
+                _settings_with_prices(),
+                user_id=user_id,
+                plan_id="investor",
+                interval="yearly",
+            )
+
+        mock_modify.assert_called_once()
 
 
 class TestReconcileEntitlementWithStripe:

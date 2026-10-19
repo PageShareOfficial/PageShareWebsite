@@ -6,12 +6,20 @@ import { X } from '@/constants/icons';
 import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 import BillingIntervalToggle from '@/components/app/plans/BillingIntervalToggle';
 import PlansPageContent from '@/components/app/plans/PlansPageContent';
+import SaleStrip from '@/components/landing/SaleStrip';
+import { prefetchSale } from '@/hooks/billing/useActiveSale';
+import { useSaleRedeemable } from '@/hooks/billing/useSaleRedeemable';
 import type { BillingInterval } from '@/components/app/plans/planData';
 
 export default function PremiumOverlay() {
   const { isOpen, closePremium } = usePremiumOverlay();
+  const saleEligible = useSaleRedeemable(isOpen);
   const [mounted, setMounted] = useState(false);
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
+
+  useEffect(() => {
+    void prefetchSale();
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -43,6 +51,7 @@ export default function PremiumOverlay() {
       aria-modal="true"
       aria-label="Premium plans"
     >
+      {saleEligible ? <SaleStrip immediate /> : null}
       <header className="sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 bg-black/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-1 min-w-0">
           <button
@@ -69,6 +78,7 @@ export default function PremiumOverlay() {
         <PlansPageContent
           billingInterval={billingInterval}
           onBillingIntervalChange={setBillingInterval}
+          saleEligible={saleEligible === true}
         />
       </div>
     </div>,

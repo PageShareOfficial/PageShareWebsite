@@ -1,8 +1,14 @@
 'use client';
 
 import { ArrowRight, Check, LoaderCircle } from '@/constants/icons';
+import { saleDisplayAmount } from '@/utils/billing/salePrice';
 import PlanTickRibbon from './PlanTickRibbon';
 import type { BillingInterval, PlanDefinition } from './planData';
+
+export interface PlanSale {
+  code: string;
+  percentOff: number;
+}
 
 interface PlanCardProps {
   plan: PlanDefinition;
@@ -15,6 +21,8 @@ interface PlanCardProps {
   canSwitchInterval?: boolean;
   /** Other plan type while subscribed — block Analyst ↔ Investor. */
   isCrossPlanLocked?: boolean;
+  /** Live sale for a new checkout. Omitted on switch and manage, which skip the code. */
+  sale?: PlanSale | null;
   disabled?: boolean;
   className?: string;
 }
@@ -45,7 +53,11 @@ const THEME_STYLES = {
 type PlanThemeStyles = (typeof THEME_STYLES)[keyof typeof THEME_STYLES];
 
 function formatPrice(amount: number): string {
-  return amount.toLocaleString('en-US');
+  const hasCents = Math.round(amount * 100) % 100 !== 0;
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
 }
 
 function getDisplayPrice(plan: PlanDefinition, interval: BillingInterval): number {
@@ -98,21 +110,36 @@ function PlanCardHeader({
 
 function PlanCardPricing({
   displayAmount,
+  listAmount,
+  saleCode,
   discount,
   styles,
 }: {
   displayAmount: number;
+  listAmount: number;
+  saleCode: string | null;
   discount: number;
   styles: PlanThemeStyles;
 }) {
   const priceClass = 'text-3xl sm:text-4xl font-black tracking-tight';
+  const onSale = saleCode !== null && listAmount !== displayAmount;
 
   return (
     <div className="text-center mb-4">
+      {onSale ? (
+        <p className="text-sm text-gray-500 line-through">${formatPrice(listAmount)}/month</p>
+      ) : null}
       <div className="flex items-baseline justify-center gap-2 flex-wrap">
         <span className={`${priceClass} text-white`}>${formatPrice(displayAmount)}</span>
         <span className={`${priceClass} text-gray-400`}>/month</span>
       </div>
+      {onSale ? (
+        <p
+          className={`mt-2 inline-block text-[11px] font-bold tracking-wide uppercase px-3 py-1 rounded-full border ${styles.savings}`}
+        >
+          {saleCode}
+        </p>
+      ) : null}
       {discount > 0 ? (
         <p
           className={`mt-2 inline-block text-[11px] font-bold tracking-wide uppercase px-3 py-1 rounded-full border ${styles.savings}`}
@@ -189,11 +216,13 @@ export default function PlanCard({
   isCurrentBilling = false,
   canSwitchInterval = false,
   isCrossPlanLocked = false,
+  sale = null,
   disabled = false,
   className = '',
 }: PlanCardProps) {
   const styles = THEME_STYLES[plan.theme];
-  const displayAmount = getDisplayPrice(plan, interval);
+  const listAmount = getDisplayPrice(plan, interval);
+  const displayAmount = sale ? saleDisplayAmount(listAmount, sale.percentOff) : listAmount;
   const discount = plan.pricing.yearly.discount;
   const buttonLabel = resolveButtonLabel({
     isCurrentBilling,
@@ -212,6 +241,8 @@ export default function PlanCard({
       <PlanCardHeader plan={plan} styles={styles} isCurrentBilling={isCurrentBilling} />
       <PlanCardPricing
         displayAmount={displayAmount}
+        listAmount={listAmount}
+        saleCode={sale?.code ?? null}
         discount={discount}
         styles={styles}
       />
