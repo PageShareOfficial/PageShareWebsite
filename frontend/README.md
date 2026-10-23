@@ -14,7 +14,7 @@ PageShare is built with Next.js and TypeScript, providing a comprehensive social
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) (CSS-first config in `app/globals.css`)
 - **Forms**: [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/) validation
 - **Icons**: [Lucide React](https://lucide.dev/) & [React Icons](https://react-icons.github.io/react-icons/)
-- **Runtime**: Node.js 24.x
+- **Runtime**: Node.js 24.22.1 or later (24.x)
 
 ## Prerequisites
 
