@@ -15,7 +15,7 @@ import { calculateUserStats, ProfileUser } from '@/utils/user/profileUtils';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
 const Feed = dynamic(() => import('@/components/app/feed/Feed'), { ssr: false, loading: () => <Loading /> });
-const TweetComposer = dynamic(() => import('@/components/app/composer/TweetComposer'), { ssr: false });
+const PostComposer = dynamic(() => import('@/components/app/composer/PostComposer'), { ssr: false });
 const EditProfileModal = dynamic(() => import('@/components/app/modals/EditProfileModal'), { ssr: false });
 const ReportModal = dynamic(() => import('@/components/app/modals/ReportModal'), { ssr: false });
 import { useContentFilters } from '@/hooks/features/useContentFilters';
@@ -619,7 +619,7 @@ export default function ProfilePage() {
         />
       )}
       {isQuoteRepostOpen && quoteRepostPostId && (
-        <TweetComposer
+        <PostComposer
           currentUser={currentUser}
           onSubmit={handleQuoteRepostSubmit}
           onClose={() => {

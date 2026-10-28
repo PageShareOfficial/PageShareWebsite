@@ -13,7 +13,7 @@ import PollComponent from '@/components/app/post/PollComponent';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import AuthorBadges from '@/components/app/common/AuthorBadges';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
 import DeletedQuotedPost from '@/components/app/post/DeletedQuotedPost';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
@@ -112,7 +112,7 @@ export default function ReplyCard({
               />
 
                 {/* Original Post Content */}
-                {isTweet(originalPost) && (
+                {isPost(originalPost) && (
                   <div className="mt-2">
                 {isQuote && quotedPost ? (
                   <>
@@ -137,7 +137,7 @@ export default function ReplyCard({
                         />
                         <span className="text-xs text-gray-500">· {quotedPost.createdAt}</span>
                       </div>
-                      {isTweet(quotedPost) && (
+                      {isPost(quotedPost) && (
                         <>
                           <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                             {highlightContentTags(quotedPost.content)}
@@ -230,7 +230,7 @@ export default function ReplyCard({
             )}
 
                 {/* Original Post Engagement Stats */}
-                {isTweet(originalPost) && (
+                {isPost(originalPost) && (
                   <PostActions
                     post={originalPost}
                     originalPost={quotedPost}

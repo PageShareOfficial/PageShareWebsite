@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Post } from '@/types';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 import { removeDeletedPost } from '@/utils/content/quotedPostUtils';
 import { createNormalRepost, createQuoteRepost, incrementRepostCount } from '@/utils/content/repostHelpers';
 import { User } from '@/types';
@@ -34,7 +34,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
   const hasUserReposted = (postId: string): boolean => {
     return posts.some(
       (post) => {
-        if (!isTweet(post)) return false;
+        if (!isPost(post)) return false;
         if (post.repostType !== 'normal') return false;
         if (!post.originalPostId) return false;
         if (post.originalPostId !== postId) return false;
@@ -47,7 +47,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
   const findUserRepost = (postId: string) => {
     return posts.find(
       (post) =>
-        isTweet(post) &&
+        isPost(post) &&
         post.repostType === 'normal' &&
         post.originalPostId === postId &&
         post.author.handle === currentUser.handle
@@ -198,7 +198,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
 
     if (type === 'normal') {
       const postToRepost =
-        isTweet(originalPost) && originalPost.repostType === 'quote' ? originalPost : originalPost;
+        isPost(originalPost) && originalPost.repostType === 'quote' ? originalPost : originalPost;
       const repost = createNormalRepost({
         originalPost: postToRepost,
         currentUser: {
@@ -320,7 +320,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
     );
   };
 
-  const handleNewTweet = async (
+  const handleNewPost = async (
     text: string,
     mediaFiles?: File[],
     gifUrl?: string,
@@ -527,7 +527,7 @@ export function usePostHandlers({ posts, setPosts, currentUser, onDeleteRedirect
     handleComment,
     handleDelete,
     handleVote,
-    handleNewTweet,
+    handleNewPost,
     handleQuoteRepostSubmit,
     hasUserReposted,
     isQuoteRepostOpen,

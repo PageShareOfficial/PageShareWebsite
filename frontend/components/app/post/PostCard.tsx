@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types';
 import { useState, useEffect } from 'react';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 import { isQuotePost, resolveRepostedPost } from '@/utils/content/quotedPostUtils';
 import { highlightContentTags } from '@/utils/core/textFormatting';
 import { navigateToPost, navigateToProfile } from '@/utils/core/navigationUtils';
@@ -66,7 +66,7 @@ export default function PostCard({
   
   // For normal reposts, check if original post is liked
   const getInitialLikedState = () => {
-    if (isTweet(post) && post.repostType === 'normal' && originalPost) {
+    if (isPost(post) && post.repostType === 'normal' && originalPost) {
       return originalPost.userInteractions.liked;
     }
     return post.userInteractions.liked;
@@ -78,7 +78,7 @@ export default function PostCard({
   
   // Sync like state when post prop changes (e.g., after liking on homepage)
   useEffect(() => {
-    if (isTweet(post) && post.repostType === 'normal' && originalPost) {
+    if (isPost(post) && post.repostType === 'normal' && originalPost) {
       setIsLiked(originalPost.userInteractions.liked);
     } else {
       setIsLiked(post.userInteractions.liked);
@@ -89,7 +89,7 @@ export default function PostCard({
   // Check if current user has reposted this post (for button color persistence)
   // Use API reposted flag first (survives refresh); fallback to hasUserReposted (wrapper in list) or "this card is my repost"
   const getPostIdToCheck = () => {
-    if (isTweet(post) && post.repostType === 'normal' && post.originalPostId) {
+    if (isPost(post) && post.repostType === 'normal' && post.originalPostId) {
       return post.originalPostId;
     }
     return post.id;
@@ -101,7 +101,7 @@ export default function PostCard({
     (hasUserReposted ? hasUserReposted(postIdToCheck) : false) ||
     Boolean(
       currentUserHandle &&
-        isTweet(post) &&
+        isPost(post) &&
         post.repostType === 'normal' &&
         post.author.handle === currentUserHandle
     );
@@ -109,7 +109,7 @@ export default function PostCard({
   const handleLike = () => {
     setIsLiked(!isLiked);
     // For normal reposts, like the original post, not the repost entry
-    const postIdToLike = (isTweet(post) && post.repostType === 'normal' && originalPost)
+    const postIdToLike = (isPost(post) && post.repostType === 'normal' && originalPost)
       ? originalPost.id
       : post.id;
     onLike(postIdToLike);
@@ -119,7 +119,7 @@ export default function PostCard({
     // For quote reposts, repost the quote repost itself (not the original it quotes)
     // For normal reposts, repost the original post
     // For regular posts, repost the post itself
-    const postIdToRepost = (isTweet(post) && post.repostType === 'normal' && post.originalPostId)
+    const postIdToRepost = (isPost(post) && post.repostType === 'normal' && post.originalPostId)
       ? post.originalPostId  // Normal repost: repost the original
       : post.id;  // Quote repost or regular post: repost itself
     onRepost(postIdToRepost, 'normal');
@@ -129,7 +129,7 @@ export default function PostCard({
     // For quote reposts, quote repost the quote repost itself (not the original it quotes)
     // For normal reposts, quote repost the original post
     // For regular posts, quote repost the post itself
-    const postIdToRepost = (isTweet(post) && post.repostType === 'normal' && post.originalPostId)
+    const postIdToRepost = (isPost(post) && post.repostType === 'normal' && post.originalPostId)
       ? post.originalPostId  // Normal repost: quote repost the original
       : post.id;  // Quote repost or regular post: quote repost itself
     onRepost(postIdToRepost, 'quote');
@@ -160,13 +160,13 @@ export default function PostCard({
   const handleCommentClick = () => {
     // For normal reposts, navigate to original post's comment page
     const targetPost =
-      isTweet(post) && post.repostType === 'normal' && originalPost ? originalPost : post;
+      isPost(post) && post.repostType === 'normal' && originalPost ? originalPost : post;
     navigateToPost(targetPost.author.handle, targetPost.id, router);
   };
 
   // Render content based on post type
   const renderContent = () => {
-    if (isTweet(post)) {
+    if (isPost(post)) {
       return (
         <>
           {isQuotePost(post) ? (
@@ -192,7 +192,7 @@ export default function PostCard({
                   />
                 </div>
               )}
-              {/* Original Tweet Card (when we have the original in allPosts) */}
+              {/* Original post card (when we have the original in allPosts) */}
               {originalPost ? (
                 <div 
                   className="mb-3 p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
@@ -226,7 +226,7 @@ export default function PostCard({
                       }}
                     />
                   </div>
-                  {originalPost && isTweet(originalPost) && (
+                  {originalPost && isPost(originalPost) && (
                     <>
                       <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                         {highlightContentTags(originalPost.content)}
@@ -262,8 +262,8 @@ export default function PostCard({
             </>
           ) : (
             <>
-              {/* Normal Tweet or Normal Repost Content */}
-              {post.repostType === 'normal' && originalPost && isTweet(originalPost) ? (
+              {/* Normal post or normal repost content */}
+              {post.repostType === 'normal' && originalPost && isPost(originalPost) ? (
                 // Normal repost - show original post content
                 <>
                   <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
@@ -296,7 +296,7 @@ export default function PostCard({
                   )}
                 </>
               ) : (
-                // Normal tweet - show regular content
+                // Normal post - show regular content
                 <>
                   <p className="text-white text-[15px] leading-relaxed mb-3 whitespace-pre-wrap wrap-break-word">
                     {highlightContentTags(post.content)}
@@ -363,7 +363,7 @@ export default function PostCard({
             className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
-              const authorHandle = (isTweet(post) && post.repostType === 'normal' && originalPost) 
+              const authorHandle = (isPost(post) && post.repostType === 'normal' && originalPost) 
                 ? originalPost.author.handle 
                 : post.author.handle;
               handleProfileClick(e, authorHandle);

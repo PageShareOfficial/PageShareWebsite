@@ -129,7 +129,7 @@ backend/
 │   ├── models/                    # SQLAlchemy ORM Models
 │   │   ├── __init__.py
 │   │   ├── user.py                # User model
-│   │   ├── post.py                # Post/Tweet model
+│   │   ├── post.py                # Post model
 │   │   ├── comment.py             # Comment model
 │   │   ├── ticker.py              # Ticker model
 │   │   ├── post_ticker.py         # Post-Ticker junction
