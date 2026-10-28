@@ -1,5 +1,5 @@
 import type { Post } from '@/types';
-import { isTweet } from './postUtils';
+import { isPost } from './postUtils';
 
 /**
  * Quote posts are their own posts that embed another one. The API may send only
@@ -7,7 +7,7 @@ import { isTweet } from './postUtils';
  * When the quoted original is hard-deleted the id is cleared, so `repostType` alone counts too.
  */
 export function isQuotePost(post: Post): boolean {
-  if (!isTweet(post)) return false;
+  if (!isPost(post)) return false;
   if (post.repostType === 'quote') return true;
   return Boolean(post.originalPostId) && post.repostType !== 'normal';
 }
@@ -18,7 +18,7 @@ export function isQuotePost(post: Post): boolean {
  * omits it when the original was deleted).
  */
 export function resolveRepostedPost(post: Post, allPosts: Post[] = []): Post | undefined {
-  if (!isTweet(post) || !post.repostType || !post.originalPostId) return undefined;
+  if (!isPost(post) || !post.repostType || !post.originalPostId) return undefined;
   if (post.quotedPost) return post.quotedPost;
   return allPosts.find((candidate) => candidate.id === post.originalPostId);
 }
@@ -33,9 +33,9 @@ export function removeDeletedPost(posts: Post[], deletedPostId: string): Post[] 
 
   return posts
     .filter((post) => post.id !== deletedPostId)
-    .filter((post) => !(isTweet(post) && post.repostType === 'normal' && post.originalPostId === deletedPostId))
+    .filter((post) => !(isPost(post) && post.repostType === 'normal' && post.originalPostId === deletedPostId))
     .map((post) => {
-      if (!isTweet(post) || post.originalPostId !== deletedPostId || !post.quotedPost) return post;
+      if (!isPost(post) || post.originalPostId !== deletedPostId || !post.quotedPost) return post;
       const { quotedPost: _removed, ...withoutQuotedPost } = post;
       return withoutQuotedPost;
     });

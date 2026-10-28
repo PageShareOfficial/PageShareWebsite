@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Pencil, RefreshCw } from '@/constants/icons';
 import PostCard from '../post/PostCard';
-import TweetComposer from '../composer/TweetComposer';
+import PostComposer from '../composer/PostComposer';
 import { Post } from '@/types';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import LoadingState from '../common/LoadingState';
 import ErrorState from '../common/ErrorState';
@@ -19,7 +19,7 @@ interface FeedProps {
   onDelete?: (postId: string) => void;
   hasUserReposted?: (postId: string) => boolean;
   currentUserHandle?: string;
-  onNewTweet?: (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => void;
+  onNewPost?: (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => void;
   allPosts?: Post[]; // All posts for looking up original posts in quote reposts
   showAllReposts?: boolean; // If true, show all reposts including normal reposts by current user (for profile pages)
   onReportClick?: (contentType: 'post' | 'comment', contentId: string, userHandle: string, userDisplayName: string, postId?: string) => void;
@@ -42,7 +42,7 @@ export default function Feed({
   onDelete,
   hasUserReposted,
   currentUserHandle,
-  onNewTweet,
+  onNewPost,
   allPosts,
   showAllReposts = false,
   onReportClick,
@@ -57,9 +57,9 @@ export default function Feed({
   const [isComposerModalOpen, setIsComposerModalOpen] = useState(false);
   const { currentUser } = useCurrentUser();
 
-  const handleTweetSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
-    if (onNewTweet) {
-      onNewTweet(text, media, gifUrl, poll);
+  const handlePostSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
+    if (onNewPost) {
+      onNewPost(text, media, gifUrl, poll);
       // Close modal if open
       setIsComposerModalOpen(false);
     }
@@ -67,8 +67,8 @@ export default function Feed({
 
   return (
     <main className="w-full bg-black">
-      {/* Tweet Composer - Desktop & Tablet Only - Only show if onNewTweet is provided */}
-      {onNewTweet && (
+      {/* Post composer - desktop & tablet only - only show if onNewPost is provided */}
+      {onNewPost && (
         <div className="hidden md:block">
           {postError && onClearPostError && (
             <div className="mb-3 flex items-center justify-between rounded-lg bg-red-500/10 px-4 py-2 text-red-400 text-sm">
@@ -76,16 +76,16 @@ export default function Feed({
               <button onClick={onClearPostError} className="text-red-400 hover:text-red-300" aria-label="Dismiss">×</button>
             </div>
           )}
-          <TweetComposer
+          <PostComposer
             currentUser={currentUser}
-            onSubmit={handleTweetSubmit}
+            onSubmit={handlePostSubmit}
             isPosting={isPosting}
           />
         </div>
       )}
 
-      {/* Floating Post Button - Mobile Only - Only show if onNewTweet is provided */}
-      {onNewTweet && (
+      {/* Floating Post Button - Mobile Only - Only show if onNewPost is provided */}
+      {onNewPost && (
         <button
           onClick={() => setIsComposerModalOpen(true)}
           className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 bg-white text-black rounded-full shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
@@ -95,11 +95,11 @@ export default function Feed({
         </button>
       )}
 
-      {/* Tweet Composer Modal - Mobile */}
-      {onNewTweet && isComposerModalOpen && (
-        <TweetComposer
+      {/* Post composer modal - mobile */}
+      {onNewPost && isComposerModalOpen && (
+        <PostComposer
           currentUser={currentUser}
-          onSubmit={handleTweetSubmit}
+          onSubmit={handlePostSubmit}
           onClose={() => setIsComposerModalOpen(false)}
           isModal={true}
           isPosting={isPosting}
@@ -143,7 +143,7 @@ export default function Feed({
               const originalPost = posts.find((p) => p.id === post.originalPostId);
               
               // Hide self-reposts from your feed (only for normal reposts)
-              // Quote reposts are new tweets, so show them even if they're your own post
+              // Quote reposts are new posts, so show them even if they're your own post
               if (post.repostType === 'normal' && originalPost && originalPost.author.handle === currentUserHandle) {
                 return false; // Don't show self normal reposts
               }
@@ -164,10 +164,10 @@ export default function Feed({
                 return true;
               }
               
-              // Quote reposts are treated as new tweets, so show them from all users
+              // Quote reposts are treated as new posts, so show them from all users
               // (They're not filtered like normal reposts)
               if (post.repostType === 'quote') {
-                return true; // Show all quote reposts (they're new tweets)
+                return true; // Show all quote reposts (they're new posts)
               }
               
               return false;
@@ -179,7 +179,7 @@ export default function Feed({
             if (hasUserReposted && hasUserReposted(post.id)) {
               // Check if user has a quote repost of this post (quote reposts should show both)
               const hasQuoteRepost = posts.some((p) => {
-                if (!isTweet(p)) return false;
+                if (!isPost(p)) return false;
                 if (p.repostType !== 'quote') return false;
                 if (!p.originalPostId) return false;
                 if (p.originalPostId !== post.id) return false;
@@ -215,7 +215,7 @@ export default function Feed({
             if (!post.repostType && currentUserHandle) {
               // Find all normal reposts of this post
               const allReposts = posts.filter((p) => {
-                if (!isTweet(p)) return false;
+                if (!isPost(p)) return false;
                 if (p.repostType !== 'normal') return false;
                 if (!p.originalPostId) return false;
                 if (p.originalPostId !== post.id) return false;

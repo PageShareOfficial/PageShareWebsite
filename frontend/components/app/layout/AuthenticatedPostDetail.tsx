@@ -10,7 +10,7 @@ const ReportModal = dynamic(
 import PostCard from '@/components/app/post/PostCard';
 import PostMedia from '@/components/app/post/PostMedia';
 import PollComponent from '@/components/app/post/PollComponent';
-import TweetComposer from '@/components/app/composer/TweetComposer';
+import PostComposer from '@/components/app/composer/PostComposer';
 import CommentComposer from '@/components/app/composer/CommentComposer';
 import ImageViewerModal from '@/components/app/modals/ImageViewerModal';
 import ContentMenu from '@/components/app/common/ContentMenu';
@@ -166,7 +166,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
               </div>
 
               <CommentComposer
-                postId={postId}
                 currentUser={currentUser}
                 onSubmit={async (text, mediaFiles, gifUrl, poll, previewUrls) => {
                   await handleAddComment(text, mediaFiles, gifUrl, poll, previewUrls);
@@ -350,7 +349,7 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
       </div>
 
       {isQuoteRepostOpen && quoteRepostPostId && (
-        <TweetComposer
+        <PostComposer
           currentUser={currentUser}
           onSubmit={(text) => handleQuoteRepostSubmit(text)}
           onClose={() => {

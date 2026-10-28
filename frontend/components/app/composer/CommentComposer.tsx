@@ -1,46 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import {
-  HiOutlinePhotograph,
-  HiOutlineEmojiHappy,
-  X,
-  RiFileGifLine,
-  RiBarChartLine,
-} from '@/constants/icons';
-import dynamic from 'next/dynamic';
-import { GiphyFetch } from '@giphy/js-fetch-api';
-import { Grid } from '@giphy/react-components';
-import { Post, Comment, User } from '@/types';
-import { useMediaUpload, MEDIA_LIMITS_HINT } from '@/hooks/composer/useMediaUpload';
-import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
-import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
-import { useCharacterCounter } from '@/hooks/composer/useCharacterCounter';
-import { useGiphySearch } from '@/hooks/composer/useGiphySearch';
-import { resizeComposerTextarea } from '@/hooks/composer/composerTextareaResize';
+import { useState } from 'react';
+import { User } from '@/types';
 import AvatarWithFallback from '@/components/app/common/AvatarWithFallback';
-import ComposerTagSuggestions from '@/components/app/composer/ComposerTagSuggestions';
-import { useComposerTagging } from '@/hooks/composer/useComposerTagging';
-import MediaPreviewGrid from '@/components/app/common/MediaPreviewGrid';
-import {
-  FREE_CONTENT_MAX_LENGTH,
-  PREMIUM_CONTENT_MAX_LENGTH,
-} from '@/constants/contentLimits';
-import { useSubscription } from '@/hooks/billing/useSubscription';
-import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
-
-// Dynamically import emoji picker to avoid SSR issues
-const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
-
-// Initialize Giphy
-const getGiphyClient = () => {
-  const apiKey = process.env.NEXT_PUBLIC_GIPHY_API_KEY || '';
-  if (!apiKey) return null;
-  return new GiphyFetch(apiKey);
-};
+import ComposerCharacterCounter from '@/components/app/composer/ComposerCharacterCounter';
+import ComposerMediaToolbar from '@/components/app/composer/ComposerMediaToolbar';
+import ComposerSharedExtras from '@/components/app/composer/ComposerSharedExtras';
+import { useComposerCore } from '@/hooks/composer/useComposerCore';
+import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
 interface CommentComposerProps {
-  postId: string;
   currentUser: User;
   onSubmit: (
     text: string,
@@ -52,111 +21,46 @@ interface CommentComposerProps {
 }
 
 export default function CommentComposer({
-  postId,
   currentUser,
   onSubmit,
 }: CommentComposerProps) {
-  const { openPremium } = usePremiumOverlay();
-  const { isPremium } = useSubscription();
-  const [commentText, setCommentText] = useState('');
-  const [showGifPicker, setShowGifPicker] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
-  const exceedsFreeLimit = !isPremium && commentText.length > FREE_CONTENT_MAX_LENGTH;
-  const tagging = useComposerTagging({ text: commentText, setText: setCommentText, textareaRef });
+  const core = useComposerCore();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Use hooks
-  const {
-    mediaFiles,
-    mediaPreviews,
-    selectedGif,
-    mediaError,
-    handleImageUpload,
-    handleRemoveMedia,
-    handleGifSelect,
-    clearMedia,
-    clearMediaError,
-    setSelectedGif,
-    setMediaFiles,
-    setMediaPreviews,
-  } = useMediaUpload();
-
-  const {
-    showPoll,
-    pollOptions,
-    pollDuration,
-    setShowPoll,
-    addPollOption,
-    removePollOption,
-    updatePollOption,
-    setPollDuration,
-    getPollData,
-    resetPoll,
-  } = usePollBuilder();
-
-  const {
-    showEmojiPicker,
-    emojiPickerRef,
-    setShowEmojiPicker,
-  } = useEmojiPicker();
-
-  const { gifSearchQuery, debouncedGifSearch, setGifSearchQuery } = useGiphySearch();
-
-  const { remainingChars, isOverLimit, charPercentage } = useCharacterCounter({
-    maxLength,
-    text: commentText,
-  });
-
-  // Handle GIF select with proper format
-  const handleGifSelectWrapper = (gif: any) => {
-    handleGifSelect(gif.images.original.url);
-    setShowGifPicker(false);
-  };
-
-  // Handle emoji click: update React state at cursor (same pattern as TweetComposer).
-  // We don't use handleEmojiClick from the hook because it mutates DOM and doesn't work with controlled inputs.
-  const handleEmojiClickWrapper = (emojiData: any) => {
-    const emoji = emojiData.emoji ?? '';
-    if (!emoji) {
-      setShowEmojiPicker(false);
+  const handleCommentSubmit = async () => {
+    setSubmitError(null);
+    if (core.text.trim() && core.exceedsFreeLimit) {
+      core.openPremium();
       return;
     }
-    const textarea = textareaRef.current;
-    const start = textarea ? textarea.selectionStart : commentText.length;
-    const end = textarea ? textarea.selectionEnd : commentText.length;
-    setCommentText((prev) => prev.substring(0, start) + emoji + prev.substring(end));
-    setShowEmojiPicker(false);
-    if (textarea) {
-      const newPos = start + emoji.length;
-      requestAnimationFrame(() => {
-        textareaRef.current?.setSelectionRange(newPos, newPos);
-        textareaRef.current?.focus();
-      });
-    }
-  };
 
-  const handleCommentSubmit = async (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
-    if (!isPremium && text.length > FREE_CONTENT_MAX_LENGTH) {
-      openPremium();
-      return;
-    }
-    
-    const trimmed = text.trim();
-    if (!trimmed && !media?.length && !gifUrl && !poll) {
-      return; // Don't submit empty comments
-    }
+    const poll = core.poll.getPollData() ?? undefined;
+    const trimmed = core.text.trim();
+    const previewUrls = [...core.media.mediaPreviews];
+    if (core.isContentEmpty) return;
 
     try {
-      // Optimistically clear input and media immediately on submit
-      setCommentText('');
-      clearMedia();
-      resetPoll();
-      await onSubmit(trimmed, media, gifUrl, poll, mediaPreviews);
+      await onSubmit(
+        trimmed,
+        core.media.mediaFiles.length > 0 ? core.media.mediaFiles : undefined,
+        core.media.selectedGif || undefined,
+        poll,
+        previewUrls
+      );
+      core.resetComposer();
     } catch (error) {
-      console.error('Failed to submit comment', error);
+      const message = getErrorMessage(error, 'Failed to submit comment');
+      console.error('Failed to submit comment:', message);
+      setSubmitError(message);
     }
   };
+
+  const submitDisabled = core.counter.isOverLimit || core.isContentEmpty;
+  const placeholder = core.exceedsFreeLimit
+    ? 'Upgrade to Premium to post longer content'
+    : core.poll.showPoll
+      ? 'Ask a question...'
+      : 'Add a comment...';
 
   return (
     <div className="border-b border-white/10 px-4 py-3">
@@ -167,367 +71,57 @@ export default function CommentComposer({
           size={40}
           className="shrink-0"
         />
-        <div className="flex-1 min-w-0 relative">
-          <div className="relative">
-            <textarea
-              ref={(textarea) => {
-                if (textarea) {
-                  (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = textarea;
-                  resizeComposerTextarea(textarea);
-                }
-              }}
-              value={commentText}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setCommentText(newValue);
-                resizeComposerTextarea(e.target);
-                tagging.trackCaret(e);
-              }}
-              onSelect={tagging.trackCaret}
-              onBlur={tagging.clearCaret}
-              onKeyDown={tagging.handleKeyDown}
-              placeholder={exceedsFreeLimit ? "Upgrade to Premium to post longer content" : (showPoll ? "Ask a question..." : "Add a comment...")}
-              className={`thin-scrollbar thin-scrollbar-gutter w-full bg-transparent pr-3 text-white placeholder-gray-500 text-[15px] resize-none focus:outline-hidden overflow-y-auto overflow-x-hidden ${
-                exceedsFreeLimit ? 'placeholder-red-400' : ''
-              }`}
-              style={{ 
-                height: '48px', // Start with 2 lines
-                minHeight: '48px',
-                maxHeight: '360px', // Max 15 lines
-              }}
-              rows={2}
+        <div className="relative min-w-0 flex-1">
+          <textarea
+            ref={core.assignTextareaRef}
+            value={core.text}
+            onChange={core.handleTextChange}
+            onSelect={core.tagging.trackCaret}
+            onBlur={core.tagging.clearCaret}
+            onKeyDown={core.tagging.handleKeyDown}
+            placeholder={placeholder}
+            className={`thin-scrollbar thin-scrollbar-gutter w-full resize-none overflow-x-hidden overflow-y-auto bg-transparent pr-3 text-[15px] text-white placeholder-gray-500 focus:outline-hidden ${
+              core.exceedsFreeLimit ? 'placeholder-red-400' : ''
+            }`}
+            style={{ height: '48px', minHeight: '48px', maxHeight: '360px' }}
+            rows={2}
+          />
+          <ComposerSharedExtras core={core} showDesktopEmoji />
+          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+            <ComposerMediaToolbar
+              {...core.mediaToolbar}
+              buttonClassName="rounded-full p-1.5 text-cyan-400 transition-colors hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+              iconClassName="h-5 w-5"
             />
-          </div>
-          <ComposerTagSuggestions tagging={tagging} />
-          {exceedsFreeLimit && (
-            <div className="flex items-center justify-center mt-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openPremium();
-                }}
-                className="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors shadow-lg"
-              >
-                Upgrade to Premium
-              </button>
-            </div>
-          )}
-          
-          {/* Media Previews */}
-          {(mediaPreviews.length > 0 || selectedGif) && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <MediaPreviewGrid
-                previews={mediaPreviews}
-                onRemove={handleRemoveMedia}
-                containerClassName="col-span-2 grid grid-cols-2 gap-2"
-                imageClassName="w-full h-24 object-cover rounded-xl"
-              />
-              {selectedGif && (
-                <div className="relative group">
-                  <img
-                    src={selectedGif}
-                    alt="Selected GIF"
-                    className="w-full h-24 object-cover rounded-xl"
-                    loading="lazy"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSelectedGif(null)}
-                    className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Poll Options */}
-          {showPoll && (
-            <div className="mt-3 p-3 bg-white/5 rounded-xl border border-white/10">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-white">Add poll</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetPoll();
-                  }}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="space-y-2 mb-3">
-                {pollOptions.map((option, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={option}
-                      onChange={(e) => updatePollOption(index, e.target.value)}
-                      placeholder={`Choice ${index + 1}`}
-                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500"
-                      maxLength={25}
-                    />
-                    {pollOptions.length > 2 && (
-                      <button
-                        type="button"
-                        onClick={() => removePollOption(index)}
-                        className="p-2 text-gray-400 hover:text-white"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {pollOptions.length < 4 && (
-                <button
-                  type="button"
-                  onClick={addPollOption}
-                  className="text-sm text-cyan-400 hover:text-cyan-300"
-                >
-                  Add option
-                </button>
-              )}
-              <div className="mt-3">
-                <label className="text-sm text-gray-400 mb-2 block">Poll duration</label>
-                <select
-                  value={pollDuration}
-                  onChange={(e) => setPollDuration(Number(e.target.value))}
-                  className="px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-cyan-500 appearance-none cursor-pointer pr-10"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 0.75rem center',
-                  }}
-                >
-                  <option value={1}>1 day</option>
-                  <option value={3}>3 days</option>
-                  <option value={7}>7 days</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* GIF Picker */}
-          {showGifPicker && (
-            <div className="mt-3 p-3 bg-white/5 rounded-xl border border-white/10 max-h-96 overflow-y-auto">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-white">Choose a GIF</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowGifPicker(false);
-                    setGifSearchQuery('');
-                  }}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="mb-3">
-                <input
-                  type="text"
-                  value={gifSearchQuery}
-                  onChange={(e) => setGifSearchQuery(e.target.value)}
-                  placeholder="Search for GIFs..."
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-cyan-500 text-sm"
-                />
-              </div>
-              {(() => {
-                const giphyClient = getGiphyClient();
-                if (!giphyClient) return null;
-                return (
-                  <div className="w-full">
-                    <Grid
-                      key={debouncedGifSearch}
-                      onGifClick={handleGifSelectWrapper}
-                      fetchGifs={(offset) => {
-                        const searchQuery = debouncedGifSearch.trim();
-                        if (searchQuery) {
-                          return giphyClient.search(searchQuery, { offset, limit: 10 });
-                        }
-                        return giphyClient.trending({ offset, limit: 10 });
-                      }}
-                      width={typeof window !== 'undefined' ? Math.min(window.innerWidth - 80, 400) : 400}
-                      columns={2}
-                      gutter={6}
-                      noLink={true}
-                      hideAttribution={true}
-                    />
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* Emoji Picker */}
-          {showEmojiPicker && (
-            <div className="mt-3 relative" ref={emojiPickerRef}>
-              <div className="absolute z-20 left-0">
-                <div className="bg-black border border-white/10 rounded-xl overflow-hidden shadow-xl">
-                  <EmojiPicker
-                    onEmojiClick={handleEmojiClickWrapper}
-                    width={350}
-                    height={400}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap flex-1 min-w-0">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                className="hidden"
+            <div className="flex shrink-0 flex-row items-center justify-end gap-2">
+              <ComposerCharacterCounter
+                textLength={core.text.length}
+                remainingChars={core.counter.remainingChars}
+                charPercentage={core.counter.charPercentage}
+                isOverLimit={core.counter.isOverLimit}
               />
               <button
                 type="button"
-                onClick={() => {
-                  clearMediaError();
-                  fileInputRef.current?.click();
-                  setShowGifPicker(false);
-                  setShowPoll(false);
-                  setSelectedGif(null);
-                }}
-                className="p-1.5 text-cyan-400 hover:bg-cyan-400/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={showPoll || !!selectedGif}
-                aria-label="Upload image"
-                title={MEDIA_LIMITS_HINT}
-              >
-                <HiOutlinePhotograph className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowGifPicker(!showGifPicker);
-                  setShowEmojiPicker(false);
-                  setShowPoll(false);
-                  setMediaFiles([]);
-                  setMediaPreviews([]);
-                }}
-                className="p-1.5 text-cyan-400 hover:bg-cyan-400/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={showPoll || mediaPreviews.length > 0}
-                aria-label="Add GIF"
-              >
-                <RiFileGifLine className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowEmojiPicker(!showEmojiPicker);
-                  setShowGifPicker(false);
-                }}
-                className="p-1.5 text-cyan-400 hover:bg-cyan-400/10 rounded-full transition-colors"
-                aria-label="Add emoji"
-              >
-                <HiOutlineEmojiHappy className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPoll(!showPoll);
-                  setShowGifPicker(false);
-                  setMediaFiles([]);
-                  setMediaPreviews([]);
-                  setSelectedGif(null);
-                }}
-                className="p-1.5 text-cyan-400 hover:bg-cyan-400/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={mediaPreviews.length > 0 || !!selectedGif}
-                aria-label="Add poll"
-              >
-                <RiBarChartLine className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="flex flex-row items-center justify-end gap-2 shrink-0">
-              {/* Character Counter - Always show circle, show number only when 30 or less characters remaining */}
-              {commentText.length > 0 && (
-                <div className="relative w-8 h-8 shrink-0">
-                  <svg className="transform -rotate-90 w-8 h-8" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="15"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      fill="none"
-                      className="text-white/10"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="15"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 15}`}
-                      strokeDashoffset={`${2 * Math.PI * 15 * (1 - Math.min(charPercentage, 100) / 100)}`}
-                      className={`transition-all ${
-                        isOverLimit
-                          ? 'text-red-400'
-                          : remainingChars <= 10
-                          ? 'text-red-400'
-                          : remainingChars <= 20
-                          ? 'text-yellow-400'
-                          : remainingChars <= 30
-                          ? 'text-cyan-400'
-                          : 'text-white/20'
-                      }`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  {/* Show number only when 30 or less characters remaining */}
-                  {remainingChars <= 30 && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span
-                        className={`text-[10px] font-semibold leading-none ${
-                          isOverLimit
-                            ? 'text-red-400'
-                            : remainingChars <= 10
-                            ? 'text-red-400'
-                            : remainingChars <= 20
-                            ? 'text-yellow-400'
-                            : 'text-cyan-400'
-                        }`}
-                      >
-                        {remainingChars}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <button
-                onClick={() => {
-                  const poll = showPoll && pollOptions.filter(opt => opt.trim()).length >= 2
-                    ? { options: pollOptions.filter(opt => opt.trim()), duration: pollDuration }
-                    : undefined;
-                  handleCommentSubmit(commentText, mediaFiles, selectedGif || undefined, poll);
-                }}
-                disabled={isOverLimit || (!commentText.trim() && mediaPreviews.length === 0 && !selectedGif && !(showPoll && pollOptions.filter(opt => opt.trim()).length >= 2))}
-                className="px-4 py-1.5 bg-white text-black rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                onClick={() => void handleCommentSubmit()}
+                disabled={submitDisabled}
+                className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Reply
               </button>
             </div>
           </div>
-          {mediaError && (
-            <p className="mt-2 text-xs text-amber-400" title={mediaError}>
-              {mediaError}
+          {submitError ? (
+            <p className="mt-2 text-xs text-red-400" title={submitError}>
+              {submitError}
             </p>
-          )}
+          ) : null}
+          {core.media.mediaError ? (
+            <p className="mt-2 text-xs text-amber-400" title={core.media.mediaError}>
+              {core.media.mediaError}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
   );
 }
-

@@ -2,7 +2,7 @@
 
 import { Repeat2 } from '@/constants/icons';
 import { Post } from '@/types';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 import ContentMenu from '@/components/app/common/ContentMenu';
 import PostAuthorMeta from '@/components/app/post/PostAuthorMeta';
 
@@ -31,7 +31,7 @@ export default function PostHeader({
   return (
     <>
       {/* Repost indicator - For normal reposts (when viewing your own repost) */}
-      {isTweet(post) && post.repostType === 'normal' && originalPost && (
+      {isPost(post) && post.repostType === 'normal' && originalPost && (
         <div className="flex items-center space-x-1 mb-1 text-gray-500 text-xs">
           <Repeat2 className="w-3 h-3" />
           <span>
@@ -51,7 +51,7 @@ export default function PostHeader({
       )}
       
         <div className="flex items-center justify-between gap-2 mb-1 w-full min-w-0">
-        {isTweet(post) && post.repostType === 'normal' && originalPost ? (
+        {isPost(post) && post.repostType === 'normal' && originalPost ? (
           <PostAuthorMeta
             displayName={originalPost.author.displayName}
             handle={originalPost.author.handle}

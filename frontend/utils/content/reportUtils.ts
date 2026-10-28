@@ -56,6 +56,26 @@ export const getReportReasons = (): { value: ReportReason; label: string }[] => 
   ];
 };
 
+const REPORT_REASON_VALUES = new Set<string>(
+  getReportReasons().map((option) => option.value)
+);
+
+export function isReportReason(value: string): value is ReportReason {
+  return REPORT_REASON_VALUES.has(value);
+}
+
+/** Human-readable label for a report reason code. */
+export function getReportReasonLabel(reason: string): string {
+  if (!isReportReason(reason)) return reason;
+  const match = getReportReasons().find((option) => option.value === reason);
+  return match?.label ?? reason;
+}
+
+/** Normalize API reason codes; unknown values fall back to `other`. */
+export function toReportReason(value: string): ReportReason {
+  return isReportReason(value) ? value : 'other';
+}
+
 /**
  * Report content (post or comment)
  */

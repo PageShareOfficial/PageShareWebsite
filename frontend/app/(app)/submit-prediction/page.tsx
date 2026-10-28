@@ -7,8 +7,8 @@ import DesktopHeader from '@/components/app/layout/DesktopHeader';
 import Loading from '@/components/app/common/Loading';
 import SubmitPredictionForm, {
   type PredictionPriceLockState,
-} from '@/components/app/predictions/SubmitPredictionForm';
-import FloatingPriceLockOverlay from '@/components/app/predictions/FloatingPriceLockOverlay';
+} from '@/components/app/predictions/submit/SubmitPredictionForm';
+import FloatingPriceLockOverlay from '@/components/app/predictions/submit/FloatingPriceLockOverlay';
 import Skeleton from '@/components/app/common/Skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePredictionSubmissionQuota } from '@/hooks/predictions/usePredictionSubmissionQuota';

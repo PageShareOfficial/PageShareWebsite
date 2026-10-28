@@ -1,4 +1,4 @@
-import { Tweet, User, Post } from '@/types';
+import { User, Post } from '@/types';
 
 export interface CreateRepostParams {
   originalPost: Post;
@@ -6,7 +6,7 @@ export interface CreateRepostParams {
   quoteText?: string;
 }
 
-export function createNormalRepost({ originalPost, currentUser }: CreateRepostParams): Tweet | null {
+export function createNormalRepost({ originalPost, currentUser }: CreateRepostParams): Post | null {
   // Create a normal repost
   return {
     id: `repost-${Date.now()}`,
@@ -39,7 +39,7 @@ export function createQuoteRepost({
   originalPost,
   currentUser,
   quoteText,
-}: CreateRepostParams): Tweet | null {
+}: CreateRepostParams): Post | null {
   if (!quoteText) return null;
 
   // Create a quote repost
