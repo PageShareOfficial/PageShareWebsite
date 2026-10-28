@@ -73,7 +73,7 @@ class PostResponse(BaseModel):
         from_attributes = True
 
 class OriginalPostInResponse(BaseModel):
-    """Embedded original post for quote reposts (so the client can render the quoted tweet)."""
+    """Embedded original post for quote reposts (so the client can render the quoted post)."""
 
     id: str
     author: PostAuthor

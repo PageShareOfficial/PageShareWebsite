@@ -8,7 +8,7 @@ import Topbar from '@/components/app/layout/Topbar';
 import Feed from '@/components/app/feed/Feed';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
-const TweetComposer = dynamic(() => import('@/components/app/composer/TweetComposer'), { ssr: false });
+const PostComposer = dynamic(() => import('@/components/app/composer/PostComposer'), { ssr: false });
 const ReportModal = dynamic(() => import('@/components/app/modals/ReportModal'), { ssr: false });
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import { usePostsData } from '@/hooks/post/usePostsData';
@@ -38,7 +38,7 @@ export default function HomePage() {
     handleComment,
     handleDelete,
     handleVote,
-    handleNewTweet,
+    handleNewPost,
     handleQuoteRepostSubmit,
     hasUserReposted,
     isQuoteRepostOpen,
@@ -101,7 +101,7 @@ export default function HomePage() {
                 onDelete={handleDelete}
                 hasUserReposted={hasUserReposted}
                 currentUserHandle={currentUser.handle}
-                onNewTweet={handleNewTweet}
+                onNewPost={handleNewPost}
                 onReportClick={handleReportClick}
                 postsLoading={postsLoading}
                 postsError={postsError}
@@ -115,7 +115,7 @@ export default function HomePage() {
 
       {/* Modals */}
       {isQuoteRepostOpen && quoteRepostPostId && (
-        <TweetComposer
+        <PostComposer
           currentUser={currentUser}
           onSubmit={(text) => handleQuoteRepostSubmit(text)}
           onClose={() => {

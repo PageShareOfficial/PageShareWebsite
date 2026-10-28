@@ -9,8 +9,8 @@ export interface User {
   isAdmin?: boolean;
 }
 
-// Normal tweet/post (from TweetComposer)
-export interface Tweet {
+/** Feed post: opinion text, media, poll, or repost (from PostComposer). */
+export interface Post {
   id: string;
   author: User;
   createdAt: string;
@@ -22,7 +22,7 @@ export interface Tweet {
   repostedFrom?: User; // Original author if this is a repost
   repostType?: 'normal' | 'quote'; // Type of repost
   originalPostId?: string; // Reference to original post ID (optimized for backend)
-  /** When present, the original post that was quoted (from API). Use this to render the quoted tweet card. */
+  /** When present, the original post that was quoted (from API). */
   quotedPost?: Post;
   poll?: {
     pollId?: string; // backend poll id for voting
@@ -44,9 +44,6 @@ export interface Tweet {
     reposted: boolean;
   };
 }
-
-// All posts are tweets
-export type Post = Tweet;
 
 export interface WatchlistItem {
   ticker: string;

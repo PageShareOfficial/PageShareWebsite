@@ -114,7 +114,7 @@ export default function CommentComposer({
     setShowGifPicker(false);
   };
 
-  // Handle emoji click: update React state at cursor (same pattern as TweetComposer).
+  // Handle emoji click: update React state at cursor (same pattern as PostComposer).
   // We don't use handleEmojiClick from the hook because it mutates DOM and doesn't work with controlled inputs.
   const handleEmojiClickWrapper = (emojiData: any) => {
     const emoji = emojiData.emoji ?? '';

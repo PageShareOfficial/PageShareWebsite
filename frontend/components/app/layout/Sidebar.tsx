@@ -31,7 +31,7 @@ import AuthorBadges from '@/components/app/common/AuthorBadges';
 import Skeleton from '@/components/app/common/Skeleton';
 import { ROUTES, profilePath, settingsDeleteAccountPath } from '@/constants/routes';
 
-const TweetComposer = dynamic(() => import('../composer/TweetComposer'), { ssr: false });
+const PostComposer = dynamic(() => import('../composer/PostComposer'), { ssr: false });
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -82,8 +82,8 @@ export default function Sidebar() {
     signOut();
   };
 
-  const handleTweetSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
-    // TODO: Submit tweet/post
+  const handlePostSubmit = (text: string, media?: File[], gifUrl?: string, poll?: { options: string[]; duration: number }) => {
+    // TODO: Submit post
     setIsComposerModalOpen(false);
   };
 
@@ -295,11 +295,11 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Tweet Composer Modal - Desktop & Tablet */}
+      {/* Post composer modal - desktop & tablet */}
       {isComposerModalOpen && (
-        <TweetComposer
+        <PostComposer
           currentUser={currentUser}
-          onSubmit={handleTweetSubmit}
+          onSubmit={handlePostSubmit}
           onClose={() => setIsComposerModalOpen(false)}
           isModal={true}
         />

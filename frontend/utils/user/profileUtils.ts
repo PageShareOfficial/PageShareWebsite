@@ -1,5 +1,5 @@
 import { Post, User } from '@/types';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 
 export interface ProfileUser extends User {
   joinedDate: string;
@@ -31,7 +31,7 @@ export function getCurrentUser(): User {
 // Calculate user stats from posts
 export const calculateUserStats = (username: string, posts: Post[]) => {
   const userPosts = posts.filter((post) => {
-    if (isTweet(post)) {
+    if (isPost(post)) {
       // Count original posts and quote reposts (not normal reposts)
       if (post.repostType === 'normal') return false;
       return post.author.handle === username;

@@ -1,9 +1,9 @@
-import { Post, Tweet } from '@/types';
+import { Post } from '@/types';
 
 /**
- * Type guard: narrows Post to Tweet (post with content, repostType, etc.).
- * Use before accessing repostType, originalPostId, quotedPost, and other Tweet-only fields.
+ * Type guard: a feed post with content (and optional repost fields).
+ * Use before reading repostType, originalPostId, quotedPost, etc.
  */
-export function isTweet(post: Post): post is Tweet {
+export function isPost(post: Post | null | undefined): post is Post {
   return post != null && 'content' in post;
 }

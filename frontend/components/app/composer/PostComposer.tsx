@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
 import { Post } from '@/types';
-import { isTweet } from '@/utils/content/postUtils';
+import { isPost } from '@/utils/content/postUtils';
 import { useMediaUpload, MEDIA_LIMITS_HINT } from '@/hooks/composer/useMediaUpload';
 import { usePollBuilder } from '@/hooks/composer/usePollBuilder';
 import { useEmojiPicker } from '@/hooks/composer/useEmojiPicker';
@@ -34,7 +34,7 @@ import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
 // Dynamically import emoji picker to avoid SSR issues
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
-interface TweetComposerProps {
+interface PostComposerProps {
   currentUser: {
     displayName: string;
     handle: string;
@@ -57,7 +57,7 @@ const getGiphyClient = () => {
   return new GiphyFetch(apiKey);
 };
 
-export default function TweetComposer({
+export default function PostComposer({
   currentUser,
   onSubmit,
   onClose,
@@ -65,7 +65,7 @@ export default function TweetComposer({
   originalPostId,
   allPosts = [],
   isPosting = false,
-}: TweetComposerProps) {
+}: PostComposerProps) {
   const { openPremium } = usePremiumOverlay();
   const { isPremium } = useSubscription();
   // Look up original post by ID
@@ -77,18 +77,18 @@ export default function TweetComposer({
     
     // Check if this is a refresh (not a navigation)
     // If navigation flag exists, it means we navigated (not refreshed)
-    const navigationFlag = sessionStorage.getItem('tweetComposerNavFlag');
+    const navigationFlag = sessionStorage.getItem('postComposerNavFlag');
     
     if (!navigationFlag) {
       // This is likely a refresh, clear saved state
-      sessionStorage.removeItem('tweetComposerState');
+      sessionStorage.removeItem('postComposerState');
       // Set flag for future navigations
-      sessionStorage.setItem('tweetComposerNavFlag', 'true');
+      sessionStorage.setItem('postComposerNavFlag', 'true');
       return null;
     }
     
     // This is navigation, load saved state
-    const saved = sessionStorage.getItem('tweetComposerState');
+    const saved = sessionStorage.getItem('postComposerState');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -102,19 +102,19 @@ export default function TweetComposer({
   // Set navigation flag on mount (for next navigation)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('tweetComposerNavFlag', 'true');
+      sessionStorage.setItem('postComposerNavFlag', 'true');
     }
   }, []);
 
   const savedState = loadStateFromStorage();
   
-  const [tweetText, setTweetText] = useState(savedState?.tweetText || '');
+  const [postText, setPostText] = useState(savedState?.postText || '');
   const [showGifPicker, setShowGifPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxLength = isPremium ? PREMIUM_CONTENT_MAX_LENGTH : FREE_CONTENT_MAX_LENGTH;
-  const exceedsFreeLimit = !isPremium && tweetText.length > FREE_CONTENT_MAX_LENGTH;
-  const tagging = useComposerTagging({ text: tweetText, setText: setTweetText, textareaRef });
+  const exceedsFreeLimit = !isPremium && postText.length > FREE_CONTENT_MAX_LENGTH;
+  const tagging = useComposerTagging({ text: postText, setText: setPostText, textareaRef });
 
   // Use hooks
   const {
@@ -157,7 +157,7 @@ export default function TweetComposer({
 
   const { remainingChars, isOverLimit, charPercentage } = useCharacterCounter({
     maxLength,
-    text: tweetText,
+    text: postText,
   });
 
   // Handle GIF select with proper format
@@ -166,7 +166,7 @@ export default function TweetComposer({
     setShowGifPicker(false);
   };
 
-  // Handle emoji click: insert at cursor and update controlled state (textarea is value={tweetText})
+  // Handle emoji click: insert at cursor and update controlled state (textarea is value={postText})
   const handleEmojiClickWrapper = (emojiData: any) => {
     const emoji = emojiData.emoji ?? '';
     if (!emoji) {
@@ -174,9 +174,9 @@ export default function TweetComposer({
       return;
     }
     const textarea = textareaRef.current;
-    const start = textarea ? textarea.selectionStart : tweetText.length;
-    const end = textarea ? textarea.selectionEnd : tweetText.length;
-    setTweetText((prev: string) => prev.substring(0, start) + emoji + prev.substring(end));
+    const start = textarea ? textarea.selectionStart : postText.length;
+    const end = textarea ? textarea.selectionEnd : postText.length;
+    setPostText((prev: string) => prev.substring(0, start) + emoji + prev.substring(end));
     setShowEmojiPicker(false);
     // Restore cursor after the inserted emoji once React has re-rendered
     if (textarea) {
@@ -192,21 +192,21 @@ export default function TweetComposer({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const stateToSave = {
-      tweetText,
+      postText,
       selectedGif,
       showPoll,
       pollOptions,
       pollDuration,
     };
-    sessionStorage.setItem('tweetComposerState', JSON.stringify(stateToSave));
-  }, [tweetText, selectedGif, showPoll, pollOptions, pollDuration]);
+    sessionStorage.setItem('postComposerState', JSON.stringify(stateToSave));
+  }, [postText, selectedGif, showPoll, pollOptions, pollDuration]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isPosting) return;
 
-    const hasText = tweetText.trim().length > 0;
+    const hasText = postText.trim().length > 0;
     const hasMedia = mediaFiles.length > 0;
     const hasGif = !!selectedGif;
     const poll = getPollData();
@@ -220,17 +220,17 @@ export default function TweetComposer({
     }
 
     onSubmit(
-      tweetText,
+      postText,
       mediaFiles.length > 0 ? mediaFiles : undefined,
       selectedGif || undefined,
       poll || undefined
     );
-    setTweetText('');
+    setPostText('');
     clearMedia();
     resetPoll();
     // Clear sessionStorage after successful submit
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('tweetComposerState');
+      sessionStorage.removeItem('postComposerState');
     }
     if (onClose) {
       onClose();
@@ -261,10 +261,10 @@ export default function TweetComposer({
                   resizeComposerTextarea(textarea);
                 }
               }}
-              value={tweetText}
+              value={postText}
               onChange={(e) => {
                 const newValue = e.target.value;
-                setTweetText(newValue);
+                setPostText(newValue);
                 resizeComposerTextarea(e.target);
                 tagging.trackCaret(e);
               }}
@@ -497,15 +497,15 @@ export default function TweetComposer({
                   isAdmin={originalPost.author.isAdmin}
                   size="sm"
                 />
-                <span className="text-xs text-gray-500">· {originalPost.createdAt}</span>
+                <span className="text-xs text-gray-500">Â· {originalPost.createdAt}</span>
               </div>
               {/* Render content based on post type */}
-              {isTweet(originalPost) ? (
+              {isPost(originalPost) ? (
                 <>
                   <p className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap wrap-break-word">
                     {originalPost.content}
                   </p>
-                  {/* Original tweet media */}
+                  {/* Original post media */}
                   {originalPost.media && originalPost.media.length > 0 && (
                     <div className={`mt-2 rounded-lg overflow-hidden ${
                       originalPost.media.length === 1 ? 'max-w-full' :
@@ -614,7 +614,7 @@ export default function TweetComposer({
             
             <div className="flex flex-row items-center justify-end gap-2 md:gap-3 shrink-0">
               {/* Character Counter - Always show circle, show number only when 30 or less characters remaining */}
-              {tweetText.length > 0 && (
+              {postText.length > 0 && (
                 <div className="relative w-8 h-8 md:w-10 md:h-10 shrink-0">
                   <svg className="transform -rotate-90 w-8 h-8 md:w-10 md:h-10" viewBox="0 0 36 36">
                     <circle
@@ -674,8 +674,8 @@ export default function TweetComposer({
                 type="submit"
                 disabled={
                   isPosting ||
-                  (tweetText.trim().length === 0 && mediaFiles.length === 0 && !selectedGif && !(showPoll && pollOptions.filter((o) => o.trim()).length >= 2)) ||
-                  (tweetText.length > 0 && isOverLimit)
+                  (postText.trim().length === 0 && mediaFiles.length === 0 && !selectedGif && !(showPoll && pollOptions.filter((o) => o.trim()).length >= 2)) ||
+                  (postText.length > 0 && isOverLimit)
                 }
                 className="px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
