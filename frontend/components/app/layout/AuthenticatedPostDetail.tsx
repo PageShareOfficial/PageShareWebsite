@@ -166,7 +166,6 @@ export default function AuthenticatedPostDetail(props: AuthenticatedPostDetailPr
               </div>
 
               <CommentComposer
-                postId={postId}
                 currentUser={currentUser}
                 onSubmit={async (text, mediaFiles, gifUrl, poll, previewUrls) => {
                   await handleAddComment(text, mediaFiles, gifUrl, poll, previewUrls);

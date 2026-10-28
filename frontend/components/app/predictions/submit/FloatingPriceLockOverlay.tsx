@@ -1,7 +1,7 @@
 'use client';
 
 import { createPortal } from 'react-dom';
-import PriceLockBanner from '@/components/app/predictions/PriceLockBanner';
+import PriceLockBanner from '@/components/app/predictions/submit/PriceLockBanner';
 import type { ScrollContainerRect } from '@/hooks/predictions/useScrollPastAnchor';
 
 interface FloatingPriceLockOverlayProps {
