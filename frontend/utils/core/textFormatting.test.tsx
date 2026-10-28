@@ -6,15 +6,21 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { contentTagHref, highlightContentTags } from './textFormatting';
 
-function highlightedTags(text: string): string[] {
+function tagLabels(text: string): string[] {
   return highlightContentTags(text)
-    .filter((part): part is ReactElement<{ children: string }> => isValidElement(part))
-    .map((part) => part.props.children);
+    .filter((part): part is ReactElement => isValidElement(part))
+    .map((part) => {
+      const props = part.props as { tag?: string; children?: string };
+      if (typeof props.tag === 'string') return `$${props.tag.slice(1).toUpperCase()}`;
+      if (typeof props.children === 'string') return props.children;
+      return '';
+    })
+    .filter(Boolean);
 }
 
 describe('highlightContentTags', () => {
   it('highlights cashtags and mentions together', () => {
-    expect(highlightedTags('Long $BTC with @alice today')).toEqual(['$BTC', '@alice']);
+    expect(tagLabels('Long $BTC with @alice today')).toEqual(['$BTC', '@alice']);
   });
 
   it('keeps the surrounding text in order', () => {
@@ -24,7 +30,7 @@ describe('highlightContentTags', () => {
   });
 
   it('allows punctuation after a mention', () => {
-    expect(highlightedTags('thanks @alice, and @carol.')).toEqual(['@alice', '@carol']);
+    expect(tagLabels('thanks @alice, and @carol.')).toEqual(['@alice', '@carol']);
   });
 
   it.each([
@@ -32,7 +38,7 @@ describe('highlightContentTags', () => {
     ['a too-short handle', 'hey @al'],
     ['a lone @', 'meet @ noon'],
   ])('does not highlight %s', (_label, text) => {
-    expect(highlightedTags(text)).toEqual([]);
+    expect(tagLabels(text)).toEqual([]);
   });
 
   it('returns the text unchanged when there are no tags', () => {
@@ -50,11 +56,12 @@ describe('contentTagHref', () => {
 describe('content tag links', () => {
   afterEach(cleanup);
 
-  it('renders tags as links that do not trigger the surrounding card click', () => {
+  it('renders ticker pills and mentions that do not trigger the card click', () => {
     const onCardClick = vi.fn();
     render(<p onClick={onCardClick}>{highlightContentTags('Long $BTC with @alice')}</p>);
 
     expect(screen.getByRole('link', { name: '$BTC' })).toHaveAttribute('href', '/ticker/BTC');
+    expect(screen.getByText('$BTC')).toBeInTheDocument();
     const mention = screen.getByRole('link', { name: '@alice' });
     expect(mention).toHaveAttribute('href', '/alice');
 
@@ -62,8 +69,9 @@ describe('content tag links', () => {
     expect(onCardClick).not.toHaveBeenCalled();
   });
 
-  it('renders plain highlights when not interactive', () => {
+  it('renders plain ticker pills when not interactive', () => {
     render(<p>{highlightContentTags('Long $BTC', false)}</p>);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByText('$BTC')).toBeInTheDocument();
   });
 });
