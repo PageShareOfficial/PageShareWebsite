@@ -1,6 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import TickerCashtagPill from '@/components/app/ticker/TickerCashtagPill';
 import { profilePath, tickerPath } from '@/constants/routes';
+import { parseCashtagSymbol } from '@/utils/ticker/cashtagUtils';
 
 /** Cashtags end at space, newline, or end of string. */
 const CASHTAG_PATTERN = String.raw`\$[A-Za-z0-9_]+(?=\s|$)`;
@@ -10,12 +12,16 @@ const CASHTAG_PATTERN = String.raw`\$[A-Za-z0-9_]+(?=\s|$)`;
  */
 const MENTION_PATTERN = String.raw`(?<=^|\s)@[A-Za-z0-9_]{3,50}(?=$|\s|[.,!?;:)])`;
 
-export const CONTENT_TAG_REGEX = new RegExp(`${CASHTAG_PATTERN}|${MENTION_PATTERN}`, 'g');
+export const CONTENT_TAG_REGEX = new RegExp(
+  `${CASHTAG_PATTERN}|${MENTION_PATTERN}`,
+  'g'
+);
 
 /** `$btc` opens the ticker page, `@Alice` opens the profile (usernames are lowercase). */
 export function contentTagHref(tag: string): string {
-  const name = tag.slice(1);
-  return tag.startsWith('$') ? tickerPath(name.toUpperCase()) : profilePath(name.toLowerCase());
+  const cashtagSymbol = parseCashtagSymbol(tag);
+  if (cashtagSymbol) return tickerPath(cashtagSymbol);
+  return profilePath(tag.slice(1).toLowerCase());
 }
 
 /** Cards open the post on click; a tag link must not trigger that as well. */
@@ -23,10 +29,14 @@ function stopCardClick(event: React.MouseEvent) {
   event.stopPropagation();
 }
 
-function renderContentTag(tag: string, key: number, interactive: boolean): React.ReactElement {
+function renderMentionTag(
+  tag: string,
+  key: number,
+  interactive: boolean
+): React.ReactElement {
   if (!interactive) {
     return (
-      <span key={key} className="text-cyan-400 font-medium">
+      <span key={key} className="font-medium text-cyan-400">
         {tag}
       </span>
     );
@@ -36,11 +46,22 @@ function renderContentTag(tag: string, key: number, interactive: boolean): React
       key={key}
       href={contentTagHref(tag)}
       onClick={stopCardClick}
-      className="text-cyan-400 font-medium hover:underline"
+      className="font-medium text-cyan-400 hover:underline"
     >
       {tag}
     </Link>
   );
+}
+
+function renderContentTag(
+  tag: string,
+  key: number,
+  interactive: boolean
+): React.ReactElement {
+  if (tag.startsWith('$')) {
+    return <TickerCashtagPill key={key} tag={tag} interactive={interactive} />;
+  }
+  return renderMentionTag(tag, key, interactive);
 }
 
 /**
@@ -57,7 +78,9 @@ export function highlightContentTags(
   let lastIndex = 0;
 
   for (const match of text.matchAll(CONTENT_TAG_REGEX)) {
-    if (match.index > lastIndex) parts.push(text.substring(lastIndex, match.index));
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
     parts.push(renderContentTag(match[0], match.index, interactive));
     lastIndex = match.index + match[0].length;
   }
@@ -67,22 +90,16 @@ export function highlightContentTags(
 }
 
 /**
- * Get initials from a name (first letter of each word, up to 2 characters)
- * @param name - The name to extract initials from
- * @returns String with initials (e.g., "John Doe" -> "JD", "John" -> "J")
+ * Get initials from a name (first letter of each word, up to 2 characters).
  */
 export function getInitials(name: string): string {
   if (!name || name.trim().length === 0) return '';
 
-  const words = name.trim().split(/\s+/);
-  if (words.length === 0) return '';
-
-  // Get first letter of each word, up to 2 words
-  const initials = words
+  return name
+    .trim()
+    .split(/\s+/)
     .slice(0, 2)
     .map((word) => word[0])
     .join('')
     .toUpperCase();
-
-  return initials;
 }
