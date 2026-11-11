@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import * as Sentry from '@sentry/nextjs';
+// import * as Sentry from '@sentry/nextjs';
 import { ROUTES } from '@/constants/routes';
 import { logErrorToBackend } from '@/utils/error/logError';
 
@@ -49,13 +49,13 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       },
     });
 
-    try {
-      Sentry.captureException(error, {
-        contexts: { react: { componentStack: errorInfo.componentStack } },
-      });
-    } catch {
-      // ignore Sentry errors
-    }
+    // try {
+    //   Sentry.captureException(error, {
+    //     contexts: { react: { componentStack: errorInfo.componentStack } },
+    //   });
+    // } catch {
+    //   // ignore Sentry errors
+    // }
   }
 
   resetError() {
