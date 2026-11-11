@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/nextjs';
+// import * as Sentry from '@sentry/nextjs';
 import { logErrorToBackend } from '@/utils/error/logError';
 import { getErrorMessage } from '@/utils/error/getErrorMessage';
 
@@ -24,9 +24,9 @@ export function reportAccountLoadFailure(error: unknown, source: AccountLoadSour
     user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
     metadata: { source, endpoint: '/users/me' },
   });
-  try {
-    Sentry.captureException(error, { tags: { area: 'account_load', source } });
-  } catch {
-    // Reporting must never break sign-in.
-  }
+  // try {
+  //   Sentry.captureException(error, { tags: { area: 'account_load', source } });
+  // } catch {
+  //   // Reporting must never break sign-in.
+  // }
 }
