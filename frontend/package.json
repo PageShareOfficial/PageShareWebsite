@@ -17,7 +17,6 @@
   "dependencies": {
     "@giphy/react-components": "^10.1.1",
     "@hookform/resolvers": "^5.2.2",
-    "@sentry/nextjs": "^10.38.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
     "emoji-picker-react": "^4.16.1",

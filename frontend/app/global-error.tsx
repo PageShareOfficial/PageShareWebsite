@@ -5,8 +5,7 @@
  * (e.g. in root layout). Required by Sentry for full React error coverage.
  * See: https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#capture-react-render-errors
  */
-import * as Sentry from '@sentry/nextjs';
-import NextError from 'next/error';
+// import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import { ROUTES } from '@/constants/routes';
 
@@ -16,7 +15,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    //Sentry.captureException(error);
   }, [error]);
 
   return (
