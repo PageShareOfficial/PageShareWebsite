@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Topbar from '@/components/app/layout/Topbar';
+import NetworkStatsCollapsible from '@/components/app/layout/NetworkStatsCollapsible';
 import Feed from '@/components/app/feed/Feed';
 import { usePostHandlers } from '@/hooks/post/usePostHandlers';
 import { useReportModal } from '@/hooks/features/useReportModal';
@@ -89,6 +90,7 @@ export default function HomePage() {
   return (
     <>
       <Topbar />
+      <NetworkStatsCollapsible placement="mobile" />
       <div className="flex-1 flex pb-16 md:pb-0">
         <div className="w-full border-l border-r border-white/10 px-2 py-6 lg:px-4">
               <Feed

@@ -9,14 +9,13 @@ import LandingHero from '@/components/landing/LandingHero';
 import HowWeWorkSection from '@/components/landing/HowWeWorkSection';
 import FounderVideoSection from '@/components/landing/FounderVideoSection';
 import BottomCTA from '@/components/landing/BottomCTA';
-import LandingFooterSocial from '@/components/landing/LandingFooterSocial';
+import SiteFooter from '@/components/app/layout/SiteFooter';
 import CryptoTickerBar from '@/components/landing/CryptoTickerBar';
 import SaleStrip from '@/components/landing/SaleStrip';
 import type { TopCrypto } from '@/utils/api/topCryptosApi';
 import {
   AUTH_ERROR_CODES,
   ROUTES,
-  comingSoonPath,
   isAuthErrorCode,
   type AuthErrorCode,
 } from '@/constants/routes';
@@ -79,93 +78,7 @@ function HomeContent({ topCryptos }: LandingPageProps) {
         <BottomCTA />
       </div>
 
-      <footer className="relative z-10 border-t border-white/10 bg-black mt-auto">
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4 sm:py-6">
-          <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 md:gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500">
-            <Link href={ROUTES.about} className="hover:text-white transition-colors px-1">
-              About
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('Help-Center')}
-              className="hover:text-white transition-colors px-1"
-            >
-              Help Center
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href={ROUTES.terms} className="hover:text-white transition-colors px-1">
-              Terms of Service
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href={ROUTES.privacy} className="hover:text-white transition-colors px-1">
-              Privacy Policy
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href={ROUTES.cookies} className="hover:text-white transition-colors px-1">
-              Cookie Policy
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('Accessibility')}
-              className="hover:text-white transition-colors px-1"
-            >
-              Accessibility
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link href={ROUTES.disclaimer} className="hover:text-white transition-colors px-1">
-              Disclaimer
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('Blog')}
-              className="hover:text-white transition-colors px-1"
-            >
-              Blog
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('Careers')}
-              className="hover:text-white transition-colors px-1"
-            >
-              Careers
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('Brand-Resources')}
-              className="hover:text-white transition-colors px-1"
-            >
-              Brand Resources
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('API')}
-              className="hover:text-white transition-colors px-1"
-            >
-              API
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <Link
-              href={comingSoonPath('Contact')}
-              className="hover:text-white transition-colors px-1"
-            >
-              Contact
-            </Link>
-            <span className="text-gray-600 hidden sm:inline">|</span>
-            <LandingFooterSocial />
-          </nav>
-          <div className="mt-3 sm:mt-4 text-center">
-            <p className="text-gray-500 text-[10px] sm:text-xs px-4 leading-relaxed">
-              © 2025 PageShare is not a securities broker-dealer, investment adviser, or any
-              other type of financial professional. No content on the PageShare platform should
-              be considered an offer, solicitation of an offer, or advice to buy or sell
-              securities or any other type of investment or financial product. By using the
-              PageShare platform, you understand and agree that PageShare does not provide
-              investment advice, recommend any security, transaction, or order, issue
-              securities, produce or provide research.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter layout="landing" />
     </div>
   );
 }

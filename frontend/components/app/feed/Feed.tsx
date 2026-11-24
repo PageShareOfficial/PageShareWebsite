@@ -9,6 +9,7 @@ import { isPost } from '@/utils/content/postUtils';
 import { useCurrentUser } from '@/hooks/user/useCurrentUser';
 import LoadingState from '../common/LoadingState';
 import ErrorState from '../common/ErrorState';
+import NetworkStatsCollapsible from '@/components/app/layout/NetworkStatsCollapsible';
 interface FeedProps {
   posts: Post[];
   onNewIdeaClick: () => void;
@@ -81,6 +82,7 @@ export default function Feed({
             onSubmit={handlePostSubmit}
             isPosting={isPosting}
           />
+          <NetworkStatsCollapsible placement="tablet" />
         </div>
       )}
 
