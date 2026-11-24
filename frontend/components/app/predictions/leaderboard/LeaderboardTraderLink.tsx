@@ -8,18 +8,22 @@ import type { LeaderboardEntry } from '@/types/predictions';
 interface LeaderboardTraderLinkProps {
   entry: LeaderboardEntry;
   maskIdentity?: boolean;
+  className?: string;
 }
 
 export default function LeaderboardTraderLink({
   entry,
   maskIdentity = false,
+  className = '',
 }: LeaderboardTraderLinkProps) {
   const identity = getLeaderboardIdentity(entry, maskIdentity);
 
   return (
-    <div className="min-w-0 text-left">
-      <div className="flex min-w-0 items-center gap-1">
-        <span className="truncate font-medium text-white">{identity.displayName}</span>
+    <div className={`min-w-0 text-left ${className}`.trim()}>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="min-w-0 flex-1 truncate font-medium text-white">
+          {identity.displayName}
+        </span>
         <AuthorBadges
           subscriptionPlanId={getLeaderboardPlanId(entry)}
           size="sm"

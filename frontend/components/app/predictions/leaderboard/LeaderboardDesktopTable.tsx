@@ -12,6 +12,7 @@ import LeaderboardRankDisplay from '@/components/app/predictions/leaderboard/Lea
 import LeaderboardTraderLink from '@/components/app/predictions/leaderboard/LeaderboardTraderLink';
 import LeaderboardYouBadge from '@/components/app/predictions/leaderboard/LeaderboardYouBadge';
 import type { LeaderboardEntry } from '@/types/predictions';
+import { leaderboardDesktopWinRateColClass } from '@/components/app/predictions/leaderboard/leaderboardTableConstants';
 
 interface LeaderboardDesktopTableProps {
   entries: LeaderboardEntry[];
@@ -34,19 +35,19 @@ export default function LeaderboardDesktopTable({
 }: LeaderboardDesktopTableProps) {
   return (
     <div className="hidden overflow-visible px-2 py-4 lg:block">
-      <table className="w-full table-fixed border-separate border-spacing-y-4 text-left text-sm">
+      <table className="w-full border-separate border-spacing-y-4 text-left text-sm">
         <colgroup>
           <col className="w-14" />
-          <col />
-          <col className="w-26" />
-          <col className="w-22" />
-          <col className="w-22" />
-          <col className={showAnalytics || showSaveAnalyst ? 'w-36' : 'w-22'} />
+          <col className="min-w-[10rem]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
+          <col className={leaderboardDesktopWinRateColClass(showAnalytics, showSaveAnalyst)} />
         </colgroup>
         <thead>
           <tr className="border-b border-white/10 bg-white/4 text-xs uppercase tracking-wide text-gray-400">
             <th className="px-2 py-3 font-medium">Rank</th>
-            <th className="px-2 py-3 font-medium">Analyst/Trader</th>
+            <th className="px-2 py-3 font-medium">Analyst</th>
             <th className="whitespace-nowrap px-2 py-3 text-right font-medium tabular-nums tracking-normal">
               Predictions
             </th>
@@ -87,9 +88,9 @@ export default function LeaderboardDesktopTable({
                 </td>
                 <td
                   style={podiumBorderStyle}
-                  className={`border-y-2 bg-black/65 px-2 py-3 ${rowClass}`}
+                  className={`min-w-0 border-y-2 bg-black/65 px-2 py-3 ${rowClass}`}
                 >
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex w-full min-w-0 items-center gap-2">
                     <AvatarWithFallback
                       src={identity.avatarSrc}
                       alt={identity.avatarAlt}
@@ -97,7 +98,11 @@ export default function LeaderboardDesktopTable({
                       size={36}
                       className="shrink-0"
                     />
-                    <LeaderboardTraderLink entry={entry} maskIdentity={maskThisRow} />
+                    <LeaderboardTraderLink
+                      entry={entry}
+                      maskIdentity={maskThisRow}
+                      className="flex-1 min-w-0"
+                    />
                   </div>
                 </td>
                 <td
