@@ -113,12 +113,14 @@ function PlanCardPricing({
   listAmount,
   saleCode,
   discount,
+  pricingHighlight,
   styles,
 }: {
   displayAmount: number;
   listAmount: number;
   saleCode: string | null;
   discount: number;
+  pricingHighlight: string | null;
   styles: PlanThemeStyles;
 }) {
   const priceClass = 'text-3xl sm:text-4xl font-black tracking-tight';
@@ -140,7 +142,13 @@ function PlanCardPricing({
           {saleCode}
         </p>
       ) : null}
-      {discount > 0 ? (
+      {pricingHighlight ? (
+        <p
+          className={`mt-2 inline-block text-[11px] font-bold tracking-wide uppercase px-3 py-1 rounded-full border ${styles.savings}`}
+        >
+          {pricingHighlight}
+        </p>
+      ) : discount > 0 ? (
         <p
           className={`mt-2 inline-block text-[11px] font-bold tracking-wide uppercase px-3 py-1 rounded-full border ${styles.savings}`}
         >
@@ -244,6 +252,7 @@ export default function PlanCard({
         listAmount={listAmount}
         saleCode={sale?.code ?? null}
         discount={discount}
+        pricingHighlight={plan.pricingHighlight ?? null}
         styles={styles}
       />
       <PlanFeatureList features={plan.features} styles={styles} />
