@@ -1,46 +1,30 @@
+import { PAGE_SHARE_SOCIAL_LINKS } from '@/lib/social/socialLinks';
 import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedinIn,
-  FaTelegram,
-  FaYoutube,
-  FaXTwitter,
-  FaDiscord,
-  type IconType,
-} from '@/constants/icons';
+  getFooterSocialStyles,
+  type FooterSocialDensity,
+} from '@/lib/social/footerSocialStyles';
 
-type SocialLink = {
-  label: string;
-  href: string;
-  Icon: IconType;
+type LandingFooterSocialProps = {
+  /** Tighter icons for app sidebar rails (LinkedIn-style). */
+  compact?: boolean;
 };
 
-const SOCIAL_LINKS: SocialLink[] = [
-  { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61587705572199', Icon: FaFacebookF },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/pageshare-io/', Icon: FaLinkedinIn },
-  { label: 'Instagram', href: 'https://www.instagram.com/pageshareio/', Icon: FaInstagram },
-  { label: 'YouTube', href: 'https://www.youtube.com/@PageShare-Crypto', Icon: FaYoutube },
-  { label: 'Telegram', href: 'https://t.me/+akC9c_yKeGdlNDM1', Icon: FaTelegram },
-  { label: 'X', href: 'https://x.com/PageShareio', Icon: FaXTwitter },
-  { label: 'Discord', href: 'https://discord.gg/jhwXvY9R6J', Icon: FaDiscord },
-];
+export default function LandingFooterSocial({ compact = false }: LandingFooterSocialProps) {
+  const density: FooterSocialDensity = compact ? 'compact' : 'default';
+  const styles = getFooterSocialStyles(density);
 
-const SOCIAL_ICON_CLASS =
-  'inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-500 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-cyan-400/50';
-
-export default function LandingFooterSocial() {
   return (
-    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-      {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+    <div className={`flex shrink-0 flex-wrap items-center ${styles.container}`}>
+      {PAGE_SHARE_SOCIAL_LINKS.map(({ label, href, Icon }) => (
         <a
           key={label}
           href={href}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`PageShare on ${label}`}
-          className={SOCIAL_ICON_CLASS}
+          className={styles.button}
         >
-          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+          <Icon className={styles.icon} aria-hidden />
         </a>
       ))}
     </div>

@@ -1,176 +1,37 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ROUTES } from '@/constants/routes';
-import { useRouter } from 'next/navigation';
-import { Plus } from '@/constants/icons';
-import { WatchlistItem } from '@/types';
-import { navigateToTicker } from '@/utils/core/navigationUtils';
-import PriceChangeDisplay from '@/components/app/common/PriceChangeDisplay';
-import TickerImage from '@/components/app/ticker/TickerImage';
-import Skeleton from '@/components/app/common/Skeleton';
-import LoadingState from '@/components/app/common/LoadingState';
-import { useOnlineStatus } from '@/hooks/common/useOnlineStatus';
-import { useOfflineOverlay } from '@/contexts/OfflineOverlayContext';
-import { usePremiumOverlay } from '@/contexts/PremiumOverlayContext';
+import NetworkStatsCards from '@/components/app/layout/NetworkStatsCards';
+import RightRailPremiumCard from '@/components/app/layout/RightRailPremiumCard';
+import SiteFooter from '@/components/app/layout/SiteFooter';
+import { useOpenPremiumWhenOnline } from '@/hooks/billing/useOpenPremiumWhenOnline';
+import { useNetworkStats } from '@/hooks/network/useNetworkStats';
 import { useSubscription } from '@/hooks/billing/useSubscription';
-import { ShowMoreToggleButton } from '@/components/app/common/ShowAllButton';
 
-/** Rows shown in the rail until the user expands the watchlist card. */
-const RAIL_WATCHLIST_PREVIEW_COUNT = 2;
-
-interface RightRailProps {
-  watchlist: WatchlistItem[];
-  onManageWatchlist: () => void;
-  onUpdateWatchlist: (watchlist: WatchlistItem[]) => void;
-  isLoading?: boolean;
-}
-
-export default function RightRail({
-  watchlist,
-  onManageWatchlist,
-  onUpdateWatchlist,
-  isLoading = false,
-}: RightRailProps) {
-  const router = useRouter();
-  const isOnline = useOnlineStatus();
-  const { setShowOfflineOverlay } = useOfflineOverlay();
-  const { openPremium } = usePremiumOverlay();
+export default function RightRail() {
+  const { stats, loading } = useNetworkStats();
+  const { openPremiumPlans, isOnline } = useOpenPremiumWhenOnline();
   const { isPremium, isLoading: isSubscriptionLoading } = useSubscription();
   const showPremiumUpgradeCard = !isSubscriptionLoading && !isPremium;
-  const [isWatchlistExpanded, setIsWatchlistExpanded] = useState(false);
-  const hasHiddenWatchlistItems = watchlist.length > RAIL_WATCHLIST_PREVIEW_COUNT;
-  const visibleWatchlist = isWatchlistExpanded
-    ? watchlist
-    : watchlist.slice(0, RAIL_WATCHLIST_PREVIEW_COUNT);
-
-  const handleUpgradeClick = () => {
-    if (isOnline) openPremium();
-    else setShowOfflineOverlay(true);
-  };
-
-  const handleWatchlistRowClick = (ticker: string) => {
-    if (!isOnline) setShowOfflineOverlay(true);
-    else navigateToTicker(ticker, router);
-  };
 
   return (
     <aside className="hidden lg:flex flex-col w-[350px] sticky top-0 h-screen pt-6 overflow-y-auto">
-      <div className="flex flex-col gap-6 pb-6">
-        {/* Watchlist Card */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5 shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <Link
-              href={ROUTES.watchlist}
-              prefetch={true}
-              className="text-lg font-semibold text-white hover:text-cyan-400 transition-colors cursor-pointer"
-            >
-              Watchlist
-            </Link>
-            <button
-              type="button"
-              onClick={onManageWatchlist}
-              disabled={!isOnline}
-              className="p-1.5 text-gray-400 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
-              aria-label="Manage watchlist"
-              title={!isOnline ? 'Connect to the internet to continue' : 'Manage watchlist'}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={`skeleton-${index}`}
-                  className="flex items-center gap-3 p-2"
-                >
-                  {/* Image Skeleton */}
-                  <Skeleton variant="rectangular" width={40} height={40} rounded="rounded-lg" />
-                  
-                  <div className="min-w-0 flex-1">
-                    <Skeleton variant="text" width={60} height={16} className="mb-2" />
-                    <Skeleton variant="text" width="80%" height={12} />
-                  </div>
-                  <div className="text-right shrink-0 ml-2">
-                    <Skeleton variant="text" width={50} height={16} className="mb-1" />
-                    <Skeleton variant="text" width={40} height={12} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : watchlist.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-400">Add tickers to track</p>
-          ) : (
-            <div className="space-y-3">
-              {visibleWatchlist.map((item) => (
-                <div
-                  key={item.ticker}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleWatchlistRowClick(item.ticker)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleWatchlistRowClick(item.ticker)}
-                  className={`flex items-center gap-3 rounded-lg p-2 transition-colors ${isOnline ? 'cursor-pointer hover:bg-white/5' : 'cursor-not-allowed opacity-70'}`}
-                  title={!isOnline ? 'Connect to the internet to view ticker' : undefined}
-                >
-                  {/* Ticker Image */}
-                  <TickerImage
-                    src={item.image}
-                    ticker={item.ticker}
-                    size="sm"
-                  />
-                  
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium text-white truncate">{item.ticker}</div>
-                    <div className="text-xs text-gray-400 truncate">{item.name}</div>
-                  </div>
-                  <div className="text-right shrink-0 ml-2">
-                    <div className="font-medium text-white">${item.price.toFixed(2)}</div>
-                    <PriceChangeDisplay 
-                      change={(item.price * item.change) / 100} 
-                      changePercent={item.change}
-                      size="sm"
-                      showIcon={false}
-                    />
-                  </div>
-                </div>
-              ))}
-              {hasHiddenWatchlistItems && (
-                <ShowMoreToggleButton
-                  expanded={isWatchlistExpanded}
-                  onToggle={() => setIsWatchlistExpanded((expanded) => !expanded)}
-                />
-              )}
-            </div>
-          )}
-        </div>
+      <div className="flex flex-col gap-4 pb-6">
+        <NetworkStatsCards
+          stats={stats}
+          loading={loading}
+          onOpenPlans={openPremiumPlans}
+          ctaDisabled={!isOnline}
+        />
 
-        {isSubscriptionLoading ? (
-          <div className="bg-linear-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 shrink-0">
-            <LoadingState size="sm" className="py-6" />
-          </div>
-        ) : (
-          showPremiumUpgradeCard && (
-          <div className="bg-linear-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-5 shrink-0">
-            <h2 className="text-lg font-semibold text-white mb-2">Premium</h2>
-            <p className="text-sm text-gray-300 mb-4">
-              Premium AI tools, deeper filters, and credibility analytics.
-            </p>
-            <button
-              type="button"
-              onClick={handleUpgradeClick}
-              disabled={!isOnline}
-              title={!isOnline ? 'Connect to the internet to continue' : undefined}
-              className="w-full px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
-            >
-              Upgrade
-            </button>
-          </div>
-          )
-        )}
+        <RightRailPremiumCard
+          isLoading={isSubscriptionLoading}
+          showUpgrade={showPremiumUpgradeCard}
+          onUpgrade={openPremiumPlans}
+          isOnline={isOnline}
+        />
+
+        <SiteFooter layout="sidebar" />
       </div>
     </aside>
   );
 }
-

@@ -30,6 +30,8 @@ export interface PlanDefinition {
   };
   features: string[];
   ctaLabel: string;
+  /** Shown under price instead of the yearly-billing savings badge. */
+  pricingHighlight?: string;
 }
 
 export const PLANS: PlanDefinition[] = [
@@ -40,8 +42,8 @@ export const PLANS: PlanDefinition[] = [
     roleTitle: 'Analyst / Trader',
     tagline: 'Build Credibility. Publish Predictions. Grow Your Influence.',
     pricing: {
-      monthly: { amount: 79 },
-      yearly: { amountPerMonth: 59, discount: 25 },
+      monthly: { amount: 0 },
+      yearly: { amountPerMonth: 0, discount: 0 },
     },
     features: [
       'Publish Your Predictions',
@@ -55,6 +57,7 @@ export const PLANS: PlanDefinition[] = [
       'Priority Support',
     ],
     ctaLabel: 'Start as Analyst',
+    pricingHighlight: 'Limited Time Period Offer',
   },
   {
     id: 'investor',
